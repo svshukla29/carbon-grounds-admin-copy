@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { Bell, Search, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Bell, Search, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,8 +10,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export function DashboardHeader() {
   return (
@@ -19,7 +19,11 @@ export function DashboardHeader() {
       <div className="hidden md:flex md:flex-1">
         <form className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-          <Input type="search" placeholder="Search..." className="w-full rounded-lg bg-white pl-8 md:w-[300px]" />
+          <Input
+            type="search"
+            placeholder="Search..."
+            className="w-full rounded-lg bg-white pl-8 md:w-[300px]"
+          />
         </form>
       </div>
       <div className="flex flex-1 items-center justify-end gap-4 md:gap-2 lg:gap-4">
@@ -31,7 +35,9 @@ export function DashboardHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon" className="rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-green-100 text-green-800">AG</AvatarFallback>
+                <AvatarFallback className="bg-green-100 text-green-800">
+                  AG
+                </AvatarFallback>
               </Avatar>
               <span className="sr-only">Toggle user menu</span>
             </Button>
@@ -45,10 +51,12 @@ export function DashboardHeader() {
             </DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => (window.location.href = "/")}>Log out</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => (window.location.href = "/")}>
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }

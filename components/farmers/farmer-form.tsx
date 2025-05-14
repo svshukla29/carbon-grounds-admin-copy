@@ -1,20 +1,32 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DatePicker } from "@/components/ui/date-picker"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Mock farmer data
 const farmersData = [
@@ -36,13 +48,13 @@ const farmersData = [
     },
     certifications: ["Organic Farming", "Sustainable Agriculture"],
   },
-]
+];
 
 export function FarmerForm({ id }: { id?: string }) {
-  const isEditMode = !!id
-  const router = useRouter()
-  const [loading, setLoading] = useState(isEditMode)
-  const [submitting, setSubmitting] = useState(false)
+  const isEditMode = !!id;
+  const router = useRouter();
+  const [loading, setLoading] = useState(isEditMode);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     bio: "",
@@ -55,7 +67,7 @@ export function FarmerForm({ id }: { id?: string }) {
     address: "",
     crops: [] as string[],
     certifications: [] as string[],
-  })
+  });
 
   const cropOptions = [
     { id: "rice", label: "Rice" },
@@ -64,23 +76,23 @@ export function FarmerForm({ id }: { id?: string }) {
     { id: "maize", label: "Maize" },
     { id: "fruit", label: "Fruit Trees" },
     { id: "beans", label: "Beans" },
-  ]
+  ];
 
   const certificationOptions = [
     { id: "organic", label: "Organic Farming" },
     { id: "sustainable", label: "Sustainable Agriculture" },
     { id: "fairtrade", label: "Fair Trade" },
     { id: "rainforest", label: "Rainforest Alliance" },
-  ]
+  ];
 
   useEffect(() => {
     if (isEditMode) {
       // Simulate API fetch for edit mode
       const fetchFarmer = async () => {
-        setLoading(true)
+        setLoading(true);
         try {
           // In a real app, this would be an API call
-          const foundFarmer = farmersData.find((f) => f.id === id)
+          const foundFarmer = farmersData.find((f) => f.id === id);
 
           if (foundFarmer) {
             setFormData({
@@ -95,76 +107,80 @@ export function FarmerForm({ id }: { id?: string }) {
               address: foundFarmer.contact.address,
               crops: foundFarmer.crops,
               certifications: foundFarmer.certifications,
-            })
+            });
           } else {
             // Farmer not found
-            router.push("/dashboard/farmers")
+            router.push("/dashboard/farmers");
           }
         } catch (error) {
-          console.error("Error fetching farmer:", error)
+          console.error("Error fetching farmer:", error);
         } finally {
-          setLoading(false)
+          setLoading(false);
         }
-      }
+      };
 
-      fetchFarmer()
+      fetchFarmer();
     }
-  }, [id, isEditMode, router])
+  }, [id, isEditMode, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleDateChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleCropToggle = (cropId: string) => {
-    const crop = cropOptions.find((c) => c.id === cropId)?.label
-    if (!crop) return
+    const crop = cropOptions.find((c) => c.id === cropId)?.label;
+    if (!crop) return;
 
     setFormData((prev) => {
-      const crops = prev.crops.includes(crop) ? prev.crops.filter((c) => c !== crop) : [...prev.crops, crop]
-      return { ...prev, crops }
-    })
-  }
+      const crops = prev.crops.includes(crop)
+        ? prev.crops.filter((c) => c !== crop)
+        : [...prev.crops, crop];
+      return { ...prev, crops };
+    });
+  };
 
   const handleCertificationToggle = (certId: string) => {
-    const cert = certificationOptions.find((c) => c.id === certId)?.label
-    if (!cert) return
+    const cert = certificationOptions.find((c) => c.id === certId)?.label;
+    if (!cert) return;
 
     setFormData((prev) => {
       const certifications = prev.certifications.includes(cert)
         ? prev.certifications.filter((c) => c !== cert)
-        : [...prev.certifications, cert]
-      return { ...prev, certifications }
-    })
-  }
+        : [...prev.certifications, cert];
+      return { ...prev, certifications };
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
+    e.preventDefault();
+    setSubmitting(true);
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // In a real app, this would be an API call to create or update the farmer
-      console.log("Submitting form data:", formData)
+      console.log("Submitting form data:", formData);
 
       // Redirect to farmers list after successful submission
-      router.push("/dashboard/farmers")
+      router.push("/dashboard/farmers");
     } catch (error) {
-      console.error("Error submitting form:", error)
+      console.error("Error submitting form:", error);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -174,7 +190,7 @@ export function FarmerForm({ id }: { id?: string }) {
           <p className="mt-2 text-sm text-gray-500">Loading farmer data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -196,7 +212,9 @@ export function FarmerForm({ id }: { id?: string }) {
           <CardHeader>
             <CardTitle>Farmer Information</CardTitle>
             <CardDescription>
-              {isEditMode ? "Update the details of the existing farmer" : "Enter the details of the new farmer"}
+              {isEditMode
+                ? "Update the details of the existing farmer"
+                : "Enter the details of the new farmer"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -250,7 +268,9 @@ export function FarmerForm({ id }: { id?: string }) {
                     <Label htmlFor="status">Verification Status</Label>
                     <Select
                       value={formData.status}
-                      onValueChange={(value) => handleSelectChange("status", value)}
+                      onValueChange={(value) =>
+                        handleSelectChange("status", value)
+                      }
                       required
                     >
                       <SelectTrigger id="status">
@@ -264,7 +284,10 @@ export function FarmerForm({ id }: { id?: string }) {
                   </div>
                   <div className="space-y-2">
                     <Label>Join Date</Label>
-                    <DatePicker value={formData.joinDate} onChange={(date) => handleDateChange("joinDate", date)} />
+                    <DatePicker
+                      value={formData.joinDate}
+                      onChange={(date) => handleDateChange("joinDate", date)}
+                    />
                   </div>
                 </div>
               </TabsContent>
@@ -325,13 +348,19 @@ export function FarmerForm({ id }: { id?: string }) {
                   <Label>Crops</Label>
                   <div className="grid grid-cols-2 gap-2 rounded-md border p-4 md:grid-cols-3">
                     {cropOptions.map((crop) => (
-                      <div key={crop.id} className="flex items-center space-x-2">
+                      <div
+                        key={crop.id}
+                        className="flex items-center space-x-2"
+                      >
                         <Checkbox
                           id={`crop-${crop.id}`}
                           checked={formData.crops.includes(crop.label)}
                           onCheckedChange={() => handleCropToggle(crop.id)}
                         />
-                        <Label htmlFor={`crop-${crop.id}`} className="text-sm font-normal">
+                        <Label
+                          htmlFor={`crop-${crop.id}`}
+                          className="text-sm font-normal"
+                        >
                           {crop.label}
                         </Label>
                       </div>
@@ -343,13 +372,21 @@ export function FarmerForm({ id }: { id?: string }) {
                   <Label>Certifications</Label>
                   <div className="grid grid-cols-1 gap-2 rounded-md border p-4 md:grid-cols-2">
                     {certificationOptions.map((cert) => (
-                      <div key={cert.id} className="flex items-center space-x-2">
+                      <div
+                        key={cert.id}
+                        className="flex items-center space-x-2"
+                      >
                         <Checkbox
                           id={`cert-${cert.id}`}
                           checked={formData.certifications.includes(cert.label)}
-                          onCheckedChange={() => handleCertificationToggle(cert.id)}
+                          onCheckedChange={() =>
+                            handleCertificationToggle(cert.id)
+                          }
                         />
-                        <Label htmlFor={`cert-${cert.id}`} className="text-sm font-normal">
+                        <Label
+                          htmlFor={`cert-${cert.id}`}
+                          className="text-sm font-normal"
+                        >
                           {cert.label}
                         </Label>
                       </div>
@@ -363,7 +400,11 @@ export function FarmerForm({ id }: { id?: string }) {
               <Button asChild variant="outline">
                 <Link href="/dashboard/farmers">Cancel</Link>
               </Button>
-              <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={submitting}>
+              <Button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700"
+                disabled={submitting}
+              >
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -380,5 +421,5 @@ export function FarmerForm({ id }: { id?: string }) {
         </Card>
       </form>
     </div>
-  )
+  );
 }

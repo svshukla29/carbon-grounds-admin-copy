@@ -1,22 +1,38 @@
-"use client"
+"use client";
 
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
-import { Info } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PermissionProps {
-  label: string
-  description: string
-  defaultChecked?: boolean
-  disabled?: boolean
+  label: string;
+  description: string;
+  defaultChecked?: boolean;
+  disabled?: boolean;
 }
 
-function Permission({ label, description, defaultChecked = false, disabled = false }: PermissionProps) {
+function Permission({
+  label,
+  description,
+  defaultChecked = false,
+  disabled = false,
+}: PermissionProps) {
   return (
     <div className="flex items-center justify-between space-y-0 rounded-lg border p-4">
       <div className="space-y-0.5">
@@ -25,7 +41,7 @@ function Permission({ label, description, defaultChecked = false, disabled = fal
       </div>
       <Switch defaultChecked={defaultChecked} disabled={disabled} />
     </div>
-  )
+  );
 }
 
 export function RoleManagement() {
@@ -45,7 +61,9 @@ export function RoleManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Admin Role</CardTitle>
-                <CardDescription>Full access to all features and settings</CardDescription>
+                <CardDescription>
+                  Full access to all features and settings
+                </CardDescription>
               </div>
               <TooltipProvider>
                 <Tooltip>
@@ -98,7 +116,12 @@ export function RoleManagement() {
                   defaultChecked
                   disabled
                 />
-                <Permission label="Manage Roles" description="Assign and modify user roles" defaultChecked disabled />
+                <Permission
+                  label="Manage Roles"
+                  description="Assign and modify user roles"
+                  defaultChecked
+                  disabled
+                />
                 <Permission
                   label="Remove Team Members"
                   description="Remove users from the platform"
@@ -119,7 +142,12 @@ export function RoleManagement() {
                   defaultChecked
                   disabled
                 />
-                <Permission label="Export Data" description="Export data in various formats" defaultChecked disabled />
+                <Permission
+                  label="Export Data"
+                  description="Export data in various formats"
+                  defaultChecked
+                  disabled
+                />
                 <Permission
                   label="Manage Integrations"
                   description="Configure third-party integrations"
@@ -138,7 +166,9 @@ export function RoleManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Project Manager Role</CardTitle>
-                <CardDescription>Manage projects and team members</CardDescription>
+                <CardDescription>
+                  Manage projects and team members
+                </CardDescription>
               </div>
               <TooltipProvider>
                 <Tooltip>
@@ -149,7 +179,10 @@ export function RoleManagement() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Project Managers oversee specific projects and their teams.</p>
+                    <p>
+                      Project Managers oversee specific projects and their
+                      teams.
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -159,9 +192,20 @@ export function RoleManagement() {
             <div className="space-y-4">
               <h3 className="text-sm font-medium">Project Management</h3>
               <div className="grid gap-3">
-                <Permission label="Create Projects" description="Create new sustainability projects" defaultChecked />
-                <Permission label="Edit Projects" description="Modify existing project details" defaultChecked />
-                <Permission label="Delete Projects" description="Remove projects from the platform" />
+                <Permission
+                  label="Create Projects"
+                  description="Create new sustainability projects"
+                  defaultChecked
+                />
+                <Permission
+                  label="Edit Projects"
+                  description="Modify existing project details"
+                  defaultChecked
+                />
+                <Permission
+                  label="Delete Projects"
+                  description="Remove projects from the platform"
+                />
               </div>
             </div>
 
@@ -175,8 +219,14 @@ export function RoleManagement() {
                   description="Send invitations to new team members"
                   defaultChecked
                 />
-                <Permission label="Manage Roles" description="Assign and modify user roles" />
-                <Permission label="Remove Team Members" description="Remove users from the platform" />
+                <Permission
+                  label="Manage Roles"
+                  description="Assign and modify user roles"
+                />
+                <Permission
+                  label="Remove Team Members"
+                  description="Remove users from the platform"
+                />
               </div>
             </div>
 
@@ -185,9 +235,20 @@ export function RoleManagement() {
             <div className="space-y-4">
               <h3 className="text-sm font-medium">Data & Reporting</h3>
               <div className="grid gap-3">
-                <Permission label="View Reports" description="Access all reports and analytics" defaultChecked />
-                <Permission label="Export Data" description="Export data in various formats" defaultChecked />
-                <Permission label="Manage Integrations" description="Configure third-party integrations" />
+                <Permission
+                  label="View Reports"
+                  description="Access all reports and analytics"
+                  defaultChecked
+                />
+                <Permission
+                  label="Export Data"
+                  description="Export data in various formats"
+                  defaultChecked
+                />
+                <Permission
+                  label="Manage Integrations"
+                  description="Configure third-party integrations"
+                />
               </div>
             </div>
           </CardContent>
@@ -200,7 +261,9 @@ export function RoleManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Field Officer Role</CardTitle>
-                <CardDescription>Manage on-the-ground operations and farmer verification</CardDescription>
+                <CardDescription>
+                  Manage on-the-ground operations and farmer verification
+                </CardDescription>
               </div>
               <TooltipProvider>
                 <Tooltip>
@@ -211,7 +274,10 @@ export function RoleManagement() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Field Officers work directly with farmers and collect data.</p>
+                    <p>
+                      Field Officers work directly with farmers and collect
+                      data.
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -222,7 +288,11 @@ export function RoleManagement() {
             <div className="space-y-4">
               <h3 className="text-sm font-medium">Farmer Management</h3>
               <div className="grid gap-3">
-                <Permission label="Add Farmers" description="Register new farmers in the system" defaultChecked />
+                <Permission
+                  label="Add Farmers"
+                  description="Register new farmers in the system"
+                  defaultChecked
+                />
                 <Permission
                   label="Verify Farmers"
                   description="Verify farmer information and practices"
@@ -245,7 +315,9 @@ export function RoleManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Analyst Role</CardTitle>
-                <CardDescription>Analyze data and generate reports</CardDescription>
+                <CardDescription>
+                  Analyze data and generate reports
+                </CardDescription>
               </div>
               <TooltipProvider>
                 <Tooltip>
@@ -256,7 +328,9 @@ export function RoleManagement() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Analysts work with data to generate insights and reports.</p>
+                    <p>
+                      Analysts work with data to generate insights and reports.
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -267,7 +341,11 @@ export function RoleManagement() {
             <div className="space-y-4">
               <h3 className="text-sm font-medium">Data Analysis</h3>
               <div className="grid gap-3">
-                <Permission label="Access Raw Data" description="View and analyze all collected data" defaultChecked />
+                <Permission
+                  label="Access Raw Data"
+                  description="View and analyze all collected data"
+                  defaultChecked
+                />
                 <Permission
                   label="Create Visualizations"
                   description="Generate charts and visual representations"
@@ -290,7 +368,9 @@ export function RoleManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Viewer Role</CardTitle>
-                <CardDescription>Read-only access to projects and reports</CardDescription>
+                <CardDescription>
+                  Read-only access to projects and reports
+                </CardDescription>
               </div>
               <TooltipProvider>
                 <Tooltip>
@@ -301,7 +381,9 @@ export function RoleManagement() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Viewers can only see information but cannot make changes.</p>
+                    <p>
+                      Viewers can only see information but cannot make changes.
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -312,14 +394,26 @@ export function RoleManagement() {
             <div className="space-y-4">
               <h3 className="text-sm font-medium">Project Access</h3>
               <div className="grid gap-3">
-                <Permission label="View Projects" description="See project details and progress" defaultChecked />
-                <Permission label="View Farmers" description="See farmer profiles and status" defaultChecked />
-                <Permission label="View Partners" description="See partner organizations" defaultChecked />
+                <Permission
+                  label="View Projects"
+                  description="See project details and progress"
+                  defaultChecked
+                />
+                <Permission
+                  label="View Farmers"
+                  description="See farmer profiles and status"
+                  defaultChecked
+                />
+                <Permission
+                  label="View Partners"
+                  description="See partner organizations"
+                  defaultChecked
+                />
               </div>
             </div>
           </CardContent>
         </Card>
       </TabsContent>
     </Tabs>
-  )
+  );
 }

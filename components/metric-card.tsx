@@ -1,17 +1,30 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowDown, ArrowUp, DollarSign, Leaf, Users } from "lucide-react"
-import { cn } from "@/lib/utils"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ArrowDown, ArrowUp, DollarSign, Leaf, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MetricCardProps {
-  title: string
-  value: string
-  trend: "up" | "down" | "neutral"
-  trendValue: string
-  description: string
-  icon: "leaf" | "users" | "carbon" | "dollar"
+  title: string;
+  value: string;
+  trend: "up" | "down" | "neutral";
+  trendValue: string;
+  description: string;
+  icon: "leaf" | "users" | "carbon" | "dollar";
 }
 
-export function MetricCard({ title, value, trend, trendValue, description, icon }: MetricCardProps) {
+export function MetricCard({
+  title,
+  value,
+  trend,
+  trendValue,
+  description,
+  icon,
+}: MetricCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -33,7 +46,9 @@ export function MetricCard({ title, value, trend, trendValue, description, icon 
               <path d="M21 10H3M21 6H3M21 14H3M21 18H3" />
             </svg>
           )}
-          {icon === "dollar" && <DollarSign className="h-4 w-4 text-emerald-600" />}
+          {icon === "dollar" && (
+            <DollarSign className="h-4 w-4 text-emerald-600" />
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -55,5 +70,5 @@ export function MetricCard({ title, value, trend, trendValue, description, icon 
         <CardDescription className="mt-1">{description}</CardDescription>
       </CardContent>
     </Card>
-  )
+  );
 }

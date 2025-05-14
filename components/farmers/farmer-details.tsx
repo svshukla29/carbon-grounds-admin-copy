@@ -1,15 +1,21 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, Download, FileEdit, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { DeleteFarmerDialog } from "@/components/farmers/delete-farmer-dialog"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Download, FileEdit, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DeleteFarmerDialog } from "@/components/farmers/delete-farmer-dialog";
 
 // Mock farmer data
 const farmersData = [
@@ -79,57 +85,59 @@ const farmersData = [
       { year: "2023", crops: ["Coffee", "Maize"], area: "3.0 hectares" },
     ],
   },
-]
+];
 
 export function FarmerDetails({ id }: { id: string }) {
-  const [farmer, setFarmer] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const router = useRouter()
+  const [farmer, setFarmer] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     // Simulate API fetch
     const fetchFarmer = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         // In a real app, this would be an API call
-        const foundFarmer = farmersData.find((f) => f.id === id)
+        const foundFarmer = farmersData.find((f) => f.id === id);
 
         if (foundFarmer) {
-          setFarmer(foundFarmer)
+          setFarmer(foundFarmer);
         } else {
           // Farmer not found
-          router.push("/dashboard/farmers")
+          router.push("/dashboard/farmers");
         }
       } catch (error) {
-        console.error("Error fetching farmer:", error)
+        console.error("Error fetching farmer:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchFarmer()
-  }, [id, router])
+    fetchFarmer();
+  }, [id, router]);
 
   const handleDelete = () => {
-    setDeleteDialogOpen(true)
-  }
+    setDeleteDialogOpen(true);
+  };
 
   const handleDeleteConfirm = () => {
     // In a real app, this would be an API call to delete the farmer
-    setDeleteDialogOpen(false)
-    router.push("/dashboard/farmers")
-  }
+    setDeleteDialogOpen(false);
+    router.push("/dashboard/farmers");
+  };
 
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-green-600"></div>
-          <p className="mt-2 text-sm text-gray-500">Loading farmer details...</p>
+          <p className="mt-2 text-sm text-gray-500">
+            Loading farmer details...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!farmer) {
@@ -143,19 +151,19 @@ export function FarmerDetails({ id }: { id: string }) {
           </Link>
         </Button>
       </div>
-    )
+    );
   }
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "Verified":
-        return "bg-green-100 text-green-800 hover:bg-green-100"
+        return "bg-green-100 text-green-800 hover:bg-green-100";
       case "Pending":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -168,8 +176,13 @@ export function FarmerDetails({ id }: { id: string }) {
                 <span className="sr-only">Back</span>
               </Link>
             </Button>
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{farmer.name}</h1>
-            <Badge variant="outline" className={getStatusBadgeColor(farmer.status)}>
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+              {farmer.name}
+            </h1>
+            <Badge
+              variant="outline"
+              className={getStatusBadgeColor(farmer.status)}
+            >
               {farmer.status}
             </Badge>
           </div>
@@ -201,21 +214,33 @@ export function FarmerDetails({ id }: { id: string }) {
           <CardContent>
             <div className="flex flex-col items-center space-y-4 pb-6 text-center">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={farmer.avatar || "/placeholder.svg"} alt={farmer.name} />
-                <AvatarFallback className="bg-green-100 text-green-800 text-xl">{farmer.initials}</AvatarFallback>
+                <AvatarImage
+                  src={farmer.avatar || "/placeholder.svg"}
+                  alt={farmer.name}
+                />
+                <AvatarFallback className="bg-green-100 text-green-800 text-xl">
+                  {farmer.initials}
+                </AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="text-xl font-bold">{farmer.name}</h3>
-                <p className="text-sm text-muted-foreground">{farmer.location}</p>
+                <p className="text-sm text-muted-foreground">
+                  {farmer.location}
+                </p>
               </div>
-              <Badge variant="outline" className={getStatusBadgeColor(farmer.status)}>
+              <Badge
+                variant="outline"
+                className={getStatusBadgeColor(farmer.status)}
+              >
                 {farmer.status}
               </Badge>
             </div>
 
             <div className="space-y-4">
               <div>
-                <h4 className="mb-2 text-sm font-medium">Contact Information</h4>
+                <h4 className="mb-2 text-sm font-medium">
+                  Contact Information
+                </h4>
                 <div className="space-y-2 rounded-md border p-3 text-sm">
                   <div className="grid grid-cols-3">
                     <span className="text-muted-foreground">Phone:</span>
@@ -241,11 +266,15 @@ export function FarmerDetails({ id }: { id: string }) {
                   </div>
                   <div className="grid grid-cols-3">
                     <span className="text-muted-foreground">Crops:</span>
-                    <span className="col-span-2">{farmer.crops.join(", ")}</span>
+                    <span className="col-span-2">
+                      {farmer.crops.join(", ")}
+                    </span>
                   </div>
                   <div className="grid grid-cols-3">
                     <span className="text-muted-foreground">Joined:</span>
-                    <span className="col-span-2">{new Date(farmer.joinDate).toLocaleDateString()}</span>
+                    <span className="col-span-2">
+                      {new Date(farmer.joinDate).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -254,7 +283,11 @@ export function FarmerDetails({ id }: { id: string }) {
                 <h4 className="mb-2 text-sm font-medium">Certifications</h4>
                 <div className="flex flex-wrap gap-2">
                   {farmer.certifications.map((cert: string, index: number) => (
-                    <Badge key={index} variant="outline" className="bg-blue-50 text-blue-700">
+                    <Badge
+                      key={index}
+                      variant="outline"
+                      className="bg-blue-50 text-blue-700"
+                    >
                       {cert}
                     </Badge>
                   ))}
@@ -288,9 +321,13 @@ export function FarmerDetails({ id }: { id: string }) {
                     <TableBody>
                       {farmer.projects.map((project: any) => (
                         <TableRow key={project.id}>
-                          <TableCell className="font-medium">{project.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {project.name}
+                          </TableCell>
                           <TableCell>{project.role}</TableCell>
-                          <TableCell>{new Date(project.joinDate).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            {new Date(project.joinDate).toLocaleDateString()}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -300,15 +337,23 @@ export function FarmerDetails({ id }: { id: string }) {
               <TabsContent value="carbon" className="pt-4">
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">Carbon Credits Generated</CardTitle>
-                    <CardDescription>Total credits: {farmer.carbonCredits} tons CO₂e</CardDescription>
+                    <CardTitle className="text-lg">
+                      Carbon Credits Generated
+                    </CardTitle>
+                    <CardDescription>
+                      Total credits: {farmer.carbonCredits} tons CO₂e
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-[200px] w-full">
                       <div className="flex h-full items-center justify-center">
                         <div className="text-center">
-                          <div className="text-5xl font-bold text-green-600">{farmer.carbonCredits}</div>
-                          <p className="mt-2 text-sm text-muted-foreground">tons of CO₂ equivalent</p>
+                          <div className="text-5xl font-bold text-green-600">
+                            {farmer.carbonCredits}
+                          </div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            tons of CO₂ equivalent
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -328,7 +373,9 @@ export function FarmerDetails({ id }: { id: string }) {
                     <TableBody>
                       {farmer.farmHistory.map((history: any, index: number) => (
                         <TableRow key={index}>
-                          <TableCell className="font-medium">{history.year}</TableCell>
+                          <TableCell className="font-medium">
+                            {history.year}
+                          </TableCell>
                           <TableCell>{history.crops.join(", ")}</TableCell>
                           <TableCell>{history.area}</TableCell>
                         </TableRow>
@@ -342,10 +389,21 @@ export function FarmerDetails({ id }: { id: string }) {
         </Card>
       </div>
 
-      <DeleteFarmerDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} onConfirm={handleDeleteConfirm} />
+      <DeleteFarmerDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
-  )
+  );
 }
 
 // Import Table components for the Tabs content
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";

@@ -1,15 +1,23 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { BarChart3, Users, FileText, Settings, Leaf, LogOut, Menu } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { useState } from "react"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  BarChart3,
+  Users,
+  FileText,
+  Settings,
+  Leaf,
+  LogOut,
+  Menu,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 export function DashboardSidebar() {
-  const pathname = usePathname()
-  const [isOpen, setIsOpen] = useState(false)
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   const routes = [
     {
@@ -42,7 +50,7 @@ export function DashboardSidebar() {
       href: "/dashboard/settings",
       active: pathname === "/dashboard/settings",
     },
-  ]
+  ];
 
   return (
     <>
@@ -55,7 +63,10 @@ export function DashboardSidebar() {
         <Menu className="h-4 w-4" />
       </Button>
       <div
-        className={cn("fixed inset-0 z-30 bg-black/60 md:hidden", isOpen ? "block" : "hidden")}
+        className={cn(
+          "fixed inset-0 z-30 bg-black/60 md:hidden",
+          isOpen ? "block" : "hidden",
+        )}
         onClick={() => setIsOpen(false)}
       />
       <aside
@@ -79,7 +90,9 @@ export function DashboardSidebar() {
                   href={route.href}
                   className={cn(
                     "flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-100 hover:text-gray-900",
-                    route.active ? "bg-gray-100 text-gray-900" : "text-gray-500",
+                    route.active
+                      ? "bg-gray-100 text-gray-900"
+                      : "text-gray-500",
                   )}
                   onClick={() => setIsOpen(false)}
                 >
@@ -102,5 +115,5 @@ export function DashboardSidebar() {
         </div>
       </aside>
     </>
-  )
+  );
 }

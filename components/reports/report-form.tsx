@@ -1,19 +1,31 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Loader2, Upload } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DatePicker } from "@/components/ui/date-picker"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Loader2, Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DatePicker } from "@/components/ui/date-picker";
 
 // Mock report data
 const reportsData = [
@@ -32,13 +44,13 @@ const reportsData = [
 <h2>Carbon Credit Generation</h2>
 <p>During Q2 2023, the project generated 450 tons of verified carbon credits. This represents a 15% increase from the previous quarter and puts the project on track to meet its annual target of 1,800 tons.</p>`,
   },
-]
+];
 
 export function ReportForm({ id }: { id?: string }) {
-  const isEditMode = !!id
-  const router = useRouter()
-  const [loading, setLoading] = useState(isEditMode)
-  const [submitting, setSubmitting] = useState(false)
+  const isEditMode = !!id;
+  const router = useRouter();
+  const [loading, setLoading] = useState(isEditMode);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     type: "",
@@ -47,16 +59,16 @@ export function ReportForm({ id }: { id?: string }) {
     date: "",
     summary: "",
     content: "",
-  })
+  });
 
   useEffect(() => {
     if (isEditMode) {
       // Simulate API fetch for edit mode
       const fetchReport = async () => {
-        setLoading(true)
+        setLoading(true);
         try {
           // In a real app, this would be an API call
-          const foundReport = reportsData.find((r) => r.id === id)
+          const foundReport = reportsData.find((r) => r.id === id);
 
           if (foundReport) {
             setFormData({
@@ -67,54 +79,56 @@ export function ReportForm({ id }: { id?: string }) {
               date: foundReport.date,
               summary: foundReport.summary,
               content: foundReport.content,
-            })
+            });
           } else {
             // Report not found
-            router.push("/dashboard/reports")
+            router.push("/dashboard/reports");
           }
         } catch (error) {
-          console.error("Error fetching report:", error)
+          console.error("Error fetching report:", error);
         } finally {
-          setLoading(false)
+          setLoading(false);
         }
-      }
+      };
 
-      fetchReport()
+      fetchReport();
     }
-  }, [id, isEditMode, router])
+  }, [id, isEditMode, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleDateChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
+    e.preventDefault();
+    setSubmitting(true);
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // In a real app, this would be an API call to create or update the report
-      console.log("Submitting form data:", formData)
+      console.log("Submitting form data:", formData);
 
       // Redirect to reports list after successful submission
-      router.push("/dashboard/reports")
+      router.push("/dashboard/reports");
     } catch (error) {
-      console.error("Error submitting form:", error)
+      console.error("Error submitting form:", error);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -124,7 +138,7 @@ export function ReportForm({ id }: { id?: string }) {
           <p className="mt-2 text-sm text-gray-500">Loading report data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -146,7 +160,9 @@ export function ReportForm({ id }: { id?: string }) {
           <CardHeader>
             <CardTitle>Report Information</CardTitle>
             <CardDescription>
-              {isEditMode ? "Update the details of your existing report" : "Enter the details of your new report"}
+              {isEditMode
+                ? "Update the details of your existing report"
+                : "Enter the details of your new report"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -171,16 +187,32 @@ export function ReportForm({ id }: { id?: string }) {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="type">Report Type</Label>
-                    <Select value={formData.type} onValueChange={(value) => handleSelectChange("type", value)} required>
+                    <Select
+                      value={formData.type}
+                      onValueChange={(value) =>
+                        handleSelectChange("type", value)
+                      }
+                      required
+                    >
                       <SelectTrigger id="type">
                         <SelectValue placeholder="Select report type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Quarterly Summary">Quarterly Summary</SelectItem>
-                        <SelectItem value="Monthly Summary">Monthly Summary</SelectItem>
-                        <SelectItem value="Verification Report">Verification Report</SelectItem>
-                        <SelectItem value="Impact Report">Impact Report</SelectItem>
-                        <SelectItem value="Audit Report">Audit Report</SelectItem>
+                        <SelectItem value="Quarterly Summary">
+                          Quarterly Summary
+                        </SelectItem>
+                        <SelectItem value="Monthly Summary">
+                          Monthly Summary
+                        </SelectItem>
+                        <SelectItem value="Verification Report">
+                          Verification Report
+                        </SelectItem>
+                        <SelectItem value="Impact Report">
+                          Impact Report
+                        </SelectItem>
+                        <SelectItem value="Audit Report">
+                          Audit Report
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -191,18 +223,30 @@ export function ReportForm({ id }: { id?: string }) {
                     <Label htmlFor="project">Related Project</Label>
                     <Select
                       value={formData.project}
-                      onValueChange={(value) => handleSelectChange("project", value)}
+                      onValueChange={(value) =>
+                        handleSelectChange("project", value)
+                      }
                       required
                     >
                       <SelectTrigger id="project">
                         <SelectValue placeholder="Select project" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Sustainable Rice Cultivation">Sustainable Rice Cultivation</SelectItem>
-                        <SelectItem value="Community Forest Management">Community Forest Management</SelectItem>
-                        <SelectItem value="Regenerative Grazing Initiative">Regenerative Grazing Initiative</SelectItem>
-                        <SelectItem value="Mangrove Restoration">Mangrove Restoration</SelectItem>
-                        <SelectItem value="Sustainable Coffee Production">Sustainable Coffee Production</SelectItem>
+                        <SelectItem value="Sustainable Rice Cultivation">
+                          Sustainable Rice Cultivation
+                        </SelectItem>
+                        <SelectItem value="Community Forest Management">
+                          Community Forest Management
+                        </SelectItem>
+                        <SelectItem value="Regenerative Grazing Initiative">
+                          Regenerative Grazing Initiative
+                        </SelectItem>
+                        <SelectItem value="Mangrove Restoration">
+                          Mangrove Restoration
+                        </SelectItem>
+                        <SelectItem value="Sustainable Coffee Production">
+                          Sustainable Coffee Production
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -210,7 +254,9 @@ export function ReportForm({ id }: { id?: string }) {
                     <Label htmlFor="status">Status</Label>
                     <Select
                       value={formData.status}
-                      onValueChange={(value) => handleSelectChange("status", value)}
+                      onValueChange={(value) =>
+                        handleSelectChange("status", value)
+                      }
                       required
                     >
                       <SelectTrigger id="status">
@@ -218,7 +264,9 @@ export function ReportForm({ id }: { id?: string }) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Draft">Draft</SelectItem>
-                        <SelectItem value="Under Review">Under Review</SelectItem>
+                        <SelectItem value="Under Review">
+                          Under Review
+                        </SelectItem>
                         <SelectItem value="Published">Published</SelectItem>
                       </SelectContent>
                     </Select>
@@ -228,7 +276,10 @@ export function ReportForm({ id }: { id?: string }) {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Report Date</Label>
-                    <DatePicker value={formData.date} onChange={(date) => handleDateChange("date", date)} />
+                    <DatePicker
+                      value={formData.date}
+                      onChange={(date) => handleDateChange("date", date)}
+                    />
                   </div>
                 </div>
 
@@ -249,7 +300,9 @@ export function ReportForm({ id }: { id?: string }) {
                   <Label>Attachments</Label>
                   <div className="rounded-md border border-dashed p-6 text-center">
                     <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                    <p className="mt-2 text-sm text-muted-foreground">Drag and drop files here, or click to browse</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Drag and drop files here, or click to browse
+                    </p>
                     <Button variant="outline" className="mt-4">
                       Browse Files
                     </Button>
@@ -272,10 +325,18 @@ export function ReportForm({ id }: { id?: string }) {
                         <span className="underline">U</span>
                       </Button>
                       <span className="mx-1 h-4 w-px bg-border"></span>
-                      <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-xs"
+                      >
                         Heading 1
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-xs"
+                      >
                         Heading 2
                       </Button>
                       <span className="mx-1 h-4 w-px bg-border"></span>
@@ -326,7 +387,8 @@ export function ReportForm({ id }: { id?: string }) {
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    You can use HTML formatting for headings, paragraphs, and other elements.
+                    You can use HTML formatting for headings, paragraphs, and
+                    other elements.
                   </p>
                 </div>
               </TabsContent>
@@ -336,7 +398,11 @@ export function ReportForm({ id }: { id?: string }) {
               <Button asChild variant="outline">
                 <Link href="/dashboard/reports">Cancel</Link>
               </Button>
-              <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={submitting}>
+              <Button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700"
+                disabled={submitting}
+              >
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -353,5 +419,5 @@ export function ReportForm({ id }: { id?: string }) {
         </Card>
       </form>
     </div>
-  )
+  );
 }

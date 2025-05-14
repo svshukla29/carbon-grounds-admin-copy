@@ -1,12 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { ArrowUpDown, Download, Eye, FileEdit, FileText, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ArrowUpDown,
+  Download,
+  Eye,
+  FileEdit,
+  FileText,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,10 +30,23 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 // Mock data for reports
 const initialReports = [
@@ -66,50 +95,55 @@ const initialReports = [
     status: "Under Review",
     date: "2023-08-10",
   },
-]
+];
 
 export function ReportsList() {
-  const [reports, setReports] = useState(initialReports)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const router = useRouter()
+  const [reports, setReports] = useState(initialReports);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const router = useRouter();
 
   const handleDeleteReport = (reportId: string) => {
-    setReports(reports.filter((report) => report.id !== reportId))
-  }
+    setReports(reports.filter((report) => report.id !== reportId));
+  };
 
   const filteredReports = reports.filter((report) => {
     const matchesSearch =
       report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       report.project.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      report.author.toLowerCase().includes(searchQuery.toLowerCase())
+      report.author.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesType = typeFilter === "all" || report.type === typeFilter
-    const matchesStatus = statusFilter === "all" || report.status === statusFilter
+    const matchesType = typeFilter === "all" || report.type === typeFilter;
+    const matchesStatus =
+      statusFilter === "all" || report.status === statusFilter;
 
-    return matchesSearch && matchesType && matchesStatus
-  })
+    return matchesSearch && matchesType && matchesStatus;
+  });
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "Published":
-        return "bg-green-100 text-green-800 hover:bg-green-100"
+        return "bg-green-100 text-green-800 hover:bg-green-100";
       case "Draft":
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
       case "Under Review":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Reports</h1>
-          <p className="text-muted-foreground">Manage and generate reports for your sustainability projects</p>
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+            Reports
+          </h1>
+          <p className="text-muted-foreground">
+            Manage and generate reports for your sustainability projects
+          </p>
         </div>
         <Button asChild className="bg-green-600 hover:bg-green-700">
           <Link href="/dashboard/reports/create">
@@ -122,7 +156,9 @@ export function ReportsList() {
       <Card>
         <CardHeader>
           <CardTitle>All Reports</CardTitle>
-          <CardDescription>View and manage all your project reports</CardDescription>
+          <CardDescription>
+            View and manage all your project reports
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -143,9 +179,15 @@ export function ReportsList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="Quarterly Summary">Quarterly Summary</SelectItem>
-                  <SelectItem value="Monthly Summary">Monthly Summary</SelectItem>
-                  <SelectItem value="Verification Report">Verification Report</SelectItem>
+                  <SelectItem value="Quarterly Summary">
+                    Quarterly Summary
+                  </SelectItem>
+                  <SelectItem value="Monthly Summary">
+                    Monthly Summary
+                  </SelectItem>
+                  <SelectItem value="Verification Report">
+                    Verification Report
+                  </SelectItem>
                   <SelectItem value="Impact Report">Impact Report</SelectItem>
                   <SelectItem value="Audit Report">Audit Report</SelectItem>
                 </SelectContent>
@@ -174,8 +216,12 @@ export function ReportsList() {
                       </div>
                     </TableHead>
                     <TableHead className="hidden md:table-cell">Type</TableHead>
-                    <TableHead className="hidden md:table-cell">Project</TableHead>
-                    <TableHead className="hidden lg:table-cell">Author</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Project
+                    </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Author
+                    </TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -203,11 +249,20 @@ export function ReportsList() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">{report.type}</TableCell>
-                        <TableCell className="hidden md:table-cell">{report.project}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{report.author}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {report.type}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {report.project}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {report.author}
+                        </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={getStatusBadgeColor(report.status)}>
+                          <Badge
+                            variant="outline"
+                            className={getStatusBadgeColor(report.status)}
+                          >
                             {report.status}
                           </Badge>
                         </TableCell>
@@ -222,11 +277,21 @@ export function ReportsList() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => router.push(`/dashboard/reports/${report.id}`)}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  router.push(`/dashboard/reports/${report.id}`)
+                                }
+                              >
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Report
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => router.push(`/dashboard/reports/edit/${report.id}`)}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/reports/edit/${report.id}`,
+                                  )
+                                }
+                              >
                                 <FileEdit className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
@@ -235,7 +300,10 @@ export function ReportsList() {
                                 Download PDF
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteReport(report.id)}>
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => handleDeleteReport(report.id)}
+                              >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
                               </DropdownMenuItem>
@@ -252,5 +320,5 @@ export function ReportsList() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

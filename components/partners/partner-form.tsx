@@ -1,23 +1,39 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // Mock partner data
 const partnersData = [
@@ -43,13 +59,13 @@ const partnersData = [
       phone: "+41 22 123 4568",
     },
   },
-]
+];
 
 export function PartnerForm({ id }: { id?: string }) {
-  const isEditMode = !!id
-  const router = useRouter()
-  const [loading, setLoading] = useState(isEditMode)
-  const [submitting, setSubmitting] = useState(false)
+  const isEditMode = !!id;
+  const router = useRouter();
+  const [loading, setLoading] = useState(isEditMode);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     type: "",
@@ -65,17 +81,17 @@ export function PartnerForm({ id }: { id?: string }) {
     contactPosition: "",
     contactEmail: "",
     contactPhone: "",
-  })
-  const [date, setDate] = useState<Date | undefined>(undefined)
+  });
+  const [date, setDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     if (isEditMode) {
       // Simulate API fetch for edit mode
       const fetchPartner = async () => {
-        setLoading(true)
+        setLoading(true);
         try {
           // In a real app, this would be an API call
-          const foundPartner = partnersData.find((p) => p.id === id)
+          const foundPartner = partnersData.find((p) => p.id === id);
 
           if (foundPartner) {
             setFormData({
@@ -93,62 +109,64 @@ export function PartnerForm({ id }: { id?: string }) {
               contactPosition: foundPartner.primaryContact.position,
               contactEmail: foundPartner.primaryContact.email,
               contactPhone: foundPartner.primaryContact.phone,
-            })
+            });
 
             if (foundPartner.joinDate) {
-              setDate(new Date(foundPartner.joinDate))
+              setDate(new Date(foundPartner.joinDate));
             }
           } else {
             // Partner not found
-            router.push("/dashboard/partners")
+            router.push("/dashboard/partners");
           }
         } catch (error) {
-          console.error("Error fetching partner:", error)
+          console.error("Error fetching partner:", error);
         } finally {
-          setLoading(false)
+          setLoading(false);
         }
-      }
+      };
 
-      fetchPartner()
+      fetchPartner();
     }
-  }, [id, isEditMode, router])
+  }, [id, isEditMode, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleDateChange = (selectedDate: Date | undefined) => {
-    setDate(selectedDate)
+    setDate(selectedDate);
     if (selectedDate) {
-      const formattedDate = format(selectedDate, "yyyy-MM-dd")
-      setFormData((prev) => ({ ...prev, joinDate: formattedDate }))
+      const formattedDate = format(selectedDate, "yyyy-MM-dd");
+      setFormData((prev) => ({ ...prev, joinDate: formattedDate }));
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
+    e.preventDefault();
+    setSubmitting(true);
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // In a real app, this would be an API call to create or update the partner
-      console.log("Submitting form data:", formData)
+      console.log("Submitting form data:", formData);
 
       // Redirect to partners list after successful submission
-      router.push("/dashboard/partners")
+      router.push("/dashboard/partners");
     } catch (error) {
-      console.error("Error submitting form:", error)
+      console.error("Error submitting form:", error);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -158,7 +176,7 @@ export function PartnerForm({ id }: { id?: string }) {
           <p className="mt-2 text-sm text-gray-500">Loading partner data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -209,16 +227,25 @@ export function PartnerForm({ id }: { id?: string }) {
 
                   <div className="space-y-2">
                     <Label htmlFor="type">Partner Type</Label>
-                    <Select value={formData.type} onValueChange={(value) => handleSelectChange("type", value)}>
+                    <Select
+                      value={formData.type}
+                      onValueChange={(value) =>
+                        handleSelectChange("type", value)
+                      }
+                    >
                       <SelectTrigger id="type">
                         <SelectValue placeholder="Select partner type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Funding Agency">Funding Agency</SelectItem>
+                        <SelectItem value="Funding Agency">
+                          Funding Agency
+                        </SelectItem>
                         <SelectItem value="NGO">NGO</SelectItem>
                         <SelectItem value="Government">Government</SelectItem>
                         <SelectItem value="Corporate">Corporate</SelectItem>
-                        <SelectItem value="Research Institution">Research Institution</SelectItem>
+                        <SelectItem value="Research Institution">
+                          Research Institution
+                        </SelectItem>
                         <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
@@ -237,7 +264,12 @@ export function PartnerForm({ id }: { id?: string }) {
 
                   <div className="space-y-2">
                     <Label htmlFor="status">Status</Label>
-                    <Select value={formData.status} onValueChange={(value) => handleSelectChange("status", value)}>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value) =>
+                        handleSelectChange("status", value)
+                      }
+                    >
                       <SelectTrigger id="status">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
@@ -255,14 +287,22 @@ export function PartnerForm({ id }: { id?: string }) {
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !date && "text-muted-foreground",
+                          )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {date ? format(date, "PPP") : "Select date"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={date} onSelect={handleDateChange} initialFocus />
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={handleDateChange}
+                          initialFocus
+                        />
                       </PopoverContent>
                     </Popover>
                   </div>
@@ -382,7 +422,11 @@ export function PartnerForm({ id }: { id?: string }) {
             </Tabs>
 
             <div className="mt-6 flex justify-end space-x-4">
-              <Button variant="outline" type="button" onClick={() => router.push("/dashboard/partners")}>
+              <Button
+                variant="outline"
+                type="button"
+                onClick={() => router.push("/dashboard/partners")}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={submitting}>
@@ -400,5 +444,5 @@ export function PartnerForm({ id }: { id?: string }) {
         </Card>
       </form>
     </div>
-  )
+  );
 }

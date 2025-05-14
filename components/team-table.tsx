@@ -1,7 +1,14 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,11 +16,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,10 +28,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Mock team data
 const initialTeamMembers = [
@@ -88,56 +101,60 @@ const initialTeamMembers = [
     avatar: "/placeholder.svg?height=40&width=40",
     initials: "RP",
   },
-]
+];
 
 export function TeamTable() {
-  const [teamMembers, setTeamMembers] = useState(initialTeamMembers)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [currentMember, setCurrentMember] = useState<any>(null)
+  const [teamMembers, setTeamMembers] = useState(initialTeamMembers);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [currentMember, setCurrentMember] = useState<any>(null);
 
   const handleEdit = (member: any) => {
-    setCurrentMember({ ...member })
-    setIsEditDialogOpen(true)
-  }
+    setCurrentMember({ ...member });
+    setIsEditDialogOpen(true);
+  };
 
   const handleSave = () => {
     if (currentMember) {
-      setTeamMembers(teamMembers.map((member) => (member.id === currentMember.id ? currentMember : member)))
-      setIsEditDialogOpen(false)
+      setTeamMembers(
+        teamMembers.map((member) =>
+          member.id === currentMember.id ? currentMember : member,
+        ),
+      );
+      setIsEditDialogOpen(false);
     }
-  }
+  };
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "Admin":
-        return "bg-red-100 text-red-800 hover:bg-red-100"
+        return "bg-red-100 text-red-800 hover:bg-red-100";
       case "Project Manager":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-100"
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
       case "Data Analyst":
-        return "bg-purple-100 text-purple-800 hover:bg-purple-100"
+        return "bg-purple-100 text-purple-800 hover:bg-purple-100";
       case "Field Coordinator":
-        return "bg-amber-100 text-amber-800 hover:bg-amber-100"
+        return "bg-amber-100 text-amber-800 hover:bg-amber-100";
       case "Sustainability Expert":
-        return "bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+        return "bg-emerald-100 text-emerald-800 hover:bg-emerald-100";
       case "Technical Lead":
-        return "bg-indigo-100 text-indigo-800 hover:bg-indigo-100"
+        return "bg-indigo-100 text-indigo-800 hover:bg-indigo-100";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
-  }
+  };
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "Active":
-        return "bg-green-100 text-green-800 hover:bg-green-100"
+        return "bg-green-100 text-green-800 hover:bg-green-100";
       case "On Leave":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
       case "Inactive":
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
-  }
+  };
 
   return (
     <>
@@ -158,23 +175,38 @@ export function TeamTable() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
-                      <AvatarFallback className="bg-green-100 text-green-800">{member.initials}</AvatarFallback>
+                      <AvatarImage
+                        src={member.avatar || "/placeholder.svg"}
+                        alt={member.name}
+                      />
+                      <AvatarFallback className="bg-green-100 text-green-800">
+                        {member.initials}
+                      </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="font-medium">{member.name}</div>
-                      <div className="text-sm text-muted-foreground">{member.email}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {member.email}
+                      </div>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={getRoleBadgeColor(member.role)}>
+                  <Badge
+                    variant="outline"
+                    className={getRoleBadgeColor(member.role)}
+                  >
                     {member.role}
                   </Badge>
                 </TableCell>
-                <TableCell className="hidden md:table-cell">{member.department}</TableCell>
                 <TableCell className="hidden md:table-cell">
-                  <Badge variant="outline" className={getStatusBadgeColor(member.status)}>
+                  {member.department}
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Badge
+                    variant="outline"
+                    className={getStatusBadgeColor(member.status)}
+                  >
                     {member.status}
                   </Badge>
                 </TableCell>
@@ -210,7 +242,9 @@ export function TeamTable() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit Team Member</DialogTitle>
-            <DialogDescription>Update team member details and permissions</DialogDescription>
+            <DialogDescription>
+              Update team member details and permissions
+            </DialogDescription>
           </DialogHeader>
           {currentMember && (
             <div className="grid gap-4 py-4">
@@ -221,7 +255,9 @@ export function TeamTable() {
                 <Input
                   id="name"
                   value={currentMember.name}
-                  onChange={(e) => setCurrentMember({ ...currentMember, name: e.target.value })}
+                  onChange={(e) =>
+                    setCurrentMember({ ...currentMember, name: e.target.value })
+                  }
                   className="col-span-3"
                 />
               </div>
@@ -232,7 +268,12 @@ export function TeamTable() {
                 <Input
                   id="email"
                   value={currentMember.email}
-                  onChange={(e) => setCurrentMember({ ...currentMember, email: e.target.value })}
+                  onChange={(e) =>
+                    setCurrentMember({
+                      ...currentMember,
+                      email: e.target.value,
+                    })
+                  }
                   className="col-span-3"
                 />
               </div>
@@ -242,18 +283,28 @@ export function TeamTable() {
                 </Label>
                 <Select
                   value={currentMember.role}
-                  onValueChange={(value) => setCurrentMember({ ...currentMember, role: value })}
+                  onValueChange={(value) =>
+                    setCurrentMember({ ...currentMember, role: value })
+                  }
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Admin">Admin</SelectItem>
-                    <SelectItem value="Project Manager">Project Manager</SelectItem>
+                    <SelectItem value="Project Manager">
+                      Project Manager
+                    </SelectItem>
                     <SelectItem value="Data Analyst">Data Analyst</SelectItem>
-                    <SelectItem value="Field Coordinator">Field Coordinator</SelectItem>
-                    <SelectItem value="Sustainability Expert">Sustainability Expert</SelectItem>
-                    <SelectItem value="Technical Lead">Technical Lead</SelectItem>
+                    <SelectItem value="Field Coordinator">
+                      Field Coordinator
+                    </SelectItem>
+                    <SelectItem value="Sustainability Expert">
+                      Sustainability Expert
+                    </SelectItem>
+                    <SelectItem value="Technical Lead">
+                      Technical Lead
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -263,14 +314,18 @@ export function TeamTable() {
                 </Label>
                 <Select
                   value={currentMember.department}
-                  onValueChange={(value) => setCurrentMember({ ...currentMember, department: value })}
+                  onValueChange={(value) =>
+                    setCurrentMember({ ...currentMember, department: value })
+                  }
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select a department" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Management">Management</SelectItem>
-                    <SelectItem value="Field Operations">Field Operations</SelectItem>
+                    <SelectItem value="Field Operations">
+                      Field Operations
+                    </SelectItem>
                     <SelectItem value="Research">Research</SelectItem>
                     <SelectItem value="Technology">Technology</SelectItem>
                   </SelectContent>
@@ -282,7 +337,9 @@ export function TeamTable() {
                 </Label>
                 <Select
                   value={currentMember.status}
-                  onValueChange={(value) => setCurrentMember({ ...currentMember, status: value })}
+                  onValueChange={(value) =>
+                    setCurrentMember({ ...currentMember, status: value })
+                  }
                 >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select a status" />
@@ -297,15 +354,21 @@ export function TeamTable() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-green-700 hover:bg-green-800">
+            <Button
+              onClick={handleSave}
+              className="bg-green-700 hover:bg-green-800"
+            >
               Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

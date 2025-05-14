@@ -1,19 +1,31 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { ArrowLeft, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { DatePicker } from "@/components/ui/date-picker"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DatePicker } from "@/components/ui/date-picker";
 
 // Mock project data
 const projectsData = [
@@ -30,7 +42,11 @@ const projectsData = [
     startDate: "2023-03-15",
     endDate: "2025-03-15",
     budget: 250000,
-    partners: ["Vietnam Agricultural Research Institute", "Mekong Farmers Cooperative", "Global Climate Fund"],
+    partners: [
+      "Vietnam Agricultural Research Institute",
+      "Mekong Farmers Cooperative",
+      "Global Climate Fund",
+    ],
     objectives: [
       "Reduce methane emissions from rice paddies by 40%",
       "Increase farmer income by 25%",
@@ -39,13 +55,13 @@ const projectsData = [
     ],
     progress: 65,
   },
-]
+];
 
 export function ProjectForm({ id }: { id?: string }) {
-  const isEditMode = !!id
-  const router = useRouter()
-  const [loading, setLoading] = useState(isEditMode)
-  const [submitting, setSubmitting] = useState(false)
+  const isEditMode = !!id;
+  const router = useRouter();
+  const [loading, setLoading] = useState(isEditMode);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -57,16 +73,16 @@ export function ProjectForm({ id }: { id?: string }) {
     budget: "",
     objectives: "",
     partners: "",
-  })
+  });
 
   useEffect(() => {
     if (isEditMode) {
       // Simulate API fetch for edit mode
       const fetchProject = async () => {
-        setLoading(true)
+        setLoading(true);
         try {
           // In a real app, this would be an API call
-          const foundProject = projectsData.find((p) => p.id === id)
+          const foundProject = projectsData.find((p) => p.id === id);
 
           if (foundProject) {
             setFormData({
@@ -80,54 +96,56 @@ export function ProjectForm({ id }: { id?: string }) {
               budget: foundProject.budget.toString(),
               objectives: foundProject.objectives.join("\n"),
               partners: foundProject.partners.join("\n"),
-            })
+            });
           } else {
             // Project not found
-            router.push("/dashboard/projects")
+            router.push("/dashboard/projects");
           }
         } catch (error) {
-          console.error("Error fetching project:", error)
+          console.error("Error fetching project:", error);
         } finally {
-          setLoading(false)
+          setLoading(false);
         }
-      }
+      };
 
-      fetchProject()
+      fetchProject();
     }
-  }, [id, isEditMode, router])
+  }, [id, isEditMode, router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleDateChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSubmitting(true)
+    e.preventDefault();
+    setSubmitting(true);
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // In a real app, this would be an API call to create or update the project
-      console.log("Submitting form data:", formData)
+      console.log("Submitting form data:", formData);
 
       // Redirect to projects list after successful submission
-      router.push("/dashboard/projects")
+      router.push("/dashboard/projects");
     } catch (error) {
-      console.error("Error submitting form:", error)
+      console.error("Error submitting form:", error);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -137,7 +155,7 @@ export function ProjectForm({ id }: { id?: string }) {
           <p className="mt-2 text-sm text-gray-500">Loading project data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -186,16 +204,28 @@ export function ProjectForm({ id }: { id?: string }) {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="type">Project Type</Label>
-                    <Select value={formData.type} onValueChange={(value) => handleSelectChange("type", value)} required>
+                    <Select
+                      value={formData.type}
+                      onValueChange={(value) =>
+                        handleSelectChange("type", value)
+                      }
+                      required
+                    >
                       <SelectTrigger id="type">
                         <SelectValue placeholder="Select project type" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Agroforestry">Agroforestry</SelectItem>
-                        <SelectItem value="Reforestation">Reforestation</SelectItem>
+                        <SelectItem value="Agroforestry">
+                          Agroforestry
+                        </SelectItem>
+                        <SelectItem value="Reforestation">
+                          Reforestation
+                        </SelectItem>
                         <SelectItem value="Soil Carbon">Soil Carbon</SelectItem>
                         <SelectItem value="Blue Carbon">Blue Carbon</SelectItem>
-                        <SelectItem value="Renewable Energy">Renewable Energy</SelectItem>
+                        <SelectItem value="Renewable Energy">
+                          Renewable Energy
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -230,7 +260,9 @@ export function ProjectForm({ id }: { id?: string }) {
                     <Label htmlFor="status">Status</Label>
                     <Select
                       value={formData.status}
-                      onValueChange={(value) => handleSelectChange("status", value)}
+                      onValueChange={(value) =>
+                        handleSelectChange("status", value)
+                      }
                       required
                     >
                       <SelectTrigger id="status">
@@ -250,11 +282,17 @@ export function ProjectForm({ id }: { id?: string }) {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Start Date</Label>
-                    <DatePicker value={formData.startDate} onChange={(date) => handleDateChange("startDate", date)} />
+                    <DatePicker
+                      value={formData.startDate}
+                      onChange={(date) => handleDateChange("startDate", date)}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>End Date</Label>
-                    <DatePicker value={formData.endDate} onChange={(date) => handleDateChange("endDate", date)} />
+                    <DatePicker
+                      value={formData.endDate}
+                      onChange={(date) => handleDateChange("endDate", date)}
+                    />
                   </div>
                 </div>
 
@@ -280,7 +318,9 @@ export function ProjectForm({ id }: { id?: string }) {
                     value={formData.objectives}
                     onChange={handleChange}
                   />
-                  <p className="text-xs text-muted-foreground">Enter each objective on a new line</p>
+                  <p className="text-xs text-muted-foreground">
+                    Enter each objective on a new line
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -293,7 +333,9 @@ export function ProjectForm({ id }: { id?: string }) {
                     value={formData.partners}
                     onChange={handleChange}
                   />
-                  <p className="text-xs text-muted-foreground">Enter each partner organization on a new line</p>
+                  <p className="text-xs text-muted-foreground">
+                    Enter each partner organization on a new line
+                  </p>
                 </div>
               </TabsContent>
             </Tabs>
@@ -302,7 +344,11 @@ export function ProjectForm({ id }: { id?: string }) {
               <Button asChild variant="outline">
                 <Link href="/dashboard/projects">Cancel</Link>
               </Button>
-              <Button type="submit" className="bg-green-600 hover:bg-green-700" disabled={submitting}>
+              <Button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700"
+                disabled={submitting}
+              >
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -319,5 +365,5 @@ export function ProjectForm({ id }: { id?: string }) {
         </Card>
       </form>
     </div>
-  )
+  );
 }

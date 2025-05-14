@@ -1,20 +1,40 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { ArrowLeft, Loader2, Users } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { toast } from "@/components/ui/use-toast"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { ArrowLeft, Loader2, Users } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/components/ui/use-toast";
 
 const teamFormSchema = z.object({
   name: z.string().min(2, {
@@ -31,62 +51,66 @@ const teamFormSchema = z.object({
   availableRoles: z.array(z.string()).min(1, {
     message: "Select at least one role.",
   }),
-})
+});
 
-type TeamFormValues = z.infer<typeof teamFormSchema>
+type TeamFormValues = z.infer<typeof teamFormSchema>;
 
 interface TeamFormProps {
-  id?: string
+  id?: string;
 }
 
 export function TeamForm({ id }: TeamFormProps) {
-  const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const isEditMode = !!id
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditMode = !!id;
 
   // Default values for the form
   const defaultValues: Partial<TeamFormValues> = {
     name: isEditMode ? "Carbon Sequestration Team" : "",
-    description: isEditMode ? "Team focused on carbon sequestration projects and initiatives" : "",
+    description: isEditMode
+      ? "Team focused on carbon sequestration projects and initiatives"
+      : "",
     lead: isEditMode ? "Jane Smith" : "",
     status: isEditMode ? "active" : "active",
     enableNotifications: true,
-    availableRoles: isEditMode ? ["admin", "project_manager", "field_agent", "data_analyst", "viewer"] : [],
-  }
+    availableRoles: isEditMode
+      ? ["admin", "project_manager", "field_agent", "data_analyst", "viewer"]
+      : [],
+  };
 
   const form = useForm<TeamFormValues>({
     resolver: zodResolver(teamFormSchema),
     defaultValues,
-  })
+  });
 
   const onSubmit = async (data: TeamFormValues) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      console.log("Form submitted:", data)
+      console.log("Form submitted:", data);
 
       toast({
         title: isEditMode ? "Team updated" : "Team created",
         description: isEditMode
           ? `Team "${data.name}" has been updated successfully.`
           : `Team "${data.name}" has been created successfully.`,
-      })
+      });
 
-      router.push("/dashboard/teams")
+      router.push("/dashboard/teams");
     } catch (error) {
-      console.error("Error submitting form:", error)
+      console.error("Error submitting form:", error);
       toast({
         title: "Error",
         description: "There was an error saving the team. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const roles = [
     { id: "admin", label: "Admin" },
@@ -94,7 +118,7 @@ export function TeamForm({ id }: TeamFormProps) {
     { id: "field_agent", label: "Field Agent" },
     { id: "data_analyst", label: "Data Analyst" },
     { id: "viewer", label: "Viewer" },
-  ]
+  ];
 
   return (
     <div className="space-y-6">
@@ -106,7 +130,9 @@ export function TeamForm({ id }: TeamFormProps) {
               <span className="sr-only">Back</span>
             </Link>
           </Button>
-          <h1 className="text-2xl font-bold tracking-tight">{isEditMode ? "Edit Team" : "Create Team"}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {isEditMode ? "Edit Team" : "Create Team"}
+          </h1>
         </div>
       </div>
 
@@ -117,7 +143,9 @@ export function TeamForm({ id }: TeamFormProps) {
             {isEditMode ? "Edit Team Details" : "New Team Details"}
           </CardTitle>
           <CardDescription>
-            {isEditMode ? "Update the information for this team." : "Fill in the information to create a new team."}
+            {isEditMode
+              ? "Update the information for this team."
+              : "Fill in the information to create a new team."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -133,7 +161,9 @@ export function TeamForm({ id }: TeamFormProps) {
                       <FormControl>
                         <Input placeholder="Enter team name" {...field} />
                       </FormControl>
-                      <FormDescription>The name of the team as it will appear in the system.</FormDescription>
+                      <FormDescription>
+                        The name of the team as it will appear in the system.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -148,7 +178,9 @@ export function TeamForm({ id }: TeamFormProps) {
                       <FormControl>
                         <Input placeholder="Enter team lead name" {...field} />
                       </FormControl>
-                      <FormDescription>The person who will lead this team.</FormDescription>
+                      <FormDescription>
+                        The person who will lead this team.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -162,9 +194,16 @@ export function TeamForm({ id }: TeamFormProps) {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter team description" className="min-h-[100px]" {...field} />
+                      <Textarea
+                        placeholder="Enter team description"
+                        className="min-h-[100px]"
+                        {...field}
+                      />
                     </FormControl>
-                    <FormDescription>A brief description of the team's purpose and responsibilities.</FormDescription>
+                    <FormDescription>
+                      A brief description of the team's purpose and
+                      responsibilities.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -177,7 +216,10 @@ export function TeamForm({ id }: TeamFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select team status" />
@@ -189,7 +231,9 @@ export function TeamForm({ id }: TeamFormProps) {
                           <SelectItem value="archived">Archived</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormDescription>The current status of this team.</FormDescription>
+                      <FormDescription>
+                        The current status of this team.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -201,11 +245,17 @@ export function TeamForm({ id }: TeamFormProps) {
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                       <FormControl>
-                        <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel>Enable Notifications</FormLabel>
-                        <FormDescription>Send notifications to team members about updates and changes.</FormDescription>
+                        <FormDescription>
+                          Send notifications to team members about updates and
+                          changes.
+                        </FormDescription>
                       </div>
                     </FormItem>
                   )}
@@ -218,8 +268,12 @@ export function TeamForm({ id }: TeamFormProps) {
                 render={() => (
                   <FormItem>
                     <div className="mb-4">
-                      <FormLabel className="text-base">Available Roles</FormLabel>
-                      <FormDescription>Select the roles that will be available for this team.</FormDescription>
+                      <FormLabel className="text-base">
+                        Available Roles
+                      </FormLabel>
+                      <FormDescription>
+                        Select the roles that will be available for this team.
+                      </FormDescription>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {roles.map((role) => (
@@ -229,20 +283,32 @@ export function TeamForm({ id }: TeamFormProps) {
                           name="availableRoles"
                           render={({ field }) => {
                             return (
-                              <FormItem key={role.id} className="flex flex-row items-start space-x-3 space-y-0">
+                              <FormItem
+                                key={role.id}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
                                 <FormControl>
                                   <Checkbox
                                     checked={field.value?.includes(role.id)}
                                     onCheckedChange={(checked) => {
                                       return checked
-                                        ? field.onChange([...field.value, role.id])
-                                        : field.onChange(field.value?.filter((value) => value !== role.id))
+                                        ? field.onChange([
+                                            ...field.value,
+                                            role.id,
+                                          ])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== role.id,
+                                            ),
+                                          );
                                     }}
                                   />
                                 </FormControl>
-                                <FormLabel className="font-normal">{role.label}</FormLabel>
+                                <FormLabel className="font-normal">
+                                  {role.label}
+                                </FormLabel>
                               </FormItem>
-                            )
+                            );
                           }}
                         />
                       ))}
@@ -257,7 +323,9 @@ export function TeamForm({ id }: TeamFormProps) {
                   <Link href="/dashboard/teams">Cancel</Link>
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   {isEditMode ? "Update Team" : "Create Team"}
                 </Button>
               </div>
@@ -266,5 +334,5 @@ export function TeamForm({ id }: TeamFormProps) {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

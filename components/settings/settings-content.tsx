@@ -1,18 +1,34 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function SettingsContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings and preferences</p>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+          Settings
+        </h1>
+        <p className="text-muted-foreground">
+          Manage your account settings and preferences
+        </p>
       </div>
 
       <Tabs defaultValue="account" className="space-y-6">
@@ -27,7 +43,9 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Account Information</CardTitle>
-              <CardDescription>Update your account details and preferences</CardDescription>
+              <CardDescription>
+                Update your account details and preferences
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -39,7 +57,10 @@ export function SettingsContent() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" defaultValue="john.doe@carbongrounds.com" />
+                    <Input
+                      id="email"
+                      defaultValue="john.doe@carbongrounds.com"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="title">Job Title</Label>
@@ -53,7 +74,9 @@ export function SettingsContent() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="management">Management</SelectItem>
-                        <SelectItem value="field-operations">Field Operations</SelectItem>
+                        <SelectItem value="field-operations">
+                          Field Operations
+                        </SelectItem>
                         <SelectItem value="research">Research</SelectItem>
                         <SelectItem value="technology">Technology</SelectItem>
                       </SelectContent>
@@ -70,7 +93,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Language</Label>
-                      <p className="text-sm text-muted-foreground">Select your preferred language</p>
+                      <p className="text-sm text-muted-foreground">
+                        Select your preferred language
+                      </p>
                     </div>
                     <Select defaultValue="en">
                       <SelectTrigger className="w-[180px]">
@@ -88,7 +113,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Time Zone</Label>
-                      <p className="text-sm text-muted-foreground">Set your local time zone</p>
+                      <p className="text-sm text-muted-foreground">
+                        Set your local time zone
+                      </p>
                     </div>
                     <Select defaultValue="utc">
                       <SelectTrigger className="w-[180px]">
@@ -106,7 +133,9 @@ export function SettingsContent() {
               </div>
 
               <div className="flex justify-end">
-                <Button className="bg-green-600 hover:bg-green-700">Save Changes</Button>
+                <Button className="bg-green-600 hover:bg-green-700">
+                  Save Changes
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -116,7 +145,9 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Appearance</CardTitle>
-              <CardDescription>Customize the look and feel of the dashboard</CardDescription>
+              <CardDescription>
+                Customize the look and feel of the dashboard
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -154,7 +185,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Compact Mode</Label>
-                      <p className="text-sm text-muted-foreground">Use a more compact layout for the dashboard</p>
+                      <p className="text-sm text-muted-foreground">
+                        Use a more compact layout for the dashboard
+                      </p>
                     </div>
                     <Switch id="compact-mode" />
                   </div>
@@ -162,7 +195,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Sidebar Position</Label>
-                      <p className="text-sm text-muted-foreground">Choose the position of the sidebar</p>
+                      <p className="text-sm text-muted-foreground">
+                        Choose the position of the sidebar
+                      </p>
                     </div>
                     <Select defaultValue="left">
                       <SelectTrigger className="w-[180px]">
@@ -178,7 +213,9 @@ export function SettingsContent() {
               </div>
 
               <div className="flex justify-end">
-                <Button className="bg-green-600 hover:bg-green-700">Save Changes</Button>
+                <Button className="bg-green-600 hover:bg-green-700">
+                  Save Changes
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -188,7 +225,9 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>Configure how and when you receive notifications</CardDescription>
+              <CardDescription>
+                Configure how and when you receive notifications
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -197,7 +236,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Project Updates</Label>
-                      <p className="text-sm text-muted-foreground">Receive emails about project status changes</p>
+                      <p className="text-sm text-muted-foreground">
+                        Receive emails about project status changes
+                      </p>
                     </div>
                     <Switch defaultChecked id="email-projects" />
                   </div>
@@ -205,7 +246,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Farmer Verifications</Label>
-                      <p className="text-sm text-muted-foreground">Receive emails when farmers need verification</p>
+                      <p className="text-sm text-muted-foreground">
+                        Receive emails when farmers need verification
+                      </p>
                     </div>
                     <Switch defaultChecked id="email-farmers" />
                   </div>
@@ -213,7 +256,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Team Activity</Label>
-                      <p className="text-sm text-muted-foreground">Receive emails about team member actions</p>
+                      <p className="text-sm text-muted-foreground">
+                        Receive emails about team member actions
+                      </p>
                     </div>
                     <Switch id="email-team" />
                   </div>
@@ -228,7 +273,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">All Notifications</Label>
-                      <p className="text-sm text-muted-foreground">Enable or disable all in-app notifications</p>
+                      <p className="text-sm text-muted-foreground">
+                        Enable or disable all in-app notifications
+                      </p>
                     </div>
                     <Switch defaultChecked id="app-all" />
                   </div>
@@ -236,7 +283,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Sound Alerts</Label>
-                      <p className="text-sm text-muted-foreground">Play sound when receiving notifications</p>
+                      <p className="text-sm text-muted-foreground">
+                        Play sound when receiving notifications
+                      </p>
                     </div>
                     <Switch id="app-sound" />
                   </div>
@@ -244,7 +293,9 @@ export function SettingsContent() {
               </div>
 
               <div className="flex justify-end">
-                <Button className="bg-green-600 hover:bg-green-700">Save Changes</Button>
+                <Button className="bg-green-600 hover:bg-green-700">
+                  Save Changes
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -254,7 +305,9 @@ export function SettingsContent() {
           <Card>
             <CardHeader>
               <CardTitle>Security Settings</CardTitle>
-              <CardDescription>Manage your account security and authentication</CardDescription>
+              <CardDescription>
+                Manage your account security and authentication
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
@@ -270,7 +323,9 @@ export function SettingsContent() {
                     <Input id="new-password" type="password" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Label htmlFor="confirm-password">
+                      Confirm New Password
+                    </Label>
                     <Input id="confirm-password" type="password" />
                   </div>
                 </div>
@@ -280,12 +335,15 @@ export function SettingsContent() {
               <Separator />
 
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Two-Factor Authentication</h3>
+                <h3 className="text-lg font-medium">
+                  Two-Factor Authentication
+                </h3>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="text-base">Enable 2FA</Label>
                     <p className="text-sm text-muted-foreground">
-                      Add an extra layer of security to your account with two-factor authentication
+                      Add an extra layer of security to your account with
+                      two-factor authentication
                     </p>
                   </div>
                   <Switch id="enable-2fa" />
@@ -300,7 +358,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between p-4">
                     <div>
                       <p className="font-medium">Current Session</p>
-                      <p className="text-sm text-muted-foreground">Chrome on Windows • 192.168.1.1</p>
+                      <p className="text-sm text-muted-foreground">
+                        Chrome on Windows • 192.168.1.1
+                      </p>
                     </div>
                     <p className="text-sm text-muted-foreground">Active now</p>
                   </div>
@@ -308,7 +368,9 @@ export function SettingsContent() {
                   <div className="flex items-center justify-between p-4">
                     <div>
                       <p className="font-medium">Mobile App</p>
-                      <p className="text-sm text-muted-foreground">iPhone 13 • 192.168.1.2</p>
+                      <p className="text-sm text-muted-foreground">
+                        iPhone 13 • 192.168.1.2
+                      </p>
                     </div>
                     <p className="text-sm text-muted-foreground">3 days ago</p>
                   </div>
@@ -322,5 +384,5 @@ export function SettingsContent() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

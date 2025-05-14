@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Bell, LogOut, Menu, Search, Settings, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Bell, LogOut, Menu, Search, Settings, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,23 +13,31 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
-export function Header({ setSidebarOpen }: { setSidebarOpen: (open: boolean) => void }) {
-  const [notifications, setNotifications] = useState(3)
-  const router = useRouter()
+export function Header({
+  setSidebarOpen,
+}: {
+  setSidebarOpen: (open: boolean) => void;
+}) {
+  const [notifications, setNotifications] = useState(3);
+  const router = useRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated")
-    router.push("/login")
-  }
+    localStorage.removeItem("isAuthenticated");
+    router.push("/login");
+  };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-4 shadow-sm md:px-6">
       <div className="flex items-center gap-2 md:hidden">
-        <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setSidebarOpen(true)}
+        >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle menu</span>
         </Button>
@@ -51,7 +59,9 @@ export function Header({ setSidebarOpen }: { setSidebarOpen: (open: boolean) => 
               <path d="M18 8c0 2.2-1.8 4-4 4s-4-1.8-4-4 1.8-4 4-4 4 1.8 4 4zM6 15c0-2.2 1.8-4 4-4M14 15c0-2.2 1.8-4 4-4M8 9c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM20 9c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM12 17c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM16 17c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z" />
             </svg>
           </div>
-          <span className="text-lg font-semibold text-green-800">Carbon Grounds</span>
+          <span className="text-lg font-semibold text-green-800">
+            Carbon Grounds
+          </span>
         </Link>
       </div>
 
@@ -81,8 +91,13 @@ export function Header({ setSidebarOpen }: { setSidebarOpen: (open: boolean) => 
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-                <AvatarFallback className="bg-green-100 text-green-800">JD</AvatarFallback>
+                <AvatarImage
+                  src="/placeholder.svg?height=32&width=32"
+                  alt="User"
+                />
+                <AvatarFallback className="bg-green-100 text-green-800">
+                  JD
+                </AvatarFallback>
               </Avatar>
               <span className="sr-only">User menu</span>
             </Button>
@@ -91,7 +106,9 @@ export function Header({ setSidebarOpen }: { setSidebarOpen: (open: boolean) => 
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium">John Doe</p>
-                <p className="text-xs text-gray-500">john.doe@carbongrounds.com</p>
+                <p className="text-xs text-gray-500">
+                  john.doe@carbongrounds.com
+                </p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -112,5 +129,5 @@ export function Header({ setSidebarOpen }: { setSidebarOpen: (open: boolean) => 
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }

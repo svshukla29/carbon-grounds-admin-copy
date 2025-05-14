@@ -1,6 +1,15 @@
-"use client"
+"use client";
 
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const data = [
   {
@@ -39,7 +48,7 @@ const data = [
     "Soil Carbon": 65,
     "Renewable Energy": 52,
   },
-]
+];
 
 export function ProjectProgressChart() {
   return (
@@ -53,9 +62,13 @@ export function ProjectProgressChart() {
           <Legend />
           <Bar dataKey="Agroforestry" fill="#4ade80" radius={[4, 4, 0, 0]} />
           <Bar dataKey="Soil Carbon" fill="#2dd4bf" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Renewable Energy" fill="#a3e635" radius={[4, 4, 0, 0]} />
+          <Bar
+            dataKey="Renewable Energy"
+            fill="#a3e635"
+            radius={[4, 4, 0, 0]}
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 }

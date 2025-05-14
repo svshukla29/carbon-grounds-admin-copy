@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const activities = [
   {
@@ -51,7 +51,7 @@ const activities = [
     project: "Community Forest Management",
     time: "3 days ago",
   },
-]
+];
 
 export function RecentActivity() {
   return (
@@ -59,18 +59,26 @@ export function RecentActivity() {
       {activities.map((activity, index) => (
         <div key={index} className="flex items-start gap-4">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={activity.user.avatar || "/placeholder.svg"} alt={activity.user.name} />
-            <AvatarFallback className="bg-green-100 text-green-800">{activity.user.initials}</AvatarFallback>
+            <AvatarImage
+              src={activity.user.avatar || "/placeholder.svg"}
+              alt={activity.user.name}
+            />
+            <AvatarFallback className="bg-green-100 text-green-800">
+              {activity.user.initials}
+            </AvatarFallback>
           </Avatar>
           <div className="space-y-1">
             <p className="text-sm">
-              <span className="font-medium">{activity.user.name}</span> {activity.action}{" "}
-              <span className="font-medium text-green-700">{activity.project}</span>
+              <span className="font-medium">{activity.user.name}</span>{" "}
+              {activity.action}{" "}
+              <span className="font-medium text-green-700">
+                {activity.project}
+              </span>
             </p>
             <p className="text-xs text-muted-foreground">{activity.time}</p>
           </div>
         </div>
       ))}
     </div>
-  )
+  );
 }

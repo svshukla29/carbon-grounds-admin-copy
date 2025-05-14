@@ -1,6 +1,13 @@
-"use client"
+"use client";
 
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 const data = [
   { month: "Jan", credits: 42 },
@@ -15,14 +22,20 @@ const data = [
   { month: "Oct", credits: 178 },
   { month: "Nov", credits: 195 },
   { month: "Dec", credits: 215 },
-]
+];
 
 export function ProjectProgressChart() {
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
-          <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+          <XAxis
+            dataKey="month"
+            stroke="#888888"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          />
           <YAxis
             stroke="#888888"
             fontSize={12}
@@ -45,5 +58,5 @@ export function ProjectProgressChart() {
         </LineChart>
       </ResponsiveContainer>
     </div>
-  )
+  );
 }

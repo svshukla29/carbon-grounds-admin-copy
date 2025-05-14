@@ -1,12 +1,19 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search } from "lucide-react"
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Search } from "lucide-react";
 
 // Mock farmers data
 const farmersData = [
@@ -65,24 +72,26 @@ const farmersData = [
     avatar: "/placeholder.svg?height=40&width=40",
     initials: "HD",
   },
-]
+];
 
 export function ProjectFarmersList({ projectId }: { projectId: string }) {
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Filter farmers based on search query
-  const filteredFarmers = farmersData.filter((farmer) => farmer.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredFarmers = farmersData.filter((farmer) =>
+    farmer.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "Verified":
-        return "bg-green-100 text-green-800 hover:bg-green-100"
+        return "bg-green-100 text-green-800 hover:bg-green-100";
       case "Pending":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -120,19 +129,33 @@ export function ProjectFarmersList({ projectId }: { projectId: string }) {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarImage src={farmer.avatar || "/placeholder.svg"} alt={farmer.name} />
-                        <AvatarFallback className="bg-green-100 text-green-800">{farmer.initials}</AvatarFallback>
+                        <AvatarImage
+                          src={farmer.avatar || "/placeholder.svg"}
+                          alt={farmer.name}
+                        />
+                        <AvatarFallback className="bg-green-100 text-green-800">
+                          {farmer.initials}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">{farmer.name}</div>
-                        <div className="text-sm text-muted-foreground">{farmer.location}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {farmer.location}
+                        </div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{farmer.area}</TableCell>
-                  <TableCell className="hidden md:table-cell">{farmer.crops.join(", ")}</TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {farmer.area}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {farmer.crops.join(", ")}
+                  </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={getStatusBadgeColor(farmer.status)}>
+                    <Badge
+                      variant="outline"
+                      className={getStatusBadgeColor(farmer.status)}
+                    >
                       {farmer.status}
                     </Badge>
                   </TableCell>
@@ -149,5 +172,5 @@ export function ProjectFarmersList({ projectId }: { projectId: string }) {
         </Button>
       </div>
     </div>
-  )
+  );
 }

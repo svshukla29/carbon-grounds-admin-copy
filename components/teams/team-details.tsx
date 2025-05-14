@@ -1,14 +1,20 @@
-import { ArrowLeft, Edit, Trash2, Users } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { TeamMembersTable } from "./team-members-table"
-import { RoleManagement } from "./role-management"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ArrowLeft, Edit, Trash2, Users } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { TeamMembersTable } from "./team-members-table";
+import { RoleManagement } from "./role-management";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface TeamDetailsProps {
-  id: string
+  id: string;
 }
 
 export function TeamDetails({ id }: TeamDetailsProps) {
@@ -16,14 +22,21 @@ export function TeamDetails({ id }: TeamDetailsProps) {
   const team = {
     id,
     name: "Carbon Sequestration Team",
-    description: "Team focused on carbon sequestration projects and initiatives",
+    description:
+      "Team focused on carbon sequestration projects and initiatives",
     createdAt: "2023-05-15",
     members: 8,
     lead: "Jane Smith",
     status: "Active",
     projects: 5,
-    roles: ["Admin", "Project Manager", "Field Agent", "Data Analyst", "Viewer"],
-  }
+    roles: [
+      "Admin",
+      "Project Manager",
+      "Field Agent",
+      "Data Analyst",
+      "Viewer",
+    ],
+  };
 
   return (
     <div className="space-y-6">
@@ -63,31 +76,46 @@ export function TeamDetails({ id }: TeamDetailsProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Team Lead</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Team Lead
+                </h3>
                 <p>{team.lead}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Created On</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Created On
+                </h3>
                 <p>{team.createdAt}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
-                <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50 hover:text-green-700">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Status
+                </h3>
+                <Badge
+                  variant="outline"
+                  className="bg-green-50 text-green-700 hover:bg-green-50 hover:text-green-700"
+                >
                   {team.status}
                 </Badge>
               </div>
             </div>
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Team Members</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Team Members
+                </h3>
                 <p>{team.members} members</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Projects</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Projects
+                </h3>
                 <p>{team.projects} active projects</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Available Roles</h3>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Available Roles
+                </h3>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {team.roles.map((role) => (
                     <Badge key={role} variant="secondary" className="text-xs">
@@ -110,7 +138,9 @@ export function TeamDetails({ id }: TeamDetailsProps) {
           <Card>
             <CardHeader>
               <CardTitle>Team Members</CardTitle>
-              <CardDescription>Manage the members of this team and their roles.</CardDescription>
+              <CardDescription>
+                Manage the members of this team and their roles.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <TeamMembersTable />
@@ -121,7 +151,9 @@ export function TeamDetails({ id }: TeamDetailsProps) {
           <Card>
             <CardHeader>
               <CardTitle>Role Management</CardTitle>
-              <CardDescription>Configure roles and permissions for this team.</CardDescription>
+              <CardDescription>
+                Configure roles and permissions for this team.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <RoleManagement />
@@ -130,5 +162,5 @@ export function TeamDetails({ id }: TeamDetailsProps) {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

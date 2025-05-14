@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,11 +11,24 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Edit, MoreHorizontal, Search, Trash2 } from "lucide-react"
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Edit, MoreHorizontal, Search, Trash2 } from "lucide-react";
 
 // Mock team data
 const initialTeamMembers = [
@@ -69,52 +82,52 @@ const initialTeamMembers = [
     avatar: "/placeholder.svg?height=40&width=40",
     initials: "EW",
   },
-]
+];
 
 export function TeamMembersTable() {
-  const [teamMembers, setTeamMembers] = useState(initialTeamMembers)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [roleFilter, setRoleFilter] = useState("all")
+  const [teamMembers, setTeamMembers] = useState(initialTeamMembers);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
 
   const filteredMembers = teamMembers.filter((member) => {
     const matchesSearch =
       member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchQuery.toLowerCase())
+      member.email.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesRole = roleFilter === "all" || member.role === roleFilter
+    const matchesRole = roleFilter === "all" || member.role === roleFilter;
 
-    return matchesSearch && matchesRole
-  })
+    return matchesSearch && matchesRole;
+  });
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case "Admin":
-        return "bg-red-100 text-red-800 hover:bg-red-100"
+        return "bg-red-100 text-red-800 hover:bg-red-100";
       case "Project Manager":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-100"
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
       case "Field Officer":
-        return "bg-amber-100 text-amber-800 hover:bg-amber-100"
+        return "bg-amber-100 text-amber-800 hover:bg-amber-100";
       case "Analyst":
-        return "bg-purple-100 text-purple-800 hover:bg-purple-100"
+        return "bg-purple-100 text-purple-800 hover:bg-purple-100";
       case "Viewer":
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
-  }
+  };
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "Active":
-        return "bg-green-100 text-green-800 hover:bg-green-100"
+        return "bg-green-100 text-green-800 hover:bg-green-100";
       case "Pending":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
       case "Inactive":
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -168,23 +181,38 @@ export function TeamMembersTable() {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar>
-                        <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
-                        <AvatarFallback className="bg-green-100 text-green-800">{member.initials}</AvatarFallback>
+                        <AvatarImage
+                          src={member.avatar || "/placeholder.svg"}
+                          alt={member.name}
+                        />
+                        <AvatarFallback className="bg-green-100 text-green-800">
+                          {member.initials}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">{member.name}</div>
-                        <div className="text-sm text-muted-foreground">{member.email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {member.email}
+                        </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={getRoleBadgeColor(member.role)}>
+                    <Badge
+                      variant="outline"
+                      className={getRoleBadgeColor(member.role)}
+                    >
                       {member.role}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{member.department}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <Badge variant="outline" className={getStatusBadgeColor(member.status)}>
+                    {member.department}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <Badge
+                      variant="outline"
+                      className={getStatusBadgeColor(member.status)}
+                    >
                       {member.status}
                     </Badge>
                   </TableCell>
@@ -219,5 +247,5 @@ export function TeamMembersTable() {
         </Table>
       </div>
     </div>
-  )
+  );
 }

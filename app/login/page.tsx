@@ -1,4 +1,4 @@
-import { LoginForm } from "@/components/auth/login-form"
+import { LoginForm } from "@/components/auth/login-form";
 
 export default function LoginPage() {
   return (
@@ -19,11 +19,15 @@ export default function LoginPage() {
               <path d="M18 8c0 2.2-1.8 4-4 4s-4-1.8-4-4 1.8-4 4-4 4 1.8 4 4zM6 15c0-2.2 1.8-4 4-4M14 15c0-2.2 1.8-4 4-4M8 9c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM20 9c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM12 17c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zM16 17c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2z" />
             </svg>
           </div>
-          <h1 className="mt-4 text-3xl font-bold text-green-800">Carbon Grounds</h1>
-          <p className="mt-2 text-sm text-gray-600">Empowering farmers with sustainable practices</p>
+          <h1 className="mt-4 text-3xl font-bold text-green-800">
+            Carbon Grounds
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Empowering farmers with sustainable practices
+          </p>
         </div>
         <LoginForm />
       </div>
     </div>
-  )
+  );
 }

@@ -1,16 +1,26 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MetricCard } from "@/components/dashboard/metric-card"
-import { ProjectProgressChart } from "@/components/dashboard/project-progress-chart"
-import { ActivityFeed } from "@/components/dashboard/activity-feed"
-import { NotificationsPanel } from "@/components/dashboard/notifications-panel"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MetricCard } from "@/components/dashboard/metric-card";
+import { ProjectProgressChart } from "@/components/dashboard/project-progress-chart";
+import { ActivityFeed } from "@/components/dashboard/activity-feed";
+import { NotificationsPanel } from "@/components/dashboard/notifications-panel";
 
 export function DashboardContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here's an overview of your sustainability projects.</p>
+        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+          Dashboard
+        </h1>
+        <p className="text-muted-foreground">
+          Welcome back! Here's an overview of your sustainability projects.
+        </p>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
@@ -60,7 +70,9 @@ export function DashboardContent() {
             <Card className="md:col-span-4">
               <CardHeader>
                 <CardTitle>Project Progress</CardTitle>
-                <CardDescription>Monthly progress across all active sustainability projects</CardDescription>
+                <CardDescription>
+                  Monthly progress across all active sustainability projects
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ProjectProgressChart />
@@ -70,7 +82,9 @@ export function DashboardContent() {
             <Card className="md:col-span-3">
               <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Latest updates from your projects and team</CardDescription>
+                <CardDescription>
+                  Latest updates from your projects and team
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ActivityFeed />
@@ -81,7 +95,9 @@ export function DashboardContent() {
           <Card>
             <CardHeader>
               <CardTitle>Notifications</CardTitle>
-              <CardDescription>Important alerts and messages requiring your attention</CardDescription>
+              <CardDescription>
+                Important alerts and messages requiring your attention
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <NotificationsPanel />
@@ -93,10 +109,14 @@ export function DashboardContent() {
           <Card>
             <CardHeader>
               <CardTitle>Analytics</CardTitle>
-              <CardDescription>Detailed analytics and insights will appear here.</CardDescription>
+              <CardDescription>
+                Detailed analytics and insights will appear here.
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex h-[400px] items-center justify-center">
-              <p className="text-muted-foreground">Analytics dashboard coming soon.</p>
+              <p className="text-muted-foreground">
+                Analytics dashboard coming soon.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -105,14 +125,18 @@ export function DashboardContent() {
           <Card>
             <CardHeader>
               <CardTitle>Reports</CardTitle>
-              <CardDescription>Generated reports and documents will appear here.</CardDescription>
+              <CardDescription>
+                Generated reports and documents will appear here.
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex h-[400px] items-center justify-center">
-              <p className="text-muted-foreground">Reports dashboard coming soon.</p>
+              <p className="text-muted-foreground">
+                Reports dashboard coming soon.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

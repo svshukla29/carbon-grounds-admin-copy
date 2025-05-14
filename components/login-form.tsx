@@ -1,49 +1,58 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertCircle } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       // This is a mock authentication - in a real app, you would validate credentials against your backend
       if (email === "admin@carbongrounds.com" && password === "password") {
         // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        router.push("/dashboard")
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        router.push("/dashboard");
       } else {
-        setError("Invalid email or password")
+        setError("Invalid email or password");
       }
     } catch (err) {
-      setError("An error occurred. Please try again.")
+      setError("An error occurred. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Admin Login</CardTitle>
-        <CardDescription>Sign in to access the Carbon Grounds admin dashboard</CardDescription>
+        <CardDescription>
+          Sign in to access the Carbon Grounds admin dashboard
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,7 +76,10 @@ export function LoginForm() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <a href="#" className="text-xs text-green-600 hover:text-green-800">
+              <a
+                href="#"
+                className="text-xs text-green-600 hover:text-green-800"
+              >
                 Forgot password?
               </a>
             </div>
@@ -79,7 +91,11 @@ export function LoginForm() {
               required
             />
           </div>
-          <Button type="submit" className="w-full bg-green-700 hover:bg-green-800" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="w-full bg-green-700 hover:bg-green-800"
+            disabled={isLoading}
+          >
             {isLoading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
@@ -88,5 +104,5 @@ export function LoginForm() {
         For demo purposes, use: admin@carbongrounds.com / password
       </CardFooter>
     </Card>
-  )
+  );
 }

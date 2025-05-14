@@ -1,14 +1,23 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, Calendar, Download, FileEdit, Printer, Share2, Trash2, FileText } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  Calendar,
+  Download,
+  FileEdit,
+  Printer,
+  Share2,
+  Trash2,
+  FileText,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Mock report data
 const reportsData = [
@@ -44,8 +53,16 @@ const reportsData = [
       <p>In Q3, the project will focus on expanding to neighboring communities and implementing digital monitoring tools to improve data collection efficiency.</p>
     `,
     attachments: [
-      { name: "Q2_2023_Data_Summary.xlsx", size: "2.4 MB", type: "spreadsheet" },
-      { name: "Farmer_Verification_Photos.zip", size: "15.8 MB", type: "archive" },
+      {
+        name: "Q2_2023_Data_Summary.xlsx",
+        size: "2.4 MB",
+        type: "spreadsheet",
+      },
+      {
+        name: "Farmer_Verification_Photos.zip",
+        size: "15.8 MB",
+        type: "archive",
+      },
       { name: "Carbon_Credit_Certificates.pdf", size: "1.2 MB", type: "pdf" },
     ],
     comments: [
@@ -71,51 +88,53 @@ const reportsData = [
       },
     ],
   },
-]
+];
 
 export function ReportDetails({ id }: { id: string }) {
-  const [report, setReport] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+  const [report, setReport] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     // Simulate API fetch
     const fetchReport = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         // In a real app, this would be an API call
-        const foundReport = reportsData.find((r) => r.id === id)
+        const foundReport = reportsData.find((r) => r.id === id);
 
         if (foundReport) {
-          setReport(foundReport)
+          setReport(foundReport);
         } else {
           // Report not found
-          router.push("/dashboard/reports")
+          router.push("/dashboard/reports");
         }
       } catch (error) {
-        console.error("Error fetching report:", error)
+        console.error("Error fetching report:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchReport()
-  }, [id, router])
+    fetchReport();
+  }, [id, router]);
 
   const handleDelete = () => {
     // In a real app, this would be an API call to delete the report
-    router.push("/dashboard/reports")
-  }
+    router.push("/dashboard/reports");
+  };
 
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <div className="text-center">
           <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-green-600"></div>
-          <p className="mt-2 text-sm text-gray-500">Loading report details...</p>
+          <p className="mt-2 text-sm text-gray-500">
+            Loading report details...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!report) {
@@ -129,21 +148,21 @@ export function ReportDetails({ id }: { id: string }) {
           </Link>
         </Button>
       </div>
-    )
+    );
   }
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "Published":
-        return "bg-green-100 text-green-800 hover:bg-green-100"
+        return "bg-green-100 text-green-800 hover:bg-green-100";
       case "Draft":
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
       case "Under Review":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -156,8 +175,13 @@ export function ReportDetails({ id }: { id: string }) {
                 <span className="sr-only">Back</span>
               </Link>
             </Button>
-            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">{report.title}</h1>
-            <Badge variant="outline" className={getStatusBadgeColor(report.status)}>
+            <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+              {report.title}
+            </h1>
+            <Badge
+              variant="outline"
+              className={getStatusBadgeColor(report.status)}
+            >
               {report.status}
             </Badge>
           </div>
@@ -198,12 +222,19 @@ export function ReportDetails({ id }: { id: string }) {
             <div className="space-y-4">
               <div className="flex flex-col items-center space-y-4 pb-6 text-center">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src={report.author.avatar || "/placeholder.svg"} alt={report.author.name} />
-                  <AvatarFallback className="bg-blue-100 text-blue-800">{report.author.initials}</AvatarFallback>
+                  <AvatarImage
+                    src={report.author.avatar || "/placeholder.svg"}
+                    alt={report.author.name}
+                  />
+                  <AvatarFallback className="bg-blue-100 text-blue-800">
+                    {report.author.initials}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className="font-medium">{report.author.name}</h3>
-                  <p className="text-sm text-muted-foreground">{report.author.email}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {report.author.email}
+                  </p>
                 </div>
               </div>
 
@@ -229,7 +260,10 @@ export function ReportDetails({ id }: { id: string }) {
                     <div className="grid grid-cols-3">
                       <span className="text-muted-foreground">Status:</span>
                       <span className="col-span-2">
-                        <Badge variant="outline" className={getStatusBadgeColor(report.status)}>
+                        <Badge
+                          variant="outline"
+                          className={getStatusBadgeColor(report.status)}
+                        >
                           {report.status}
                         </Badge>
                       </span>
@@ -240,29 +274,36 @@ export function ReportDetails({ id }: { id: string }) {
                 <div>
                   <h4 className="mb-2 text-sm font-medium">Attachments</h4>
                   <div className="space-y-2">
-                    {report.attachments.map((attachment: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between rounded-md border p-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          {attachment.type === "pdf" && (
-                            <div className="rounded-md bg-red-100 p-1">
-                              <FileText className="h-3 w-3 text-red-600" />
-                            </div>
-                          )}
-                          {attachment.type === "spreadsheet" && (
-                            <div className="rounded-md bg-green-100 p-1">
-                              <FileText className="h-3 w-3 text-green-600" />
-                            </div>
-                          )}
-                          {attachment.type === "archive" && (
-                            <div className="rounded-md bg-yellow-100 p-1">
-                              <FileText className="h-3 w-3 text-yellow-600" />
-                            </div>
-                          )}
-                          <span>{attachment.name}</span>
+                    {report.attachments.map(
+                      (attachment: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between rounded-md border p-2 text-sm"
+                        >
+                          <div className="flex items-center gap-2">
+                            {attachment.type === "pdf" && (
+                              <div className="rounded-md bg-red-100 p-1">
+                                <FileText className="h-3 w-3 text-red-600" />
+                              </div>
+                            )}
+                            {attachment.type === "spreadsheet" && (
+                              <div className="rounded-md bg-green-100 p-1">
+                                <FileText className="h-3 w-3 text-green-600" />
+                              </div>
+                            )}
+                            {attachment.type === "archive" && (
+                              <div className="rounded-md bg-yellow-100 p-1">
+                                <FileText className="h-3 w-3 text-yellow-600" />
+                              </div>
+                            )}
+                            <span>{attachment.name}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {attachment.size}
+                          </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">{attachment.size}</span>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
@@ -281,7 +322,10 @@ export function ReportDetails({ id }: { id: string }) {
                 <TabsTrigger value="comments">Comments</TabsTrigger>
               </TabsList>
               <TabsContent value="content" className="pt-4">
-                <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: report.content }}></div>
+                <div
+                  className="prose max-w-none"
+                  dangerouslySetInnerHTML={{ __html: report.content }}
+                ></div>
               </TabsContent>
               <TabsContent value="comments" className="pt-4">
                 <div className="space-y-4">
@@ -289,7 +333,10 @@ export function ReportDetails({ id }: { id: string }) {
                     <div key={comment.id} className="rounded-md border p-4">
                       <div className="flex items-start gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={comment.user.avatar || "/placeholder.svg"} alt={comment.user.name} />
+                          <AvatarImage
+                            src={comment.user.avatar || "/placeholder.svg"}
+                            alt={comment.user.name}
+                          />
                           <AvatarFallback className="bg-green-100 text-green-800">
                             {comment.user.initials}
                           </AvatarFallback>
@@ -315,7 +362,9 @@ export function ReportDetails({ id }: { id: string }) {
                       placeholder="Write your comment here..."
                     ></textarea>
                     <div className="mt-2 flex justify-end">
-                      <Button className="bg-green-600 hover:bg-green-700">Post Comment</Button>
+                      <Button className="bg-green-600 hover:bg-green-700">
+                        Post Comment
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -325,5 +374,5 @@ export function ReportDetails({ id }: { id: string }) {
         </Card>
       </div>
     </div>
-  )
+  );
 }

@@ -1,12 +1,28 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { ArrowUpDown, Download, Eye, FileEdit, Leaf, MoreHorizontal, Plus, Search, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ArrowUpDown,
+  Download,
+  Eye,
+  FileEdit,
+  Leaf,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,11 +30,24 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog"
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog";
 
 // Mock data for projects
 const initialProjects = [
@@ -72,60 +101,65 @@ const initialProjects = [
     status: "Completed",
     startDate: "2022-08-30",
   },
-]
+];
 
 export function ProjectsList() {
-  const [projects, setProjects] = useState(initialProjects)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [typeFilter, setTypeFilter] = useState("all")
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [projectToDelete, setProjectToDelete] = useState<string | null>(null)
-  const router = useRouter()
+  const [projects, setProjects] = useState(initialProjects);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleDeleteClick = (projectId: string) => {
-    setProjectToDelete(projectId)
-    setDeleteDialogOpen(true)
-  }
+    setProjectToDelete(projectId);
+    setDeleteDialogOpen(true);
+  };
 
   const handleDeleteConfirm = () => {
     if (projectToDelete) {
-      setProjects(projects.filter((project) => project.id !== projectToDelete))
-      setDeleteDialogOpen(false)
-      setProjectToDelete(null)
+      setProjects(projects.filter((project) => project.id !== projectToDelete));
+      setDeleteDialogOpen(false);
+      setProjectToDelete(null);
     }
-  }
+  };
 
   const filteredProjects = projects.filter((project) => {
     const matchesSearch =
       project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.location.toLowerCase().includes(searchQuery.toLowerCase())
+      project.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus = statusFilter === "all" || project.status === statusFilter
-    const matchesType = typeFilter === "all" || project.type === typeFilter
+    const matchesStatus =
+      statusFilter === "all" || project.status === statusFilter;
+    const matchesType = typeFilter === "all" || project.type === typeFilter;
 
-    return matchesSearch && matchesStatus && matchesType
-  })
+    return matchesSearch && matchesStatus && matchesType;
+  });
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case "Active":
-        return "bg-green-100 text-green-800 hover:bg-green-100"
+        return "bg-green-100 text-green-800 hover:bg-green-100";
       case "Pending":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
       case "Completed":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-100"
+        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
       default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100"
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">Projects</h1>
-          <p className="text-muted-foreground">Manage your sustainability projects and track their progress</p>
+          <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
+            Projects
+          </h1>
+          <p className="text-muted-foreground">
+            Manage your sustainability projects and track their progress
+          </p>
         </div>
         <Button asChild className="bg-green-600 hover:bg-green-700">
           <Link href="/dashboard/projects/create">
@@ -138,7 +172,9 @@ export function ProjectsList() {
       <Card>
         <CardHeader>
           <CardTitle>All Projects</CardTitle>
-          <CardDescription>View and manage all your sustainability projects</CardDescription>
+          <CardDescription>
+            View and manage all your sustainability projects
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -189,9 +225,15 @@ export function ProjectsList() {
                       </div>
                     </TableHead>
                     <TableHead className="hidden md:table-cell">Type</TableHead>
-                    <TableHead className="hidden md:table-cell">Location</TableHead>
-                    <TableHead className="hidden md:table-cell">Farmers</TableHead>
-                    <TableHead className="hidden lg:table-cell">Carbon Credits</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Location
+                    </TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      Farmers
+                    </TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      Carbon Credits
+                    </TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -219,12 +261,23 @@ export function ProjectsList() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">{project.type}</TableCell>
-                        <TableCell className="hidden md:table-cell">{project.location}</TableCell>
-                        <TableCell className="hidden md:table-cell">{project.farmers}</TableCell>
-                        <TableCell className="hidden lg:table-cell">{project.carbonCredits} tons</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {project.type}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {project.location}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {project.farmers}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {project.carbonCredits} tons
+                        </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={getStatusBadgeColor(project.status)}>
+                          <Badge
+                            variant="outline"
+                            className={getStatusBadgeColor(project.status)}
+                          >
                             {project.status}
                           </Badge>
                         </TableCell>
@@ -239,11 +292,23 @@ export function ProjectsList() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => router.push(`/dashboard/projects/${project.id}`)}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/projects/${project.id}`,
+                                  )
+                                }
+                              >
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => router.push(`/dashboard/projects/edit/${project.id}`)}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  router.push(
+                                    `/dashboard/projects/edit/${project.id}`,
+                                  )
+                                }
+                              >
                                 <FileEdit className="mr-2 h-4 w-4" />
                                 Edit
                               </DropdownMenuItem>
@@ -252,7 +317,10 @@ export function ProjectsList() {
                                 Export Data
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteClick(project.id)}>
+                              <DropdownMenuItem
+                                className="text-red-600"
+                                onClick={() => handleDeleteClick(project.id)}
+                              >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
                               </DropdownMenuItem>
@@ -269,7 +337,11 @@ export function ProjectsList() {
         </CardContent>
       </Card>
 
-      <DeleteProjectDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} onConfirm={handleDeleteConfirm} />
+      <DeleteProjectDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
-  )
+  );
 }
