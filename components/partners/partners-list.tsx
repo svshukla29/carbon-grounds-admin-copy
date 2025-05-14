@@ -275,11 +275,11 @@ export function PartnersList() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
-                            variant="ghost"
                             size="icon"
-                            onClick={() =>
-                              router.push(`/dashboard/partners/${partner.id}`)
-                            }
+                            variant="ghost"
+                            onClick={() => {
+                              router.push(`/dashboard/partners/${partner.id}`);
+                            }}
                           >
                             <ExternalLink className="h-4 w-4" />
                             <span className="sr-only">View</span>
@@ -287,11 +287,11 @@ export function PartnersList() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() =>
+                            onClick={() => {
                               router.push(
                                 `/dashboard/partners/edit/${partner.id}`
-                              )
-                            }
+                              );
+                            }}
                           >
                             <Edit className="h-4 w-4" />
                             <span className="sr-only">Edit</span>
