@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Edit, MoreHorizontal, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
 
 // Mock team data
 const initialTeamMembers = [
@@ -190,7 +191,14 @@ export function TeamMembersTable() {
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium">{member.name}</div>
+                        <div>
+                          <Link
+                            className="font-medium"
+                            href={`/dashboard/teams/${member.id}`}
+                          >
+                            {member.name}
+                          </Link>
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {member.email}
                         </div>

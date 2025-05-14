@@ -1,8 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { DeleteFarmerDialog } from "@/components/farmers/delete-farmer-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   ArrowUpDown,
   Download,
@@ -13,41 +45,9 @@ import {
   Trash2,
   UserPlus,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DeleteFarmerDialog } from "@/components/farmers/delete-farmer-dialog";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 // Mock data for farmers
 const initialFarmers = [
@@ -290,7 +290,11 @@ export function FarmersList() {
                                 {farmer.initials}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="font-medium">{farmer.name}</div>
+                            <div className="font-medium">
+                              <Link href={`/dashboard/farmers/${farmer.id}`}>
+                                {farmer.name}
+                              </Link>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
@@ -332,7 +336,7 @@ export function FarmersList() {
                               <DropdownMenuItem
                                 onClick={() =>
                                   router.push(
-                                    `/dashboard/farmers/edit/${farmer.id}`,
+                                    `/dashboard/farmers/edit/${farmer.id}`
                                   )
                                 }
                               >

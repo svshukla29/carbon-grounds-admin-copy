@@ -1,4 +1,3 @@
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { ReportDetails } from "@/components/reports/report-details";
 
 export default function ReportDetailsPage({
@@ -6,9 +5,5 @@ export default function ReportDetailsPage({
 }: {
   params: { id: string };
 }) {
-  return (
-    <DashboardLayout>
-      <ReportDetails id={params.id} />
-    </DashboardLayout>
-  );
+  return <ReportDetails id={params.id} />;
 }

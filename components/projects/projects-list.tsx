@@ -1,8 +1,39 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   ArrowUpDown,
   Download,
@@ -14,40 +45,9 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 // Mock data for projects
 const initialProjects = [
@@ -254,7 +254,14 @@ export function ProjectsList() {
                               <Leaf className="h-4 w-4 text-green-600" />
                             </div>
                             <div>
-                              <div className="font-medium">{project.name}</div>
+                              <div className="font-medium">
+                                <Link
+                                  href={`/dashboard/projects/${project.id}`}
+                                  className="font-medium"
+                                >
+                                  {project.name}
+                                </Link>
+                              </div>
                               <div className="hidden text-sm text-muted-foreground md:table-cell lg:hidden">
                                 {project.location}
                               </div>
@@ -295,7 +302,7 @@ export function ProjectsList() {
                               <DropdownMenuItem
                                 onClick={() =>
                                   router.push(
-                                    `/dashboard/projects/${project.id}`,
+                                    `/dashboard/projects/${project.id}`
                                   )
                                 }
                               >
@@ -305,7 +312,7 @@ export function ProjectsList() {
                               <DropdownMenuItem
                                 onClick={() =>
                                   router.push(
-                                    `/dashboard/projects/edit/${project.id}`,
+                                    `/dashboard/projects/edit/${project.id}`
                                   )
                                 }
                               >

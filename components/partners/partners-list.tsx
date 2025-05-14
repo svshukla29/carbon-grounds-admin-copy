@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Plus, Search, Edit, Trash2, ExternalLink } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -28,16 +34,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Edit, ExternalLink, Plus, Search, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 // Mock data for partners
 const initialPartners = [
@@ -253,7 +253,12 @@ export function PartnersList() {
                               {partner.name.substring(0, 2)}
                             </AvatarFallback>
                           </Avatar>
-                          <span>{partner.name}</span>
+                          <Link
+                            href={`/dashboard/partners/${partner.id}`}
+                            className="font-medium"
+                          >
+                            {partner.name}
+                          </Link>
                         </div>
                       </TableCell>
                       <TableCell>{partner.type}</TableCell>
@@ -284,7 +289,7 @@ export function PartnersList() {
                             size="icon"
                             onClick={() =>
                               router.push(
-                                `/dashboard/partners/edit/${partner.id}`,
+                                `/dashboard/partners/edit/${partner.id}`
                               )
                             }
                           >
