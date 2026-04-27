@@ -13,29 +13,30 @@ import {
 
 interface DeleteFarmerDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
   onConfirm: () => void;
+  farmerName?: string;
 }
 
 export function DeleteFarmerDialog({
   open,
-  onOpenChange,
+  onClose,
   onConfirm,
+  farmerName,
 }: DeleteFarmerDialogProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={(v) => !v && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            Are you sure you want to delete this farmer?
-          </AlertDialogTitle>
+          <AlertDialogTitle>Delete Farmer</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the
-            farmer and all associated data.
+            Are you sure you want to delete{" "}
+            <strong>{farmerName ?? "this farmer"}</strong>? This action cannot
+            be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-red-600 hover:bg-red-700"

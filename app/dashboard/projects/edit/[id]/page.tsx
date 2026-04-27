@@ -1,9 +1,10 @@
 import { ProjectForm } from "@/components/projects/project-form";
 
-export default function EditProjectPage({
+export default async function EditProjectPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  return <ProjectForm id={params.id} />;
+  const { id } = await params;
+  return <ProjectForm id={id} />;
 }

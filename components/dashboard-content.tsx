@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -10,8 +13,32 @@ import { MetricCard } from "@/components/metric-card";
 import { ProjectProgressChart } from "@/components/project-progress-chart";
 import { ActivityFeed } from "@/components/activity-feed";
 import { NotificationsPanel } from "@/components/notifications-panel";
+import { dashboardApi } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { Loader2 } from "lucide-react";
+
+interface DashboardStats {
+  totalFarmers: number;
+  totalProjects: number;
+  totalPartners: number;
+  totalReports: number;
+  totalTeamMembers: number;
+  totalCarbonCredits: number;
+}
 
 export function DashboardContent() {
+  const { user } = useAuth();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    dashboardApi
+      .getStats()
+      .then((res) => setStats(res.data))
+      .catch(console.error)
+      .finally(() => setIsLoading(false));
+  }, []);
+
   return (
     <div className="space-y-6">
       <div>
@@ -19,7 +46,7 @@ export function DashboardContent() {
           Dashboard
         </h1>
         <p className="text-muted-foreground">
-          Welcome back! Here's an overview of your sustainability projects.
+          Welcome back, {user?.name}! Here&apos;s an overview of your sustainability projects.
         </p>
       </div>
 
@@ -31,40 +58,47 @@ export function DashboardContent() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <MetricCard
-              title="Active Projects"
-              value="24"
-              trend="up"
-              trendValue="8%"
-              icon="leaf"
-              description="Across 12 regions"
-            />
-            <MetricCard
-              title="Verified Farmers"
-              value="1,284"
-              trend="up"
-              trendValue="12%"
-              icon="users"
-              description="120 new this month"
-            />
-            <MetricCard
-              title="Carbon Credits"
-              value="5,240"
-              trend="up"
-              trendValue="23%"
-              icon="carbon"
-              description="Tons of CO₂ equivalent"
-            />
-            <MetricCard
-              title="Income Streams"
-              value="18"
-              trend="up"
-              trendValue="5%"
-              icon="dollar"
-              description="New revenue channels"
-            />
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+              <span className="ml-2 text-muted-foreground">Loading stats...</span>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <MetricCard
+                title="Total Projects"
+                value={stats?.totalProjects?.toString() ?? "0"}
+                trend="up"
+                trendValue=""
+                icon="leaf"
+                description="Active carbon projects"
+              />
+              <MetricCard
+                title="Registered Farmers"
+                value={stats?.totalFarmers?.toString() ?? "0"}
+                trend="up"
+                trendValue=""
+                icon="users"
+                description="Enrolled in projects"
+              />
+              <MetricCard
+                title="Carbon Credits"
+                value={stats?.totalCarbonCredits?.toLocaleString() ?? "0"}
+                trend="up"
+                trendValue=""
+                icon="carbon"
+                description="Tons of CO₂ equivalent"
+              />
+              <MetricCard
+                title="Partners"
+                value={stats?.totalPartners?.toString() ?? "0"}
+                trend="up"
+                trendValue=""
+                icon="dollar"
+                description="Active partner organizations"
+              />
+            </div>
+          )}
 
           <div className="grid gap-4 md:grid-cols-7">
             <Card className="md:col-span-4">
@@ -74,7 +108,7 @@ export function DashboardContent() {
                   Monthly progress across all active sustainability projects
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <ProjectProgressChart />
               </CardContent>
             </Card>

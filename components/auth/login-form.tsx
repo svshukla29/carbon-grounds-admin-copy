@@ -1,9 +1,7 @@
 "use client";
 
 import type React from "react";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +16,7 @@ import {
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/lib/auth-context";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -25,7 +24,7 @@ export function LoginForm() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,16 +32,13 @@ export function LoginForm() {
     setError("");
 
     try {
-      // This is a mock authentication - in a real app, you would validate credentials against your backend
-      if (email === "admin@carbongrounds.com" && password === "password") {
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        router.push("/dashboard");
-      } else {
-        setError("Invalid email or password");
-      }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
+      await login(email, password);
+      // login() automatically redirects to /dashboard on success
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        "Invalid email or password. Please try again.";
+      setError(Array.isArray(message) ? message.join(", ") : message);
     } finally {
       setIsLoading(false);
     }
@@ -78,12 +74,6 @@ export function LoginForm() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
-              <a
-                href="#"
-                className="text-xs text-green-600 hover:text-green-800"
-              >
-                Forgot password?
-              </a>
             </div>
             <Input
               id="password"
@@ -119,7 +109,7 @@ export function LoginForm() {
         </form>
       </CardContent>
       <CardFooter className="flex justify-center text-xs text-gray-500">
-        For demo purposes, use: admin@carbongrounds.com / password
+        Use: admin@carbongrounds.com / Admin@123
       </CardFooter>
     </Card>
   );

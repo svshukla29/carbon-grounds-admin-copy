@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { partnersApi } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -35,31 +36,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Mock partner data
-const partnersData = [
-  {
-    id: "1",
-    name: "Global Climate Fund",
-    type: "Funding Agency",
-    location: "Geneva, Switzerland",
-    status: "Active",
-    joinDate: "2022-10-15",
-    description:
-      "The Global Climate Fund is an international organization dedicated to financing climate change mitigation and adaptation projects in developing countries.",
-    contactInfo: {
-      address: "123 Climate Avenue, Geneva, Switzerland",
-      phone: "+41 22 123 4567",
-      email: "info@globalclimatefund.org",
-      website: "https://www.globalclimatefund.org",
-    },
-    primaryContact: {
-      name: "Dr. Elena Müller",
-      position: "Partnership Director",
-      email: "elena.muller@globalclimatefund.org",
-      phone: "+41 22 123 4568",
-    },
-  },
-];
+
 
 export function PartnerForm({ id }: { id?: string }) {
   const isEditMode = !!id;
@@ -85,46 +62,36 @@ export function PartnerForm({ id }: { id?: string }) {
   const [date, setDate] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
-    if (isEditMode) {
-      // Simulate API fetch for edit mode
+    if (isEditMode && id) {
       const fetchPartner = async () => {
         setLoading(true);
         try {
-          // In a real app, this would be an API call
-          const foundPartner = partnersData.find((p) => p.id === id);
-
-          if (foundPartner) {
-            setFormData({
-              name: foundPartner.name,
-              type: foundPartner.type,
-              location: foundPartner.location,
-              status: foundPartner.status,
-              joinDate: foundPartner.joinDate,
-              description: foundPartner.description,
-              address: foundPartner.contactInfo.address,
-              phone: foundPartner.contactInfo.phone,
-              email: foundPartner.contactInfo.email,
-              website: foundPartner.contactInfo.website,
-              contactName: foundPartner.primaryContact.name,
-              contactPosition: foundPartner.primaryContact.position,
-              contactEmail: foundPartner.primaryContact.email,
-              contactPhone: foundPartner.primaryContact.phone,
-            });
-
-            if (foundPartner.joinDate) {
-              setDate(new Date(foundPartner.joinDate));
-            }
-          } else {
-            // Partner not found
-            router.push("/dashboard/partners");
-          }
+          const res = await partnersApi.getOne(id);
+          const p = res.data;
+          setFormData({
+            name: p.name ?? "",
+            type: p.type ?? "",
+            location: p.location ?? "",
+            status: p.status ?? "",
+            joinDate: p.joinDate ? p.joinDate.slice(0, 10) : "",
+            description: p.description ?? "",
+            address: p.address ?? "",
+            phone: p.phone ?? "",
+            email: p.contactEmail ?? "",
+            website: p.website ?? "",
+            contactName: p.contactName ?? "",
+            contactPosition: p.contactPosition ?? "",
+            contactEmail: p.contactEmail ?? "",
+            contactPhone: p.contactPhone ?? "",
+          });
+          if (p.joinDate) setDate(new Date(p.joinDate));
         } catch (error) {
           console.error("Error fetching partner:", error);
+          router.push("/dashboard/partners");
         } finally {
           setLoading(false);
         }
       };
-
       fetchPartner();
     }
   }, [id, isEditMode, router]);
@@ -151,18 +118,37 @@ export function PartnerForm({ id }: { id?: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // In a real app, this would be an API call to create or update the partner
-      console.log("Submitting form data:", formData);
-
-      // Redirect to partners list after successful submission
+      const payload = {
+        name: formData.name,
+        type: formData.type,
+        location: formData.location,
+        status: formData.status,
+        joinDate: formData.joinDate || undefined,
+        description: formData.description,
+        address: formData.address,
+        phone: formData.phone,
+        contactEmail: formData.email,
+        website: formData.website,
+        contactName: formData.contactName,
+        contactPosition: formData.contactPosition,
+        contactPhone: formData.contactPhone,
+      };
+      if (isEditMode && id) {
+        await partnersApi.update(id, payload);
+        toast({ title: "Partner updated successfully!" });
+      } else {
+        await partnersApi.create(payload);
+        toast({ title: "Partner added successfully!" });
+      }
       router.push("/dashboard/partners");
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    } catch (error: any) {
+      const msg = error?.response?.data?.message;
+      toast({
+        title: "Error",
+        description: Array.isArray(msg) ? msg.join(", ") : msg ?? "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }

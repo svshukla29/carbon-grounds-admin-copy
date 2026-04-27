@@ -1,5 +1,10 @@
 import { FarmerForm } from "@/components/farmers/farmer-form";
 
-export default function EditFarmerPage({ params }: { params: { id: string } }) {
-  return <FarmerForm id={params.id} />;
+export default async function EditFarmerPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <FarmerForm id={id} />;
 }

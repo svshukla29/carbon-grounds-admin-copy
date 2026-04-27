@@ -1,9 +1,10 @@
 import { PartnerDetails } from "@/components/partners/partner-details";
 
-export default function PartnerDetailsPage({
+export default async function PartnerDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  return <PartnerDetails id={params.id} />;
+  const { id } = await params;
+  return <PartnerDetails id={id} />;
 }

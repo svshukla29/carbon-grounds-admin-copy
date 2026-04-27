@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { projectsApi } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -27,35 +28,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
 
-// Mock project data
-const projectsData = [
-  {
-    id: "1",
-    name: "Sustainable Rice Cultivation",
-    description:
-      "A project focused on implementing sustainable rice cultivation practices that reduce methane emissions while improving yields and farmer livelihoods in the Mekong Delta region.",
-    type: "Agroforestry",
-    location: "Mekong Delta, Vietnam",
-    farmers: 124,
-    carbonCredits: 450,
-    status: "Active",
-    startDate: "2023-03-15",
-    endDate: "2025-03-15",
-    budget: 250000,
-    partners: [
-      "Vietnam Agricultural Research Institute",
-      "Mekong Farmers Cooperative",
-      "Global Climate Fund",
-    ],
-    objectives: [
-      "Reduce methane emissions from rice paddies by 40%",
-      "Increase farmer income by 25%",
-      "Improve water use efficiency by 30%",
-      "Generate verifiable carbon credits",
-    ],
-    progress: 65,
-  },
-];
+
 
 export function ProjectForm({ id }: { id?: string }) {
   const isEditMode = !!id;
@@ -76,38 +49,31 @@ export function ProjectForm({ id }: { id?: string }) {
   });
 
   useEffect(() => {
-    if (isEditMode) {
-      // Simulate API fetch for edit mode
+    if (isEditMode && id) {
       const fetchProject = async () => {
         setLoading(true);
         try {
-          // In a real app, this would be an API call
-          const foundProject = projectsData.find((p) => p.id === id);
-
-          if (foundProject) {
-            setFormData({
-              name: foundProject.name,
-              description: foundProject.description,
-              type: foundProject.type,
-              location: foundProject.location,
-              status: foundProject.status,
-              startDate: foundProject.startDate,
-              endDate: foundProject.endDate,
-              budget: foundProject.budget.toString(),
-              objectives: foundProject.objectives.join("\n"),
-              partners: foundProject.partners.join("\n"),
-            });
-          } else {
-            // Project not found
-            router.push("/dashboard/projects");
-          }
+          const res = await projectsApi.getOne(id);
+          const p = res.data;
+          setFormData({
+            name: p.name ?? "",
+            description: p.description ?? "",
+            type: p.type ?? "",
+            location: p.location ?? "",
+            status: p.status ?? "",
+            startDate: p.startDate ? p.startDate.slice(0, 10) : "",
+            endDate: p.endDate ? p.endDate.slice(0, 10) : "",
+            budget: p.budget ? String(p.budget) : "",
+            objectives: Array.isArray(p.objectives) ? p.objectives.join("\n") : (p.objectives ?? ""),
+            partners: Array.isArray(p.partnerNames) ? p.partnerNames.join("\n") : "",
+          });
         } catch (error) {
           console.error("Error fetching project:", error);
+          router.push("/dashboard/projects");
         } finally {
           setLoading(false);
         }
       };
-
       fetchProject();
     }
   }, [id, isEditMode, router]);
@@ -130,18 +96,35 @@ export function ProjectForm({ id }: { id?: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // In a real app, this would be an API call to create or update the project
-      console.log("Submitting form data:", formData);
-
-      // Redirect to projects list after successful submission
+      const payload = {
+        name: formData.name,
+        description: formData.description,
+        type: formData.type,
+        location: formData.location,
+        status: formData.status,
+        startDate: formData.startDate || undefined,
+        endDate: formData.endDate || undefined,
+        budget: formData.budget ? parseFloat(formData.budget) : undefined,
+        objectives: formData.objectives
+          ? formData.objectives.split("\n").filter(Boolean)
+          : [],
+      };
+      if (isEditMode && id) {
+        await projectsApi.update(id, payload);
+        toast({ title: "Project updated successfully!" });
+      } else {
+        await projectsApi.create(payload);
+        toast({ title: "Project created successfully!" });
+      }
       router.push("/dashboard/projects");
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    } catch (error: any) {
+      const msg = error?.response?.data?.message;
+      toast({
+        title: "Error",
+        description: Array.isArray(msg) ? msg.join(", ") : msg ?? "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }

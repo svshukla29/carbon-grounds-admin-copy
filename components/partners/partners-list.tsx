@@ -1,6 +1,8 @@
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect, useState, useCallback } from "react";
+import { partnersApi } from "@/lib/api";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,108 +36,57 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Edit, ExternalLink, Plus, Search, Trash2 } from "lucide-react";
+import { Edit, ExternalLink, Loader2, Plus, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
-// Mock data for partners
-const initialPartners = [
-  {
-    id: "1",
-    name: "Global Climate Fund",
-    type: "Funding Agency",
-    location: "Geneva, Switzerland",
-    projects: 3,
-    status: "Active",
-    joinDate: "2022-10-15",
-    logo: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "2",
-    name: "Vietnam Agricultural Research Institute",
-    type: "Research Institution",
-    location: "Hanoi, Vietnam",
-    projects: 1,
-    status: "Active",
-    joinDate: "2023-01-20",
-    logo: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "3",
-    name: "Mekong Farmers Cooperative",
-    type: "Farmer Organization",
-    location: "Mekong Delta, Vietnam",
-    projects: 1,
-    status: "Active",
-    joinDate: "2023-02-05",
-    logo: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "4",
-    name: "Kenya Forest Service",
-    type: "Government Agency",
-    location: "Nairobi, Kenya",
-    projects: 1,
-    status: "Active",
-    joinDate: "2022-12-10",
-    logo: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "5",
-    name: "African Conservation Trust",
-    type: "NGO",
-    location: "Nairobi, Kenya",
-    projects: 1,
-    status: "Active",
-    joinDate: "2023-01-15",
-    logo: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "6",
-    name: "Sustainable Agriculture Alliance",
-    type: "NGO",
-    location: "Brussels, Belgium",
-    projects: 0,
-    status: "Pending",
-    joinDate: "2023-04-20",
-    logo: "/placeholder.svg?height=40&width=40",
-  },
-];
+interface Partner {
+  id: string;
+  name: string;
+  type: string;
+  location: string;
+  status: string;
+  joinDate?: string;
+  website?: string;
+  contactEmail?: string;
+}
 
 export function PartnersList() {
-  const [partners, setPartners] = useState(initialPartners);
+  const router = useRouter();
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [partnerToDelete, setPartnerToDelete] = useState<string | null>(null);
-  const router = useRouter();
+  const [partnerToDelete, setPartnerToDelete] = useState<Partner | null>(null);
 
-  const handleDeleteClick = (partnerId: string) => {
-    setPartnerToDelete(partnerId);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    if (partnerToDelete) {
-      setPartners(partners.filter((partner) => partner.id !== partnerToDelete));
-      setDeleteDialogOpen(false);
-      setPartnerToDelete(null);
+  const fetchPartners = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params: any = {};
+      if (searchQuery) params.search = searchQuery;
+      if (statusFilter !== "all") params.status = statusFilter;
+      const res = await partnersApi.getAll(params);
+      setPartners(res.data);
+    } catch (err) {
+      console.error("Failed to fetch partners", err);
+    } finally {
+      setIsLoading(false);
     }
+  }, [searchQuery, statusFilter]);
+
+  useEffect(() => {
+    const t = setTimeout(() => fetchPartners(), 400);
+    return () => clearTimeout(t);
+  }, [fetchPartners]);
+
+  const handleDeleteConfirm = async () => {
+    if (!partnerToDelete) return;
+    await partnersApi.delete(partnerToDelete.id);
+    setPartners((prev) => prev.filter((p) => p.id !== partnerToDelete.id));
+    setDeleteDialogOpen(false);
+    setPartnerToDelete(null);
   };
-
-  const filteredPartners = partners.filter((partner) => {
-    const matchesSearch =
-      partner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      partner.location.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesType = typeFilter === "all" || partner.type === typeFilter;
-    const matchesStatus =
-      statusFilter === "all" || partner.status === statusFilter;
-
-    return matchesSearch && matchesType && matchesStatus;
-  });
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -143,10 +94,20 @@ export function PartnersList() {
         return "bg-green-100 text-green-800 hover:bg-green-100";
       case "Pending":
         return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
+      case "Inactive":
+        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
       default:
         return "bg-gray-100 text-gray-800 hover:bg-gray-100";
     }
   };
+
+  const initials = (name: string) =>
+    name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
 
   return (
     <div className="space-y-6">
@@ -171,7 +132,7 @@ export function PartnersList() {
         <CardHeader>
           <CardTitle>All Partners</CardTitle>
           <CardDescription>
-            View and manage all your partner organizations
+            {partners.length} partner{partners.length !== 1 ? "s" : ""} registered
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -186,132 +147,121 @@ export function PartnersList() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex gap-4">
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="NGO">NGO</SelectItem>
-                  <SelectItem value="Funding Agency">Funding Agency</SelectItem>
-                  <SelectItem value="Research Institution">
-                    Research Institution
-                  </SelectItem>
-                  <SelectItem value="Farmer Organization">
-                    Farmer Organization
-                  </SelectItem>
-                  <SelectItem value="Government Agency">
-                    Government Agency
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Partner</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Projects</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Join Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPartners.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+              <span className="ml-2 text-muted-foreground">Loading partners...</span>
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                      No partners found.
-                    </TableCell>
+                    <TableHead>Partner</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Join Date</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredPartners.map((partner) => (
-                    <TableRow key={partner.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src={partner.logo || "/placeholder.svg"}
-                              alt={partner.name}
-                            />
-                            <AvatarFallback>
-                              {partner.name.substring(0, 2)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <Link
-                            href={`/dashboard/partners/${partner.id}`}
-                            className="font-medium"
-                          >
-                            {partner.name}
-                          </Link>
-                        </div>
-                      </TableCell>
-                      <TableCell>{partner.type}</TableCell>
-                      <TableCell>{partner.location}</TableCell>
-                      <TableCell>{partner.projects}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusBadgeColor(partner.status)}>
-                          {partner.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(partner.joinDate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => {
-                              router.push(`/dashboard/partners/${partner.id}`);
-                            }}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                            <span className="sr-only">View</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              router.push(
-                                `/dashboard/partners/edit/${partner.id}`
-                              );
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteClick(partner.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {partners.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        No partners found.{" "}
+                        <Link
+                          href="/dashboard/partners/create"
+                          className="text-green-600 underline"
+                        >
+                          Add first partner
+                        </Link>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : (
+                    partners.map((partner) => (
+                      <TableRow key={partner.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">
+                                {initials(partner.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <Link
+                              href={`/dashboard/partners/${partner.id}`}
+                              className="font-medium hover:underline"
+                            >
+                              {partner.name}
+                            </Link>
+                          </div>
+                        </TableCell>
+                        <TableCell>{partner.type || "—"}</TableCell>
+                        <TableCell>{partner.location || "—"}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusBadgeColor(partner.status)}>
+                            {partner.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {partner.joinDate
+                            ? new Date(partner.joinDate).toLocaleDateString()
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() =>
+                                router.push(`/dashboard/partners/${partner.id}`)
+                              }
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/partners/edit/${partner.id}`
+                                )
+                              }
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setPartnerToDelete(partner);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -320,8 +270,9 @@ export function PartnersList() {
           <DialogHeader>
             <DialogTitle>Delete Partner</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this partner? This action cannot
-              be undone.
+              Are you sure you want to delete{" "}
+              <strong>{partnerToDelete?.name}</strong>? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

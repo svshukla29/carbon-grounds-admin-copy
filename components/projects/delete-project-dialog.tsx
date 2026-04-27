@@ -13,29 +13,30 @@ import {
 
 interface DeleteProjectDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
   onConfirm: () => void;
+  projectName?: string;
 }
 
 export function DeleteProjectDialog({
   open,
-  onOpenChange,
+  onClose,
   onConfirm,
+  projectName,
 }: DeleteProjectDialogProps) {
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={(v) => !v && onClose()}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            Are you sure you want to delete this project?
-          </AlertDialogTitle>
+          <AlertDialogTitle>Delete Project</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the
-            project and all associated data.
+            Are you sure you want to delete{" "}
+            <strong>{projectName ?? "this project"}</strong>? This action
+            cannot be undone and will remove all associated data.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-red-600 hover:bg-red-700"

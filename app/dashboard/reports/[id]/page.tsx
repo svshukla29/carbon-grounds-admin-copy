@@ -1,9 +1,10 @@
 import { ReportDetails } from "@/components/reports/report-details";
 
-export default function ReportDetailsPage({
+export default async function ReportDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  return <ReportDetails id={params.id} />;
+  const { id } = await params;
+  return <ReportDetails id={id} />;
 }

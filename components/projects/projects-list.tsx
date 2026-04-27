@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState, useCallback } from "react";
+import { projectsApi } from "@/lib/api";
 import { DeleteProjectDialog } from "@/components/projects/delete-project-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,11 +37,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowUpDown,
-  Download,
   Eye,
   FileEdit,
   Leaf,
+  Loader2,
   MoreHorizontal,
   Plus,
   Search,
@@ -47,107 +48,60 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
-// Mock data for projects
-const initialProjects = [
-  {
-    id: "1",
-    name: "Sustainable Rice Cultivation",
-    type: "Agroforestry",
-    location: "Mekong Delta, Vietnam",
-    farmers: 124,
-    carbonCredits: 450,
-    status: "Active",
-    startDate: "2023-03-15",
-  },
-  {
-    id: "2",
-    name: "Community Forest Management",
-    type: "Reforestation",
-    location: "Central Kenya",
-    farmers: 78,
-    carbonCredits: 320,
-    status: "Active",
-    startDate: "2023-01-10",
-  },
-  {
-    id: "3",
-    name: "Regenerative Grazing Initiative",
-    type: "Soil Carbon",
-    location: "Montana, USA",
-    farmers: 45,
-    carbonCredits: 280,
-    status: "Pending",
-    startDate: "2023-05-22",
-  },
-  {
-    id: "4",
-    name: "Mangrove Restoration",
-    type: "Blue Carbon",
-    location: "Sundarbans, Bangladesh",
-    farmers: 92,
-    carbonCredits: 510,
-    status: "Active",
-    startDate: "2022-11-05",
-  },
-  {
-    id: "5",
-    name: "Sustainable Coffee Production",
-    type: "Agroforestry",
-    location: "Chiapas, Mexico",
-    farmers: 156,
-    carbonCredits: 380,
-    status: "Completed",
-    startDate: "2022-08-30",
-  },
-];
+interface Project {
+  id: string;
+  name: string;
+  type: string;
+  location: string;
+  farmerCount?: number;
+  carbonCredits?: number;
+  status: string;
+  startDate?: string;
+}
 
 export function ProjectsList() {
-  const [projects, setProjects] = useState(initialProjects);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const router = useRouter();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
-  const handleDeleteClick = (projectId: string) => {
-    setProjectToDelete(projectId);
-    setDeleteDialogOpen(true);
+  const fetchProjects = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params: any = {};
+      if (search) params.search = search;
+      if (statusFilter !== "all") params.status = statusFilter;
+      const res = await projectsApi.getAll(params);
+      setProjects(res.data);
+    } catch (err) {
+      console.error("Failed to fetch projects", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [search, statusFilter]);
+
+  useEffect(() => {
+    const t = setTimeout(() => fetchProjects(), 400);
+    return () => clearTimeout(t);
+  }, [fetchProjects]);
+
+  const handleDelete = async () => {
+    if (!projectToDelete) return;
+    await projectsApi.delete(projectToDelete.id);
+    setProjects((prev) => prev.filter((p) => p.id !== projectToDelete.id));
+    setDeleteDialogOpen(false);
+    setProjectToDelete(null);
   };
 
-  const handleDeleteConfirm = () => {
-    if (projectToDelete) {
-      setProjects(projects.filter((project) => project.id !== projectToDelete));
-      setDeleteDialogOpen(false);
-      setProjectToDelete(null);
-    }
-  };
-
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.location.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus =
-      statusFilter === "all" || project.status === statusFilter;
-    const matchesType = typeFilter === "all" || project.type === typeFilter;
-
-    return matchesSearch && matchesStatus && matchesType;
-  });
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "bg-green-100 text-green-800 hover:bg-green-100";
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
-      case "Completed":
-        return "bg-blue-100 text-blue-800 hover:bg-blue-100";
-      default:
-        return "bg-gray-100 text-gray-800 hover:bg-gray-100";
-    }
+  const statusColor: Record<string, string> = {
+    Active: "bg-green-100 text-green-800 hover:bg-green-100",
+    Completed: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+    Pending: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+    Paused: "bg-gray-100 text-gray-800 hover:bg-gray-100",
   };
 
   return (
@@ -158,13 +112,13 @@ export function ProjectsList() {
             Projects
           </h1>
           <p className="text-muted-foreground">
-            Manage your sustainability projects and track their progress
+            Manage your sustainability projects
           </p>
         </div>
         <Button asChild className="bg-green-600 hover:bg-green-700">
           <Link href="/dashboard/projects/create">
             <Plus className="mr-2 h-4 w-4" />
-            Add Project
+            Create Project
           </Link>
         </Button>
       </div>
@@ -173,182 +127,156 @@ export function ProjectsList() {
         <CardHeader>
           <CardTitle>All Projects</CardTitle>
           <CardDescription>
-            View and manage all your sustainability projects
+            {projects.length} project{projects.length !== 1 ? "s" : ""} total
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                <Input
-                  type="search"
-                  placeholder="Search projects..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="Agroforestry">Agroforestry</SelectItem>
-                  <SelectItem value="Reforestation">Reforestation</SelectItem>
-                  <SelectItem value="Soil Carbon">Soil Carbon</SelectItem>
-                  <SelectItem value="Blue Carbon">Blue Carbon</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Filters */}
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+              <Input
+                placeholder="Search projects..."
+                className="pl-8"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Paused">Paused</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+              <span className="ml-2 text-muted-foreground">Loading projects...</span>
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Leaf className="h-10 w-10 text-muted-foreground mb-2" />
+              <p className="text-muted-foreground">No projects found.</p>
+              <Link href="/dashboard/projects/create">
+                <Button className="mt-4 bg-green-600 hover:bg-green-700">
+                  <Plus className="mr-2 h-4 w-4" /> Create First Project
+                </Button>
+              </Link>
+            </div>
+          ) : (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>
-                      <div className="flex items-center">
-                        Project Name
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
-                      </div>
-                    </TableHead>
-                    <TableHead className="hidden md:table-cell">Type</TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Location
-                    </TableHead>
-                    <TableHead className="hidden md:table-cell">
-                      Farmers
-                    </TableHead>
-                    <TableHead className="hidden lg:table-cell">
-                      Carbon Credits
-                    </TableHead>
+                    <TableHead>Project</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Farmers</TableHead>
+                    <TableHead>Carbon Credits</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Start Date</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProjects.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-24 text-center">
-                        No projects found.
+                  {projects.map((project) => (
+                    <TableRow key={project.id}>
+                      <TableCell className="font-medium">
+                        {project.name}
+                      </TableCell>
+                      <TableCell>{project.type || "—"}</TableCell>
+                      <TableCell>{project.location || "—"}</TableCell>
+                      <TableCell>{project.farmerCount ?? 0}</TableCell>
+                      <TableCell>
+                        {project.carbonCredits
+                          ? Number(project.carbonCredits).toLocaleString()
+                          : "0"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          className={
+                            statusColor[project.status] ??
+                            "bg-gray-100 text-gray-800"
+                          }
+                        >
+                          {project.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {project.startDate
+                          ? new Date(project.startDate).toLocaleDateString()
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(`/dashboard/projects/${project.id}`)
+                              }
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/projects/edit/${project.id}`
+                                )
+                              }
+                            >
+                              <FileEdit className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-red-600"
+                              onClick={() => {
+                                setProjectToDelete(project);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  ) : (
-                    filteredProjects.map((project) => (
-                      <TableRow key={project.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="rounded-full bg-green-100 p-2">
-                              <Leaf className="h-4 w-4 text-green-600" />
-                            </div>
-                            <div>
-                              <div className="font-medium">
-                                <Link
-                                  href={`/dashboard/projects/${project.id}`}
-                                  className="font-medium"
-                                >
-                                  {project.name}
-                                </Link>
-                              </div>
-                              <div className="hidden text-sm text-muted-foreground md:table-cell lg:hidden">
-                                {project.location}
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {project.type}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {project.location}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {project.farmers}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          {project.carbonCredits} tons
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={getStatusBadgeColor(project.status)}
-                          >
-                            {project.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  router.push(
-                                    `/dashboard/projects/${project.id}`
-                                  )
-                                }
-                              >
-                                <Eye className="mr-2 h-4 w-4" />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  router.push(
-                                    `/dashboard/projects/edit/${project.id}`
-                                  )
-                                }
-                              >
-                                <FileEdit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Download className="mr-2 h-4 w-4" />
-                                Export Data
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-red-600"
-                                onClick={() => handleDeleteClick(project.id)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
+                  ))}
                 </TableBody>
               </Table>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
-      <DeleteProjectDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleDeleteConfirm}
-      />
+      {projectToDelete && (
+        <DeleteProjectDialog
+          open={deleteDialogOpen}
+          onClose={() => {
+            setDeleteDialogOpen(false);
+            setProjectToDelete(null);
+          }}
+          onConfirm={handleDelete}
+          projectName={projectToDelete.name}
+        />
+      )}
     </div>
   );
 }

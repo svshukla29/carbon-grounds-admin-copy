@@ -1,9 +1,10 @@
 import { PartnerForm } from "@/components/partners/partner-form";
 
-export default function EditPartnerPage({
+export default async function EditPartnerPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  return <PartnerForm id={params.id} />;
+  const { id } = await params;
+  return <PartnerForm id={id} />;
 }

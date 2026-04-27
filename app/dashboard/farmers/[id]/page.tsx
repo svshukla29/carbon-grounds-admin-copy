@@ -1,9 +1,10 @@
 import { FarmerDetails } from "@/components/farmers/farmer-details";
 
-export default function FarmerDetailsPage({
+export default async function FarmerDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  return <FarmerDetails id={params.id} />;
+  const { id } = await params;
+  return <FarmerDetails id={id} />;
 }

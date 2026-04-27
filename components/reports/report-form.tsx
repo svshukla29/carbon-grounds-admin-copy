@@ -1,12 +1,13 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { reportsApi } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -27,24 +28,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
 
-// Mock report data
-const reportsData = [
-  {
-    id: "1",
-    title: "Q2 2023 Carbon Credits Report",
-    type: "Quarterly Summary",
-    project: "Sustainable Rice Cultivation",
-    status: "Published",
-    date: "2023-07-15",
-    summary:
-      "This quarterly report summarizes the carbon credit generation and verification for the Sustainable Rice Cultivation project during Q2 2023.",
-    content: `<h2>Executive Summary</h2>
-<p>The Sustainable Rice Cultivation project has successfully implemented alternate wetting and drying techniques across 124 farms in the Mekong Delta region. This has resulted in a 32% reduction in methane emissions compared to traditional cultivation methods.</p>
 
-<h2>Carbon Credit Generation</h2>
-<p>During Q2 2023, the project generated 450 tons of verified carbon credits. This represents a 15% increase from the previous quarter and puts the project on track to meet its annual target of 1,800 tons.</p>`,
-  },
-];
 
 export function ReportForm({ id }: { id?: string }) {
   const isEditMode = !!id;
@@ -62,35 +46,28 @@ export function ReportForm({ id }: { id?: string }) {
   });
 
   useEffect(() => {
-    if (isEditMode) {
-      // Simulate API fetch for edit mode
+    if (isEditMode && id) {
       const fetchReport = async () => {
         setLoading(true);
         try {
-          // In a real app, this would be an API call
-          const foundReport = reportsData.find((r) => r.id === id);
-
-          if (foundReport) {
-            setFormData({
-              title: foundReport.title,
-              type: foundReport.type,
-              project: foundReport.project,
-              status: foundReport.status,
-              date: foundReport.date,
-              summary: foundReport.summary,
-              content: foundReport.content,
-            });
-          } else {
-            // Report not found
-            router.push("/dashboard/reports");
-          }
+          const res = await reportsApi.getOne(id);
+          const r = res.data;
+          setFormData({
+            title: r.title ?? "",
+            type: r.type ?? "",
+            project: r.project?.id ?? "",
+            status: r.status ?? "",
+            date: r.createdAt ? r.createdAt.slice(0, 10) : "",
+            summary: r.summary ?? "",
+            content: r.content ?? "",
+          });
         } catch (error) {
           console.error("Error fetching report:", error);
+          router.push("/dashboard/reports");
         } finally {
           setLoading(false);
         }
       };
-
       fetchReport();
     }
   }, [id, isEditMode, router]);
@@ -113,18 +90,30 @@ export function ReportForm({ id }: { id?: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // In a real app, this would be an API call to create or update the report
-      console.log("Submitting form data:", formData);
-
-      // Redirect to reports list after successful submission
+      const payload = {
+        title: formData.title,
+        type: formData.type,
+        projectId: formData.project || undefined,
+        status: formData.status,
+        summary: formData.summary,
+        content: formData.content,
+      };
+      if (isEditMode && id) {
+        await reportsApi.update(id, payload);
+        toast({ title: "Report updated successfully!" });
+      } else {
+        await reportsApi.create(payload);
+        toast({ title: "Report created successfully!" });
+      }
       router.push("/dashboard/reports");
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    } catch (error: any) {
+      const msg = error?.response?.data?.message;
+      toast({
+        title: "Error",
+        description: Array.isArray(msg) ? msg.join(", ") : msg ?? "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }

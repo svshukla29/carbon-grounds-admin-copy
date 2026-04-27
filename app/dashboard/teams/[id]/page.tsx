@@ -1,9 +1,10 @@
 import { TeamDetails } from "@/components/teams/team-details";
 
-export default function TeamDetailsPage({
+export default async function TeamDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  return <TeamDetails id={params.id} />;
+  const { id } = await params;
+  return <TeamDetails id={id} />;
 }

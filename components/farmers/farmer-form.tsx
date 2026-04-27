@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { farmersApi } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 import {
   Card,
   CardContent,
@@ -28,27 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Checkbox } from "@/components/ui/checkbox";
 
-// Mock farmer data
-const farmersData = [
-  {
-    id: "1",
-    name: "Nguyen Van Minh",
-    location: "Mekong Delta, Vietnam",
-    area: "2.5",
-    crops: ["Rice", "Vegetables"],
-    status: "Verified",
-    joinDate: "2023-04-10",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "NM",
-    bio: "Nguyen Van Minh has been farming in the Mekong Delta for over 20 years. He has transitioned to sustainable farming practices to improve soil health and reduce environmental impact.",
-    contact: {
-      phone: "+84 123 456 789",
-      email: "nguyen.minh@example.com",
-      address: "123 Farming Village, Mekong Delta, Vietnam",
-    },
-    certifications: ["Organic Farming", "Sustainable Agriculture"],
-  },
-];
+
 
 export function FarmerForm({ id }: { id?: string }) {
   const isEditMode = !!id;
@@ -86,39 +68,32 @@ export function FarmerForm({ id }: { id?: string }) {
   ];
 
   useEffect(() => {
-    if (isEditMode) {
-      // Simulate API fetch for edit mode
+    if (isEditMode && id) {
       const fetchFarmer = async () => {
         setLoading(true);
         try {
-          // In a real app, this would be an API call
-          const foundFarmer = farmersData.find((f) => f.id === id);
-
-          if (foundFarmer) {
-            setFormData({
-              name: foundFarmer.name,
-              bio: foundFarmer.bio,
-              location: foundFarmer.location,
-              area: foundFarmer.area,
-              status: foundFarmer.status,
-              joinDate: foundFarmer.joinDate,
-              phone: foundFarmer.contact.phone,
-              email: foundFarmer.contact.email,
-              address: foundFarmer.contact.address,
-              crops: foundFarmer.crops,
-              certifications: foundFarmer.certifications,
-            });
-          } else {
-            // Farmer not found
-            router.push("/dashboard/farmers");
-          }
+          const res = await farmersApi.getOne(id);
+          const f = res.data;
+          setFormData({
+            name: f.name ?? "",
+            bio: f.bio ?? "",
+            location: f.location ?? "",
+            area: String(f.area ?? ""),
+            status: f.status ?? "",
+            joinDate: f.joinDate ? f.joinDate.slice(0, 10) : "",
+            phone: f.phone ?? "",
+            email: f.email ?? "",
+            address: f.address ?? "",
+            crops: f.crops ?? [],
+            certifications: f.certifications ?? [],
+          });
         } catch (error) {
           console.error("Error fetching farmer:", error);
+          router.push("/dashboard/farmers");
         } finally {
           setLoading(false);
         }
       };
-
       fetchFarmer();
     }
   }, [id, isEditMode, router]);
@@ -165,18 +140,35 @@ export function FarmerForm({ id }: { id?: string }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // In a real app, this would be an API call to create or update the farmer
-      console.log("Submitting form data:", formData);
-
-      // Redirect to farmers list after successful submission
+      const payload = {
+        name: formData.name,
+        bio: formData.bio,
+        location: formData.location,
+        area: parseFloat(formData.area) || 0,
+        status: formData.status,
+        joinDate: formData.joinDate || undefined,
+        phone: formData.phone,
+        email: formData.email,
+        address: formData.address,
+        crops: formData.crops,
+        certifications: formData.certifications,
+      };
+      if (isEditMode && id) {
+        await farmersApi.update(id, payload);
+        toast({ title: "Farmer updated successfully!" });
+      } else {
+        await farmersApi.create(payload);
+        toast({ title: "Farmer added successfully!" });
+      }
       router.push("/dashboard/farmers");
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    } catch (error: any) {
+      const msg = error?.response?.data?.message;
+      toast({
+        title: "Error",
+        description: Array.isArray(msg) ? msg.join(", ") : msg ?? "Something went wrong",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }

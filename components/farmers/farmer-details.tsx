@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Download, FileEdit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { farmersApi } from "@/lib/api";
 import {
   Card,
   CardContent,
@@ -17,75 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DeleteFarmerDialog } from "@/components/farmers/delete-farmer-dialog";
 
-// Mock farmer data
-const farmersData = [
-  {
-    id: "1",
-    name: "Nguyen Van Minh",
-    location: "Mekong Delta, Vietnam",
-    area: "2.5 hectares",
-    crops: ["Rice", "Vegetables"],
-    status: "Verified",
-    joinDate: "2023-04-10",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "NM",
-    bio: "Nguyen Van Minh has been farming in the Mekong Delta for over 20 years. He has transitioned to sustainable farming practices to improve soil health and reduce environmental impact.",
-    contact: {
-      phone: "+84 123 456 789",
-      email: "nguyen.minh@example.com",
-      address: "123 Farming Village, Mekong Delta, Vietnam",
-    },
-    projects: [
-      {
-        id: "1",
-        name: "Sustainable Rice Cultivation",
-        role: "Participant",
-        joinDate: "2023-04-15",
-      },
-    ],
-    carbonCredits: 45,
-    certifications: ["Organic Farming", "Sustainable Agriculture"],
-    farmHistory: [
-      { year: "2020", crops: ["Rice"], area: "2.0 hectares" },
-      { year: "2021", crops: ["Rice"], area: "2.0 hectares" },
-      { year: "2022", crops: ["Rice", "Vegetables"], area: "2.5 hectares" },
-      { year: "2023", crops: ["Rice", "Vegetables"], area: "2.5 hectares" },
-    ],
-  },
-  {
-    id: "6",
-    name: "John Mwangi",
-    location: "Central Kenya",
-    area: "3.0 hectares",
-    crops: ["Coffee", "Maize"],
-    status: "Verified",
-    joinDate: "2023-02-15",
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "JM",
-    bio: "John Mwangi is a third-generation coffee farmer in Central Kenya. He has implemented agroforestry techniques to improve coffee quality and protect the environment.",
-    contact: {
-      phone: "+254 123 456 789",
-      email: "john.mwangi@example.com",
-      address: "456 Coffee Farm, Central Kenya",
-    },
-    projects: [
-      {
-        id: "2",
-        name: "Community Forest Management",
-        role: "Participant",
-        joinDate: "2023-02-20",
-      },
-    ],
-    carbonCredits: 38,
-    certifications: ["Fair Trade", "Rainforest Alliance"],
-    farmHistory: [
-      { year: "2020", crops: ["Coffee"], area: "2.5 hectares" },
-      { year: "2021", crops: ["Coffee", "Maize"], area: "2.8 hectares" },
-      { year: "2022", crops: ["Coffee", "Maize"], area: "3.0 hectares" },
-      { year: "2023", crops: ["Coffee", "Maize"], area: "3.0 hectares" },
-    ],
-  },
-];
+
 
 export function FarmerDetails({ id }: { id: string }) {
   const [farmer, setFarmer] = useState<any>(null);
@@ -94,35 +27,29 @@ export function FarmerDetails({ id }: { id: string }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Simulate API fetch
     const fetchFarmer = async () => {
       setLoading(true);
       try {
-        // In a real app, this would be an API call
-        const foundFarmer = farmersData.find((f) => f.id === id);
-
-        if (foundFarmer) {
-          setFarmer(foundFarmer);
-        } else {
-          // Farmer not found
-          router.push("/dashboard/farmers");
-        }
+        const res = await farmersApi.getOne(id);
+        setFarmer(res.data);
       } catch (error) {
         console.error("Error fetching farmer:", error);
+        router.push("/dashboard/farmers");
       } finally {
         setLoading(false);
       }
     };
-
     fetchFarmer();
   }, [id, router]);
 
-  const handleDelete = () => {
-    setDeleteDialogOpen(true);
-  };
+  const handleDelete = () => setDeleteDialogOpen(true);
 
-  const handleDeleteConfirm = () => {
-    // In a real app, this would be an API call to delete the farmer
+  const handleDeleteConfirm = async () => {
+    try {
+      await farmersApi.delete(id);
+    } catch (e) {
+      console.error(e);
+    }
     setDeleteDialogOpen(false);
     router.push("/dashboard/farmers");
   };
@@ -244,15 +171,15 @@ export function FarmerDetails({ id }: { id: string }) {
                 <div className="space-y-2 rounded-md border p-3 text-sm">
                   <div className="grid grid-cols-3">
                     <span className="text-muted-foreground">Phone:</span>
-                    <span className="col-span-2">{farmer.contact.phone}</span>
+                    <span className="col-span-2">{farmer.phone ?? "—"}</span>
                   </div>
                   <div className="grid grid-cols-3">
                     <span className="text-muted-foreground">Email:</span>
-                    <span className="col-span-2">{farmer.contact.email}</span>
+                    <span className="col-span-2">{farmer.email ?? "—"}</span>
                   </div>
                   <div className="grid grid-cols-3">
                     <span className="text-muted-foreground">Address:</span>
-                    <span className="col-span-2">{farmer.contact.address}</span>
+                    <span className="col-span-2">{farmer.address ?? "—"}</span>
                   </div>
                 </div>
               </div>
@@ -391,8 +318,9 @@ export function FarmerDetails({ id }: { id: string }) {
 
       <DeleteFarmerDialog
         open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleDeleteConfirm}
+        farmerName={farmer.name}
       />
     </div>
   );
