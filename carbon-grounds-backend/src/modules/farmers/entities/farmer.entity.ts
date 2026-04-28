@@ -30,6 +30,7 @@ export class Farmer {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   area: number; // in hectares
 
+  /** Crop / plant types — shown as "Type" in the admin UI */
   @Column({ type: 'text', array: true, default: '{}' })
   crops: string[];
 
@@ -54,6 +55,15 @@ export class Farmer {
   @Column({ nullable: true })
   avatarUrl: string;
 
+  /**
+   * Primary project this farmer is assigned to.
+   * Stored as a plain UUID column for quick lookup without a JOIN.
+   * Kept in sync by ProjectsService when farmerId is set on a project.
+   */
+  @Column({ nullable: true })
+  projectId: string;
+
+  /** Many-to-many relationship with Projects (bulk assignment) */
   @ManyToMany(() => Project, (project) => project.farmers)
   projects: Project[];
 

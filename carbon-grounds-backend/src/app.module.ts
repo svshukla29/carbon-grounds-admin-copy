@@ -19,18 +19,21 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DB_HOST'),
-        port: config.get<number>('DB_PORT'),
-        database: config.get<string>('DB_NAME'),
-        username: config.get<string>('DB_USERNAME'),
-        password: config.get<string>('DB_PASSWORD'),
-        entities: [__dirname + '/modules/**/*.entity{.ts,.js}'],
-        synchronize: true, // auto-create tables — set false in production after stable
-        ssl: { rejectUnauthorized: false }, // Required for AWS RDS
-        logging: config.get<string>('NODE_ENV') === 'development',
-      }),
+      useFactory: (config: ConfigService) => {
+        const isLocal = config.get<string>('DB_HOST') === 'localhost';
+        return {
+          type: 'postgres',
+          host: config.get<string>('DB_HOST'),
+          port: config.get<number>('DB_PORT'),
+          database: config.get<string>('DB_NAME'),
+          username: config.get<string>('DB_USERNAME'),
+          password: config.get<string>('DB_PASSWORD'),
+          entities: [__dirname + '/modules/**/*.entity{.ts,.js}'],
+          synchronize: true, // auto-create tables — set false in production after stable
+          ssl: isLocal ? false : { rejectUnauthorized: false }, // SSL only for AWS RDS
+          logging: config.get<string>('NODE_ENV') === 'development',
+        };
+      },
     }),
 
     AuthModule,

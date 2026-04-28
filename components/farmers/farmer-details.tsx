@@ -17,6 +17,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DeleteFarmerDialog } from "@/components/farmers/delete-farmer-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 
 
@@ -189,18 +197,14 @@ export function FarmerDetails({ id }: { id: string }) {
                 <div className="space-y-2 rounded-md border p-3 text-sm">
                   <div className="grid grid-cols-3">
                     <span className="text-muted-foreground">Area:</span>
-                    <span className="col-span-2">{farmer.area}</span>
-                  </div>
-                  <div className="grid grid-cols-3">
-                    <span className="text-muted-foreground">Crops:</span>
-                    <span className="col-span-2">
-                      {farmer.crops.join(", ")}
-                    </span>
+                    <span className="col-span-2">{farmer.area} ha</span>
                   </div>
                   <div className="grid grid-cols-3">
                     <span className="text-muted-foreground">Joined:</span>
                     <span className="col-span-2">
-                      {new Date(farmer.joinDate).toLocaleDateString()}
+                      {farmer.joinDate
+                        ? new Date(farmer.joinDate).toLocaleDateString()
+                        : "—"}
                     </span>
                   </div>
                 </div>
@@ -209,7 +213,7 @@ export function FarmerDetails({ id }: { id: string }) {
               <div>
                 <h4 className="mb-2 text-sm font-medium">Certifications</h4>
                 <div className="flex flex-wrap gap-2">
-                  {farmer.certifications.map((cert: string, index: number) => (
+                  {(farmer.certifications || []).map((cert: string, index: number) => (
                     <Badge
                       key={index}
                       variant="outline"
@@ -229,38 +233,52 @@ export function FarmerDetails({ id }: { id: string }) {
             <CardTitle>Farmer Activity</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="projects">
+            <Tabs defaultValue="landDetails">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="projects">Projects</TabsTrigger>
+                <TabsTrigger value="landDetails">Land Details</TabsTrigger>
                 <TabsTrigger value="carbon">Carbon Credits</TabsTrigger>
-                <TabsTrigger value="history">Farm History</TabsTrigger>
+                <TabsTrigger value="plantDetails">Plant Details</TabsTrigger>
               </TabsList>
-              <TabsContent value="projects" className="pt-4">
+
+              {/* Land Details Tab (replaces Projects) */}
+              <TabsContent value="landDetails" className="pt-4">
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Project Name</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Join Date</TableHead>
+                        <TableHead>Land ID / Project</TableHead>
+                        <TableHead>Area (ha)</TableHead>
+                        <TableHead>Land Type</TableHead>
+                        <TableHead>Soil Type</TableHead>
+                        <TableHead>Water Source</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {farmer.projects.map((project: any) => (
-                        <TableRow key={project.id}>
-                          <TableCell className="font-medium">
-                            {project.name}
-                          </TableCell>
-                          <TableCell>{project.role}</TableCell>
-                          <TableCell>
-                            {new Date(project.joinDate).toLocaleDateString()}
+                      {(farmer.projects || []).length > 0 ? (
+                        (farmer.projects || []).map((project: any) => (
+                          <TableRow key={project.id}>
+                            <TableCell className="font-medium">
+                              {project.name ?? project.id ?? "—"}
+                            </TableCell>
+                            <TableCell>{project.landArea ?? "—"}</TableCell>
+                            <TableCell>{project.landType ?? "—"}</TableCell>
+                            <TableCell>{project.soilType ?? "—"}</TableCell>
+                            <TableCell>{project.waterSource ?? "—"}</TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                            No land details available
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )}
                     </TableBody>
                   </Table>
                 </div>
               </TabsContent>
+
+              {/* Carbon Credits Tab */}
               <TabsContent value="carbon" className="pt-4">
                 <Card>
                   <CardHeader className="pb-2">
@@ -268,7 +286,7 @@ export function FarmerDetails({ id }: { id: string }) {
                       Carbon Credits Generated
                     </CardTitle>
                     <CardDescription>
-                      Total credits: {farmer.carbonCredits} tons CO₂e
+                      Total credits: {farmer.carbonCredits ?? 0} tons CO₂e
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -276,7 +294,7 @@ export function FarmerDetails({ id }: { id: string }) {
                       <div className="flex h-full items-center justify-center">
                         <div className="text-center">
                           <div className="text-5xl font-bold text-green-600">
-                            {farmer.carbonCredits}
+                            {farmer.carbonCredits ?? 0}
                           </div>
                           <p className="mt-2 text-sm text-muted-foreground">
                             tons of CO₂ equivalent
@@ -287,26 +305,57 @@ export function FarmerDetails({ id }: { id: string }) {
                   </CardContent>
                 </Card>
               </TabsContent>
-              <TabsContent value="history" className="pt-4">
+
+              {/* Plant Details Tab (replaces Farm History) */}
+              <TabsContent value="plantDetails" className="pt-4">
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Plant / Crop Type</TableHead>
+                        <TableHead>Variety</TableHead>
+                        <TableHead>Season</TableHead>
+                        <TableHead>Area Planted (ha)</TableHead>
                         <TableHead>Year</TableHead>
-                        <TableHead>Crops</TableHead>
-                        <TableHead>Area</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {farmer.farmHistory.map((history: any, index: number) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">
-                            {history.year}
+                      {(farmer.farmHistory || farmer.crops || []).length > 0 ? (
+                        // Try farmHistory first, fallback to crops array
+                        (farmer.farmHistory || []).length > 0
+                          ? (farmer.farmHistory || []).map(
+                              (entry: any, index: number) => (
+                                <TableRow key={index}>
+                                  <TableCell className="font-medium">
+                                    {Array.isArray(entry.crops)
+                                      ? entry.crops.join(", ")
+                                      : entry.crops ?? "—"}
+                                  </TableCell>
+                                  <TableCell>{entry.variety ?? "—"}</TableCell>
+                                  <TableCell>{entry.season ?? "—"}</TableCell>
+                                  <TableCell>{entry.area ?? "—"}</TableCell>
+                                  <TableCell>{entry.year ?? "—"}</TableCell>
+                                </TableRow>
+                              )
+                            )
+                          : (farmer.crops || []).map(
+                              (crop: string, index: number) => (
+                                <TableRow key={index}>
+                                  <TableCell className="font-medium">{crop}</TableCell>
+                                  <TableCell>—</TableCell>
+                                  <TableCell>—</TableCell>
+                                  <TableCell>—</TableCell>
+                                  <TableCell>—</TableCell>
+                                </TableRow>
+                              )
+                            )
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                            No plant details available
                           </TableCell>
-                          <TableCell>{history.crops.join(", ")}</TableCell>
-                          <TableCell>{history.area}</TableCell>
                         </TableRow>
-                      ))}
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -325,13 +374,3 @@ export function FarmerDetails({ id }: { id: string }) {
     </div>
   );
 }
-
-// Import Table components for the Tabs content
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";

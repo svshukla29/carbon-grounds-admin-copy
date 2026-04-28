@@ -47,6 +47,12 @@ export class Report {
   @Column({ type: 'text', nullable: true })
   content: string;
 
+  @Column({ nullable: true })
+  fileUrl: string; // path/URL to uploaded attachment
+
+  @Column({ nullable: true })
+  fileName: string; // original file name for display
+
   @ManyToOne(() => Project, (project) => project.reports, {
     nullable: true,
     onDelete: 'SET NULL',

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { FarmersService } from '../farmers/farmers.service';
 import { ProjectsService } from '../projects/projects.service';
-import { PartnersService } from '../partners/partners.service';
 import { ReportsService } from '../reports/reports.service';
 import { TeamsService } from '../teams/teams.service';
 
@@ -10,7 +9,6 @@ export class DashboardService {
   constructor(
     private farmersService: FarmersService,
     private projectsService: ProjectsService,
-    private partnersService: PartnersService,
     private reportsService: ReportsService,
     private teamsService: TeamsService,
   ) {}
@@ -18,15 +16,17 @@ export class DashboardService {
   async getStats() {
     const [
       totalFarmers,
+      activeFarmers,   // Verified farmers — "Active Farmers" metric
       totalProjects,
-      totalPartners,
+      totalVillages,   // Distinct project locations — "Total Villages" metric
       totalReports,
       totalTeamMembers,
       totalCarbonCredits,
     ] = await Promise.all([
       this.farmersService.count(),
+      this.farmersService.countActive(),
       this.projectsService.count(),
-      this.partnersService.count(),
+      this.projectsService.totalVillages(),
       this.reportsService.count(),
       this.teamsService.count(),
       this.projectsService.totalCarbonCredits(),
@@ -34,8 +34,9 @@ export class DashboardService {
 
     return {
       totalFarmers,
+      activeFarmers,
       totalProjects,
-      totalPartners,
+      totalVillages,
       totalReports,
       totalTeamMembers,
       totalCarbonCredits,

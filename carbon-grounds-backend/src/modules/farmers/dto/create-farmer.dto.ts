@@ -6,6 +6,7 @@ import {
   IsArray,
   IsDateString,
   IsEmail,
+  IsUUID,
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -32,7 +33,10 @@ export class CreateFarmerDto {
   @Min(0)
   area: number;
 
-  @ApiPropertyOptional({ example: ['Rice', 'Wheat'] })
+  @ApiPropertyOptional({
+    example: ['Rice', 'Wheat'],
+    description: 'Crop / plant types (shown as "Type" in admin UI)',
+  })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
@@ -68,4 +72,11 @@ export class CreateFarmerDto {
   @IsOptional()
   @IsString()
   address?: string;
+
+  @ApiPropertyOptional({
+    description: 'UUID of the primary project this farmer belongs to',
+  })
+  @IsOptional()
+  @IsUUID()
+  projectId?: string;
 }

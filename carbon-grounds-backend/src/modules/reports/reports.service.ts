@@ -52,6 +52,13 @@ export class ReportsService {
     return this.reportsRepo.save(report);
   }
 
+  async attachFile(id: string, fileUrl: string, fileName: string): Promise<Report> {
+    const report = await this.findOne(id);
+    report.fileUrl = fileUrl;
+    report.fileName = fileName;
+    return this.reportsRepo.save(report);
+  }
+
   async remove(id: string): Promise<{ message: string }> {
     const report = await this.findOne(id);
     await this.reportsRepo.remove(report);

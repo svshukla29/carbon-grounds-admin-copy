@@ -5,7 +5,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
   BarChart3,
-  Building,
   FileText,
   Leaf,
   Settings,
@@ -48,12 +47,6 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
       icon: UserPlus,
       href: "/dashboard/farmers",
       active: pathname === "/dashboard/farmers",
-    },
-    {
-      label: "Partners",
-      icon: Building,
-      href: "/dashboard/partners",
-      active: pathname === "/dashboard/partners",
     },
     {
       label: "Reports",

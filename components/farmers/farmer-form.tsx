@@ -337,7 +337,7 @@ export function FarmerForm({ id }: { id?: string }) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Crops</Label>
+                  <Label>Type</Label>
                   <div className="grid grid-cols-2 gap-2 rounded-md border p-4 md:grid-cols-3">
                     {cropOptions.map((crop) => (
                       <div

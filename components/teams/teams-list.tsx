@@ -9,8 +9,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamMembersTable } from "@/components/teams/team-members-table";
 import { RoleManagement } from "@/components/teams/role-management";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, UserPlus } from "lucide-react";
 import { AddTeamMemberDialog } from "@/components/teams/add-team-member-dialog";
+import { AddUserDialog } from "@/components/teams/add-user-dialog";
 
 export function TeamsList() {
   return (
@@ -24,12 +25,20 @@ export function TeamsList() {
             Manage team members and their access permissions
           </p>
         </div>
-        <AddTeamMemberDialog>
-          <Button className="bg-green-600 hover:bg-green-700">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Team Member
-          </Button>
-        </AddTeamMemberDialog>
+        <div className="flex gap-2">
+          <AddUserDialog>
+            <Button variant="outline">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          </AddUserDialog>
+          <AddTeamMemberDialog>
+            <Button className="bg-green-600 hover:bg-green-700">
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Team Member
+            </Button>
+          </AddTeamMemberDialog>
+        </div>
       </div>
 
       <Tabs defaultValue="members" className="space-y-6">

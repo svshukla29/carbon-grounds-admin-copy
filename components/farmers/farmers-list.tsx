@@ -59,6 +59,7 @@ interface Farmer {
   joinDate?: string;
   email?: string;
   phone?: string;
+  projectId?: string;
 }
 
 export function FarmersList() {
@@ -175,9 +176,10 @@ export function FarmersList() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Farmer</TableHead>
+                  <TableHead>Project ID</TableHead>
                   <TableHead>Location</TableHead>
                   <TableHead>Area (ha)</TableHead>
-                  <TableHead>Crops</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Join Date</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -200,6 +202,9 @@ export function FarmersList() {
                           )}
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">
+                      {farmer.projectId ?? "—"}
                     </TableCell>
                     <TableCell className="text-sm">{farmer.location}</TableCell>
                     <TableCell className="text-sm">{Number(farmer.area).toFixed(1)}</TableCell>

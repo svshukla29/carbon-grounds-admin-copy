@@ -135,6 +135,13 @@ export const reportsApi = {
   create: (data: any) => api.post("/reports", data),
   update: (id: string, data: any) => api.patch(`/reports/${id}`, data),
   delete: (id: string) => api.delete(`/reports/${id}`),
+  uploadFile: (id: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return api.post(`/reports/${id}/upload`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 };
 
 // ─── Teams APIs ───────────────────────────────────────────────────────────────

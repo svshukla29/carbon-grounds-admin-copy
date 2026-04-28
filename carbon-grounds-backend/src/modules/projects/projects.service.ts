@@ -16,15 +16,38 @@ export class ProjectsService {
   ) {}
 
   async create(dto: CreateProjectDto): Promise<Project> {
-    const { farmerIds, ...projectData } = dto;
+    const { farmerIds, farmerId, ...projectData } = dto;
 
-    const project = this.projectsRepo.create(projectData);
+    const project = this.projectsRepo.create({
+      ...projectData,
+      // Default status to Active when creating from the form (no status field)
+      status: projectData.status ?? ProjectStatus.ACTIVE,
+      farmerId: farmerId ?? undefined,
+    });
 
+    // Bulk many-to-many assignment
     if (farmerIds && farmerIds.length > 0) {
       project.farmers = await this.farmersRepo.findBy({ id: In(farmerIds) });
     }
 
-    return this.projectsRepo.save(project);
+    // Also add primary farmer to M2M if provided
+    if (farmerId && !farmerIds?.includes(farmerId)) {
+      const primaryFarmer = await this.farmersRepo.findOne({
+        where: { id: farmerId },
+      });
+      if (primaryFarmer) {
+        project.farmers = [...(project.farmers || []), primaryFarmer];
+      }
+    }
+
+    const saved = (await this.projectsRepo.save(project)) as Project;
+
+    // Sync back projectId on the farmer record for quick lookup
+    if (farmerId) {
+      await this.farmersRepo.update(farmerId, { projectId: saved.id } as any);
+    }
+
+    return saved;
   }
 
   async findAll(query?: {
@@ -36,6 +59,8 @@ export class ProjectsService {
       .createQueryBuilder('project')
       .leftJoin('project.farmers', 'farmer')
       .addSelect(['farmer.id', 'farmer.name'])
+      .leftJoin('project.farmer', 'primaryFarmer')
+      .addSelect(['primaryFarmer.id', 'primaryFarmer.name'])
       .orderBy('project.createdAt', 'DESC');
 
     if (query?.search) {
@@ -57,7 +82,7 @@ export class ProjectsService {
   async findOne(id: string): Promise<Project> {
     const project = await this.projectsRepo.findOne({
       where: { id },
-      relations: ['farmers', 'reports'],
+      relations: ['farmers', 'reports', 'farmer'],
     });
     if (!project) throw new NotFoundException(`Project #${id} not found`);
     return project;
@@ -65,10 +90,16 @@ export class ProjectsService {
 
   async update(id: string, dto: UpdateProjectDto): Promise<Project> {
     const project = await this.findOne(id);
-    const { farmerIds, ...updateData } = dto;
+    const { farmerIds, farmerId, ...updateData } = dto;
 
     Object.assign(project, updateData);
 
+    // Update primary farmer FK
+    if (farmerId !== undefined) {
+      project.farmerId = farmerId ?? undefined;
+    }
+
+    // Update many-to-many bulk list
     if (farmerIds !== undefined) {
       project.farmers =
         farmerIds.length > 0
@@ -76,7 +107,14 @@ export class ProjectsService {
           : [];
     }
 
-    return this.projectsRepo.save(project);
+    const saved = (await this.projectsRepo.save(project)) as Project;
+
+    // Keep farmer.projectId in sync
+    if (farmerId) {
+      await this.farmersRepo.update(farmerId, { projectId: saved.id } as any);
+    }
+
+    return saved;
   }
 
   async assignFarmers(
@@ -105,5 +143,17 @@ export class ProjectsService {
       .select('SUM(project.carbonCredits)', 'total')
       .getRawOne();
     return parseFloat(result?.total || 0);
+  }
+
+  /**
+   * Count distinct villages (unique locations) across all projects.
+   * Uses location as a proxy for village.
+   */
+  async totalVillages(): Promise<number> {
+    const result = await this.projectsRepo
+      .createQueryBuilder('project')
+      .select('COUNT(DISTINCT project.location)', 'total')
+      .getRawOne();
+    return parseInt(result?.total || '0', 10);
   }
 }

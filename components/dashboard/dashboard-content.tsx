@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,9 +12,37 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { ProjectProgressChart } from "@/components/dashboard/project-progress-chart";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
-import { NotificationsPanel } from "@/components/dashboard/notifications-panel";
+import { dashboardApi } from "@/lib/api";
+import { Loader2 } from "lucide-react";
+
+interface DashboardStats {
+  totalProjects: number;
+  activeFarmers: number;
+  totalVillages: number;
+  totalCarbonCredits: number;
+  totalFarmers: number;
+  totalReports: number;
+  totalTeamMembers: number;
+}
 
 export function DashboardContent() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await dashboardApi.getStats();
+        setStats(res.data);
+      } catch (err) {
+        console.error("Failed to load dashboard stats", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div>
@@ -31,40 +62,41 @@ export function DashboardContent() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <MetricCard
-              title="Active Projects"
-              value="24"
-              trend="up"
-              trendValue="8%"
-              icon="leaf"
-              description="Across 12 regions"
-            />
-            <MetricCard
-              title="Verified Farmers"
-              value="1,284"
-              trend="up"
-              trendValue="12%"
-              icon="users"
-              description="120 new this month"
-            />
-            <MetricCard
-              title="Carbon Credits"
-              value="5,240"
-              trend="up"
-              trendValue="23%"
-              icon="carbon"
-              description="Tons of CO₂ equivalent"
-            />
-            <MetricCard
-              title="Income Streams"
-              value="18"
-              trend="up"
-              trendValue="5%"
-              icon="dollar"
-              description="New revenue channels"
-            />
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+              <span className="ml-2 text-muted-foreground">
+                Loading stats...
+              </span>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <MetricCard
+                title="Active Projects"
+                value={stats?.totalProjects?.toString() ?? "0"}
+                trend="up"
+                trendValue="Live"
+                icon="leaf"
+                description="Total sustainability projects"
+              />
+              <MetricCard
+                title="Active Farmers"
+                value={stats?.activeFarmers?.toLocaleString() ?? "0"}
+                trend="up"
+                trendValue="Verified"
+                icon="users"
+                description={`${stats?.totalFarmers ?? 0} total registered`}
+              />
+              <MetricCard
+                title="Total Villages"
+                value={stats?.totalVillages?.toString() ?? "0"}
+                trend="up"
+                trendValue="Locations"
+                icon="dollar"
+                description="Distinct villages / locations covered"
+              />
+            </div>
+          )}
 
           <div className="grid gap-4 md:grid-cols-7">
             <Card className="md:col-span-4">
@@ -91,18 +123,6 @@ export function DashboardContent() {
               </CardContent>
             </Card>
           </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>
-                Important alerts and messages requiring your attention
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <NotificationsPanel />
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="analytics">

@@ -176,10 +176,10 @@ export function ProjectsList() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Project</TableHead>
+                    <TableHead>Project ID</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Location</TableHead>
-                    <TableHead>Farmers</TableHead>
+                    <TableHead>Farmer Name</TableHead>
                     <TableHead>Carbon Credits</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Start Date</TableHead>
@@ -189,12 +189,12 @@ export function ProjectsList() {
                 <TableBody>
                   {projects.map((project) => (
                     <TableRow key={project.id}>
-                      <TableCell className="font-medium">
-                        {project.name}
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        {project.id}
                       </TableCell>
                       <TableCell>{project.type || "—"}</TableCell>
                       <TableCell>{project.location || "—"}</TableCell>
-                      <TableCell>{project.farmerCount ?? 0}</TableCell>
+                      <TableCell>{project.farmerCount ? `${project.farmerCount} farmer(s)` : "—"}</TableCell>
                       <TableCell>
                         {project.carbonCredits
                           ? Number(project.carbonCredits).toLocaleString()

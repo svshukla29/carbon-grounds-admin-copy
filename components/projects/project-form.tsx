@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { projectsApi } from "@/lib/api";
+import { projectsApi, farmersApi } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import {
   Card,
@@ -25,28 +25,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
 
-
+interface Farmer {
+  id: string;
+  name: string;
+  location: string;
+}
 
 export function ProjectForm({ id }: { id?: string }) {
   const isEditMode = !!id;
   const router = useRouter();
   const [loading, setLoading] = useState(isEditMode);
   const [submitting, setSubmitting] = useState(false);
+  const [farmers, setFarmers] = useState<Farmer[]>([]);
+
   const [formData, setFormData] = useState({
-    name: "",
+    projectId: "",
     description: "",
     type: "",
     location: "",
-    status: "",
     startDate: "",
     endDate: "",
-    budget: "",
-    objectives: "",
-    partners: "",
+    // Land details
+    landArea: "",
+    landType: "",
+    soilType: "",
+    waterSource: "",
+    elevation: "",
+    coordinates: "",
+    // Farmer selection
+    selectedFarmerId: "",
   });
+
+  // Fetch farmers for the dropdown
+  useEffect(() => {
+    const loadFarmers = async () => {
+      try {
+        const res = await farmersApi.getAll();
+        setFarmers(res.data);
+      } catch (err) {
+        console.error("Failed to load farmers", err);
+      }
+    };
+    loadFarmers();
+  }, []);
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -56,16 +79,19 @@ export function ProjectForm({ id }: { id?: string }) {
           const res = await projectsApi.getOne(id);
           const p = res.data;
           setFormData({
-            name: p.name ?? "",
+            projectId: p.id ?? "",
             description: p.description ?? "",
             type: p.type ?? "",
             location: p.location ?? "",
-            status: p.status ?? "",
             startDate: p.startDate ? p.startDate.slice(0, 10) : "",
             endDate: p.endDate ? p.endDate.slice(0, 10) : "",
-            budget: p.budget ? String(p.budget) : "",
-            objectives: Array.isArray(p.objectives) ? p.objectives.join("\n") : (p.objectives ?? ""),
-            partners: Array.isArray(p.partnerNames) ? p.partnerNames.join("\n") : "",
+            landArea: p.landArea ? String(p.landArea) : "",
+            landType: p.landType ?? "",
+            soilType: p.soilType ?? "",
+            waterSource: p.waterSource ?? "",
+            elevation: p.elevation ? String(p.elevation) : "",
+            coordinates: p.coordinates ?? "",
+            selectedFarmerId: p.farmerId ?? "",
           });
         } catch (error) {
           console.error("Error fetching project:", error);
@@ -98,17 +124,19 @@ export function ProjectForm({ id }: { id?: string }) {
     setSubmitting(true);
     try {
       const payload = {
-        name: formData.name,
-        description: formData.description,
+        name: formData.projectId,
+        description: formData.description || undefined,
         type: formData.type,
         location: formData.location,
-        status: formData.status,
         startDate: formData.startDate || undefined,
         endDate: formData.endDate || undefined,
-        budget: formData.budget ? parseFloat(formData.budget) : undefined,
-        objectives: formData.objectives
-          ? formData.objectives.split("\n").filter(Boolean)
-          : [],
+        landArea: formData.landArea ? parseFloat(formData.landArea) : undefined,
+        landType: formData.landType || undefined,
+        soilType: formData.soilType || undefined,
+        waterSource: formData.waterSource || undefined,
+        elevation: formData.elevation ? parseFloat(formData.elevation) : undefined,
+        coordinates: formData.coordinates || undefined,
+        farmerId: formData.selectedFarmerId || undefined,
       };
       if (isEditMode && id) {
         await projectsApi.update(id, payload);
@@ -155,7 +183,8 @@ export function ProjectForm({ id }: { id?: string }) {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
         <Card>
           <CardHeader>
             <CardTitle>Project Information</CardTitle>
@@ -165,187 +194,245 @@ export function ProjectForm({ id }: { id?: string }) {
                 : "Enter the details of your new sustainability project"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="basic" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="basic">Basic Information</TabsTrigger>
-                <TabsTrigger value="details">Additional Details</TabsTrigger>
-              </TabsList>
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="projectId">Project ID <span className="text-red-500">*</span></Label>
+                <Input
+                  id="projectId"
+                  name="projectId"
+                  placeholder="Enter unique project ID (e.g. PRJ-001)"
+                  value={formData.projectId}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Project Type <span className="text-red-500">*</span></Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) => handleSelectChange("type", value)}
+                  required
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Select project type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Agroforestry">Agroforestry</SelectItem>
+                    <SelectItem value="Reforestation">Reforestation</SelectItem>
+                    <SelectItem value="Soil Carbon">Soil Carbon</SelectItem>
+                    <SelectItem value="Blue Carbon">Blue Carbon</SelectItem>
+                    <SelectItem value="Renewable Energy">Renewable Energy</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-              <TabsContent value="basic" className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Project Name</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      placeholder="Enter project name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="type">Project Type</Label>
-                    <Select
-                      value={formData.type}
-                      onValueChange={(value) =>
-                        handleSelectChange("type", value)
-                      }
-                      required
-                    >
-                      <SelectTrigger id="type">
-                        <SelectValue placeholder="Select project type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Agroforestry">
-                          Agroforestry
-                        </SelectItem>
-                        <SelectItem value="Reforestation">
-                          Reforestation
-                        </SelectItem>
-                        <SelectItem value="Soil Carbon">Soil Carbon</SelectItem>
-                        <SelectItem value="Blue Carbon">Blue Carbon</SelectItem>
-                        <SelectItem value="Renewable Energy">
-                          Renewable Energy
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">
+                Description{" "}
+                <span className="text-xs text-muted-foreground">(optional)</span>
+              </Label>
+              <Textarea
+                id="description"
+                name="description"
+                placeholder="Describe the project and its goals"
+                rows={3}
+                value={formData.description}
+                onChange={handleChange}
+              />
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    placeholder="Describe the project and its goals"
-                    rows={4}
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="location">Location <span className="text-red-500">*</span></Label>
+                <Input
+                  id="location"
+                  name="location"
+                  placeholder="Project location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="selectedFarmerId">Select Farmer for this Project</Label>
+                <Select
+                  value={formData.selectedFarmerId}
+                  onValueChange={(value) =>
+                    handleSelectChange("selectedFarmerId", value)
+                  }
+                >
+                  <SelectTrigger id="selectedFarmerId">
+                    <SelectValue placeholder="Select a farmer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {farmers.map((farmer) => (
+                      <SelectItem key={farmer.id} value={farmer.id}>
+                        {farmer.name} — {farmer.location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      name="location"
-                      placeholder="Project location"
-                      value={formData.location}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) =>
-                        handleSelectChange("status", value)
-                      }
-                      required
-                    >
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Active">Active</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="details" className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Start Date</Label>
-                    <DatePicker
-                      value={formData.startDate}
-                      onChange={(date) => handleDateChange("startDate", date)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>End Date</Label>
-                    <DatePicker
-                      value={formData.endDate}
-                      onChange={(date) => handleDateChange("endDate", date)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="budget">Budget (USD)</Label>
-                  <Input
-                    id="budget"
-                    name="budget"
-                    type="number"
-                    placeholder="Project budget"
-                    value={formData.budget}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="objectives">Project Objectives</Label>
-                  <Textarea
-                    id="objectives"
-                    name="objectives"
-                    placeholder="Enter each objective on a new line"
-                    rows={4}
-                    value={formData.objectives}
-                    onChange={handleChange}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Enter each objective on a new line
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="partners">Project Partners</Label>
-                  <Textarea
-                    id="partners"
-                    name="partners"
-                    placeholder="Enter each partner on a new line"
-                    rows={4}
-                    value={formData.partners}
-                    onChange={handleChange}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Enter each partner organization on a new line
-                  </p>
-                </div>
-              </TabsContent>
-            </Tabs>
-
-            <div className="mt-6 flex justify-end gap-4">
-              <Button asChild variant="outline">
-                <Link href="/dashboard/projects">Cancel</Link>
-              </Button>
-              <Button
-                type="submit"
-                className="bg-green-600 hover:bg-green-700"
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isEditMode ? "Updating..." : "Creating..."}
-                  </>
-                ) : isEditMode ? (
-                  "Update Project"
-                ) : (
-                  "Create Project"
-                )}
-              </Button>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <DatePicker
+                  value={formData.startDate}
+                  onChange={(date) => handleDateChange("startDate", date)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>End Date</Label>
+                <DatePicker
+                  value={formData.endDate}
+                  onChange={(date) => handleDateChange("endDate", date)}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Land Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Land Details</CardTitle>
+            <CardDescription>
+              Provide information about the land associated with this project
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="landArea">Land Area (hectares)</Label>
+                <Input
+                  id="landArea"
+                  name="landArea"
+                  type="number"
+                  step="0.01"
+                  placeholder="e.g. 25.5"
+                  value={formData.landArea}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="landType">Land Type</Label>
+                <Select
+                  value={formData.landType}
+                  onValueChange={(value) =>
+                    handleSelectChange("landType", value)
+                  }
+                >
+                  <SelectTrigger id="landType">
+                    <SelectValue placeholder="Select land type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Agricultural">Agricultural</SelectItem>
+                    <SelectItem value="Forest">Forest</SelectItem>
+                    <SelectItem value="Grassland">Grassland</SelectItem>
+                    <SelectItem value="Wetland">Wetland</SelectItem>
+                    <SelectItem value="Degraded">Degraded Land</SelectItem>
+                    <SelectItem value="Mixed">Mixed Use</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="soilType">Soil Type</Label>
+                <Select
+                  value={formData.soilType}
+                  onValueChange={(value) =>
+                    handleSelectChange("soilType", value)
+                  }
+                >
+                  <SelectTrigger id="soilType">
+                    <SelectValue placeholder="Select soil type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Clay">Clay</SelectItem>
+                    <SelectItem value="Sandy">Sandy</SelectItem>
+                    <SelectItem value="Loam">Loam</SelectItem>
+                    <SelectItem value="Silt">Silt</SelectItem>
+                    <SelectItem value="Peat">Peat</SelectItem>
+                    <SelectItem value="Chalk">Chalk</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="waterSource">Water Source</Label>
+                <Select
+                  value={formData.waterSource}
+                  onValueChange={(value) =>
+                    handleSelectChange("waterSource", value)
+                  }
+                >
+                  <SelectTrigger id="waterSource">
+                    <SelectValue placeholder="Select water source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Rainfed">Rainfed</SelectItem>
+                    <SelectItem value="Irrigation">Irrigation</SelectItem>
+                    <SelectItem value="Groundwater">Groundwater</SelectItem>
+                    <SelectItem value="River">River / Stream</SelectItem>
+                    <SelectItem value="Mixed">Mixed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="elevation">Elevation (meters above sea level)</Label>
+                <Input
+                  id="elevation"
+                  name="elevation"
+                  type="number"
+                  step="1"
+                  placeholder="e.g. 340"
+                  value={formData.elevation}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="coordinates">GPS Coordinates</Label>
+                <Input
+                  id="coordinates"
+                  name="coordinates"
+                  placeholder="e.g. 10.7645° N, 106.7019° E"
+                  value={formData.coordinates}
+                  onChange={handleChange}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-4">
+          <Button asChild variant="outline">
+            <Link href="/dashboard/projects">Cancel</Link>
+          </Button>
+          <Button
+            type="submit"
+            className="bg-green-600 hover:bg-green-700"
+            disabled={submitting}
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isEditMode ? "Updating..." : "Creating..."}
+              </>
+            ) : isEditMode ? (
+              "Update Project"
+            ) : (
+              "Create Project"
+            )}
+          </Button>
+        </div>
       </form>
     </div>
   );

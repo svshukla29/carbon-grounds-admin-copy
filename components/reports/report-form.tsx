@@ -1,12 +1,19 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Upload } from "lucide-react";
+import {
+  ArrowLeft,
+  Loader2,
+  Upload,
+  File,
+  X,
+  CheckCircle2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { reportsApi } from "@/lib/api";
+import { reportsApi, projectsApi } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import {
   Card,
@@ -28,13 +35,26 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
 
-
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export function ReportForm({ id }: { id?: string }) {
   const isEditMode = !!id;
   const router = useRouter();
   const [loading, setLoading] = useState(isEditMode);
   const [submitting, setSubmitting] = useState(false);
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
+
+  // File upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<{
+    name: string;
+    url: string;
+  } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     title: "",
     type: "",
@@ -44,6 +64,11 @@ export function ReportForm({ id }: { id?: string }) {
     summary: "",
     content: "",
   });
+
+  // Load projects for dropdown
+  useEffect(() => {
+    projectsApi.getAll().then((res) => setProjects(res.data)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -55,12 +80,15 @@ export function ReportForm({ id }: { id?: string }) {
           setFormData({
             title: r.title ?? "",
             type: r.type ?? "",
-            project: r.project?.id ?? "",
+            project: r.projectId ?? "",
             status: r.status ?? "",
-            date: r.createdAt ? r.createdAt.slice(0, 10) : "",
+            date: r.date ? r.date.slice(0, 10) : "",
             summary: r.summary ?? "",
             content: r.content ?? "",
           });
+          if (r.fileUrl && r.fileName) {
+            setUploadedFile({ name: r.fileName, url: r.fileUrl });
+          }
         } catch (error) {
           console.error("Error fetching report:", error);
           router.push("/dashboard/reports");
@@ -73,7 +101,7 @@ export function ReportForm({ id }: { id?: string }) {
   }, [id, isEditMode, router]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -87,6 +115,74 @@ export function ReportForm({ id }: { id?: string }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // ─── File Handling ───────────────────────────────────────────────────────────
+
+  const ALLOWED_TYPES = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+  ];
+
+  const validateFile = (file: File) => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Only PDF, Word, Excel, and image files are allowed.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 20 MB.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const onFileSelect = (file: File) => {
+    if (!validateFile(file)) return;
+    setSelectedFile(file);
+    setUploadedFile(null);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) onFileSelect(file);
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) onFileSelect(file);
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+    setUploadedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const getFileIcon = (name: string) => {
+    const ext = name.split(".").pop()?.toLowerCase();
+    if (ext === "pdf") return "📄";
+    if (["doc", "docx"].includes(ext ?? "")) return "📝";
+    if (["xls", "xlsx"].includes(ext ?? "")) return "📊";
+    if (["png", "jpg", "jpeg"].includes(ext ?? "")) return "🖼️";
+    return "📎";
+  };
+
+  // ─── Submit ─────────────────────────────────────────────────────────────────
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -96,22 +192,46 @@ export function ReportForm({ id }: { id?: string }) {
         type: formData.type,
         projectId: formData.project || undefined,
         status: formData.status,
+        date: formData.date || undefined,
         summary: formData.summary,
         content: formData.content,
       };
+
+      let reportId = id;
       if (isEditMode && id) {
         await reportsApi.update(id, payload);
         toast({ title: "Report updated successfully!" });
       } else {
-        await reportsApi.create(payload);
+        const res = await reportsApi.create(payload);
+        reportId = res.data.id;
         toast({ title: "Report created successfully!" });
       }
+
+      // Upload file if one was selected
+      if (selectedFile && reportId) {
+        setUploading(true);
+        try {
+          await reportsApi.uploadFile(reportId, selectedFile);
+          toast({ title: "File uploaded successfully!" });
+        } catch {
+          toast({
+            title: "File upload failed",
+            description: "Report saved but file could not be uploaded.",
+            variant: "destructive",
+          });
+        } finally {
+          setUploading(false);
+        }
+      }
+
       router.push("/dashboard/reports");
     } catch (error: any) {
       const msg = error?.response?.data?.message;
       toast({
         title: "Error",
-        description: Array.isArray(msg) ? msg.join(", ") : msg ?? "Something went wrong",
+        description: Array.isArray(msg)
+          ? msg.join(", ")
+          : msg ?? "Something went wrong",
         variant: "destructive",
       });
     } finally {
@@ -199,9 +319,7 @@ export function ReportForm({ id }: { id?: string }) {
                         <SelectItem value="Impact Report">
                           Impact Report
                         </SelectItem>
-                        <SelectItem value="Audit Report">
-                          Audit Report
-                        </SelectItem>
+                        <SelectItem value="Audit Report">Audit Report</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -215,27 +333,16 @@ export function ReportForm({ id }: { id?: string }) {
                       onValueChange={(value) =>
                         handleSelectChange("project", value)
                       }
-                      required
                     >
                       <SelectTrigger id="project">
-                        <SelectValue placeholder="Select project" />
+                        <SelectValue placeholder="Select project (optional)" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Sustainable Rice Cultivation">
-                          Sustainable Rice Cultivation
-                        </SelectItem>
-                        <SelectItem value="Community Forest Management">
-                          Community Forest Management
-                        </SelectItem>
-                        <SelectItem value="Regenerative Grazing Initiative">
-                          Regenerative Grazing Initiative
-                        </SelectItem>
-                        <SelectItem value="Mangrove Restoration">
-                          Mangrove Restoration
-                        </SelectItem>
-                        <SelectItem value="Sustainable Coffee Production">
-                          Sustainable Coffee Production
-                        </SelectItem>
+                        {projects.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -253,9 +360,7 @@ export function ReportForm({ id }: { id?: string }) {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Draft">Draft</SelectItem>
-                        <SelectItem value="Under Review">
-                          Under Review
-                        </SelectItem>
+                        <SelectItem value="Under Review">Under Review</SelectItem>
                         <SelectItem value="Published">Published</SelectItem>
                       </SelectContent>
                     </Select>
@@ -285,17 +390,94 @@ export function ReportForm({ id }: { id?: string }) {
                   />
                 </div>
 
+                {/* ─── File Upload ─────────────────────────────────────────── */}
                 <div className="space-y-2">
-                  <Label>Attachments</Label>
-                  <div className="rounded-md border border-dashed p-6 text-center">
-                    <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Drag and drop files here, or click to browse
-                    </p>
-                    <Button variant="outline" className="mt-4">
-                      Browse Files
-                    </Button>
-                  </div>
+                  <Label>Attachment</Label>
+
+                  {/* Already uploaded file */}
+                  {uploadedFile && !selectedFile && (
+                    <div className="flex items-center gap-3 rounded-md border border-green-200 bg-green-50 p-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                      <span className="text-sm font-medium">
+                        {getFileIcon(uploadedFile.name)} {uploadedFile.name}
+                      </span>
+                      <a
+                        href={`${BACKEND_URL}${uploadedFile.url}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ml-auto text-xs text-green-700 underline"
+                      >
+                        View
+                      </a>
+                      <button
+                        type="button"
+                        onClick={removeFile}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Selected but not yet uploaded */}
+                  {selectedFile && (
+                    <div className="flex items-center gap-3 rounded-md border border-blue-200 bg-blue-50 p-3">
+                      <File className="h-5 w-5 text-blue-600 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {getFileIcon(selectedFile.name)} {selectedFile.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB —
+                          will upload on save
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeFile}
+                        className="text-gray-400 hover:text-red-500 shrink-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Drop zone (hidden when file selected) */}
+                  {!selectedFile && !uploadedFile && (
+                    <div
+                      className={`rounded-md border-2 border-dashed p-8 text-center transition-colors cursor-pointer ${
+                        isDragging
+                          ? "border-green-500 bg-green-50"
+                          : "border-gray-200 hover:border-green-400 hover:bg-gray-50"
+                      }`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setIsDragging(true);
+                      }}
+                      onDragLeave={() => setIsDragging(false)}
+                      onDrop={handleDrop}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                      <p className="mt-2 text-sm font-medium text-gray-700">
+                        Drag & drop a file here, or{" "}
+                        <span className="text-green-600 underline">
+                          browse
+                        </span>
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        PDF, Word, Excel, Images — max 20 MB
+                      </p>
+                    </div>
+                  )}
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                    onChange={handleFileInput}
+                    className="hidden"
+                  />
                 </div>
               </TabsContent>
 
@@ -304,65 +486,29 @@ export function ReportForm({ id }: { id?: string }) {
                   <Label htmlFor="content">Report Content</Label>
                   <div className="rounded-md border">
                     <div className="flex items-center gap-1 border-b bg-muted/50 px-2 py-1">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                      >
                         <span className="font-bold">B</span>
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                      >
                         <span className="italic">I</span>
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                      >
                         <span className="underline">U</span>
-                      </Button>
-                      <span className="mx-1 h-4 w-px bg-border"></span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-2 text-xs"
-                      >
-                        Heading 1
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-2 text-xs"
-                      >
-                        Heading 2
-                      </Button>
-                      <span className="mx-1 h-4 w-px bg-border"></span>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-4 w-4"
-                        >
-                          <path d="M4 7V4h16v3" />
-                          <path d="M9 20h6" />
-                          <path d="M12 4v16" />
-                        </svg>
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="h-4 w-4"
-                        >
-                          <path d="M8 4h13" />
-                          <path d="M8 12h13" />
-                          <path d="M8 20h13" />
-                          <path d="M3 4h.01" />
-                          <path d="M3 12h.01" />
-                          <path d="M3 20h.01" />
-                        </svg>
                       </Button>
                     </div>
                     <Textarea
@@ -375,10 +521,6 @@ export function ReportForm({ id }: { id?: string }) {
                       className="border-0 focus-visible:ring-0"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    You can use HTML formatting for headings, paragraphs, and
-                    other elements.
-                  </p>
                 </div>
               </TabsContent>
             </Tabs>
@@ -390,12 +532,16 @@ export function ReportForm({ id }: { id?: string }) {
               <Button
                 type="submit"
                 className="bg-green-600 hover:bg-green-700"
-                disabled={submitting}
+                disabled={submitting || uploading}
               >
-                {submitting ? (
+                {submitting || uploading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isEditMode ? "Updating..." : "Creating..."}
+                    {uploading
+                      ? "Uploading file..."
+                      : isEditMode
+                      ? "Updating..."
+                      : "Creating..."}
                   </>
                 ) : isEditMode ? (
                   "Update Report"

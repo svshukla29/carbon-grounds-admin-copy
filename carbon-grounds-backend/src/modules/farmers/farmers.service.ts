@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, FindOptionsWhere } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
 import { Farmer, FarmerStatus } from './entities/farmer.entity';
 import { CreateFarmerDto } from './dto/create-farmer.dto';
 import { UpdateFarmerDto } from './dto/update-farmer.dto';
@@ -27,7 +27,6 @@ export class FarmersService {
     if (query?.status) where.status = query.status;
 
     if (query?.search || query?.location) {
-      // Use query builder for flexible search
       const qb = this.farmersRepo.createQueryBuilder('farmer');
 
       if (query.search) {
@@ -74,7 +73,13 @@ export class FarmersService {
     return { message: `Farmer deleted successfully` };
   }
 
+  /** Total farmer count */
   async count(): Promise<number> {
     return this.farmersRepo.count();
+  }
+
+  /** Count of farmers with Verified status (shown as "Active Farmers" in dashboard) */
+  async countActive(): Promise<number> {
+    return this.farmersRepo.count({ where: { status: FarmerStatus.VERIFIED } });
   }
 }
