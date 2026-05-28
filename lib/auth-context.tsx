@@ -49,8 +49,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const { data } = await authApi.login(email, password);
-    const { user: userData, accessToken: token } = data;
+    const { data } = await authApi.adminLogin(email, password);
+    // Backend returns { token, user }
+    const userData = data.user;
+    const token = data.token;
 
     localStorage.setItem("accessToken", token);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -62,17 +64,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const logout = useCallback(async () => {
-    try {
-      await authApi.logout();
-    } catch {
-      // ignore errors on logout
-    } finally {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("user");
-      setAccessToken(null);
-      setUser(null);
-      router.push("/login");
-    }
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user");
+    setAccessToken(null);
+    setUser(null);
+    router.push("/login");
   }, [router]);
 
   return (

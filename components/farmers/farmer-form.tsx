@@ -1,172 +1,122 @@
 "use client";
 
-import type React from "react";
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { farmersApi } from "@/lib/api";
-import { toast } from "@/hooks/use-toast";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Card, CardContent, CardHeader, CardTitle, CardDescription,
+} from "@/components/ui/card";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Checkbox } from "@/components/ui/checkbox";
-
-
+import { farmersApi, gramPanchayatApi, mastersApi } from "@/lib/api";
+import { toast } from "@/hooks/use-toast";
 
 export function FarmerForm({ id }: { id?: string }) {
-  const isEditMode = !!id;
+  const isEdit = !!id;
   const router = useRouter();
-  const [loading, setLoading] = useState(isEditMode);
+  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    bio: "",
-    location: "",
-    area: "",
-    status: "",
-    joinDate: "",
-    phone: "",
-    email: "",
-    address: "",
-    crops: [] as string[],
-    certifications: [] as string[],
+  const [gps, setGps] = useState<any[]>([]);
+  const [tribes, setTribes] = useState<any[]>([]);
+
+  const [form, setForm] = useState({
+    farmerName: "",
+    gender: "",
+    mobileNo: "",
+    category: "",
+    tribeId: "",
+    bpl: false,
+    gramPanchayatId: "",
+    villageName: "",
+    villageLgdCode: "",
+    block: "",
+    district: "",
+    tehsil: "",
+    pinCode: "",
+    state: "Chhattisgarh",
+    khasraNo: "",
   });
 
-  const cropOptions = [
-    { id: "rice", label: "Rice" },
-    { id: "vegetables", label: "Vegetables" },
-    { id: "coffee", label: "Coffee" },
-    { id: "maize", label: "Maize" },
-    { id: "fruit", label: "Fruit Trees" },
-    { id: "beans", label: "Beans" },
-  ];
-
-  const certificationOptions = [
-    { id: "organic", label: "Organic Farming" },
-    { id: "sustainable", label: "Sustainable Agriculture" },
-    { id: "fairtrade", label: "Fair Trade" },
-    { id: "rainforest", label: "Rainforest Alliance" },
-  ];
-
+  // Load dropdowns
   useEffect(() => {
-    if (isEditMode && id) {
-      const fetchFarmer = async () => {
-        setLoading(true);
-        try {
-          const res = await farmersApi.getOne(id);
-          const f = res.data;
-          setFormData({
-            name: f.name ?? "",
-            bio: f.bio ?? "",
-            location: f.location ?? "",
-            area: String(f.area ?? ""),
-            status: f.status ?? "",
-            joinDate: f.joinDate ? f.joinDate.slice(0, 10) : "",
-            phone: f.phone ?? "",
-            email: f.email ?? "",
-            address: f.address ?? "",
-            crops: f.crops ?? [],
-            certifications: f.certifications ?? [],
-          });
-        } catch (error) {
-          console.error("Error fetching farmer:", error);
-          router.push("/dashboard/farmers");
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchFarmer();
-    }
-  }, [id, isEditMode, router]);
+    gramPanchayatApi.getAll()
+      .then((r) => setGps(Array.isArray(r.data) ? r.data : (r.data?.data || [])))
+      .catch(console.error);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    mastersApi.getTribes()
+      .then((r) => setTribes(r.data || []))
+      .catch(console.error);
+  }, []);
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  // Load existing farmer in edit mode
+  useEffect(() => {
+    if (!isEdit || !id) return;
+    setLoading(true);
+    farmersApi.getOne(id)
+      .then((r) => {
+        const f = r.data;
+        setForm({
+          farmerName: f.farmerName || "",
+          gender: f.gender || "",
+          mobileNo: f.mobileNo || "",
+          category: f.category || "",
+          tribeId: f.tribeId || "",
+          bpl: f.bpl || false,
+          gramPanchayatId: f.gramPanchayatId || "",
+          villageName: f.villageName || "",
+          villageLgdCode: f.villageLgdCode || "",
+          block: f.block || "",
+          district: f.district || "",
+          tehsil: f.tehsil || "",
+          pinCode: f.pinCode || "",
+          state: f.state || "Chhattisgarh",
+          khasraNo: f.khasraNo || "",
+        });
+      })
+      .catch(() => router.push("/dashboard/farmers"))
+      .finally(() => setLoading(false));
+  }, [id, isEdit, router]);
 
-  const handleDateChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCropToggle = (cropId: string) => {
-    const crop = cropOptions.find((c) => c.id === cropId)?.label;
-    if (!crop) return;
-
-    setFormData((prev) => {
-      const crops = prev.crops.includes(crop)
-        ? prev.crops.filter((c) => c !== crop)
-        : [...prev.crops, crop];
-      return { ...prev, crops };
-    });
-  };
-
-  const handleCertificationToggle = (certId: string) => {
-    const cert = certificationOptions.find((c) => c.id === certId)?.label;
-    if (!cert) return;
-
-    setFormData((prev) => {
-      const certifications = prev.certifications.includes(cert)
-        ? prev.certifications.filter((c) => c !== cert)
-        : [...prev.certifications, cert];
-      return { ...prev, certifications };
-    });
-  };
+  const set = (key: string, value: string | boolean) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation
+    if (!form.farmerName.trim()) return toast({ title: "Farmer name required", variant: "destructive" });
+    if (!form.gender) return toast({ title: "Gender required", variant: "destructive" });
+    if (!form.mobileNo.trim()) return toast({ title: "Mobile number required", variant: "destructive" });
+    if (!form.category) return toast({ title: "Category required", variant: "destructive" });
+    if (!form.villageName.trim()) return toast({ title: "Village name required", variant: "destructive" });
+    if (!form.khasraNo.trim()) return toast({ title: "Khasra number required", variant: "destructive" });
+
     setSubmitting(true);
     try {
       const payload = {
-        name: formData.name,
-        bio: formData.bio,
-        location: formData.location,
-        area: parseFloat(formData.area) || 0,
-        status: formData.status,
-        joinDate: formData.joinDate || undefined,
-        phone: formData.phone,
-        email: formData.email,
-        address: formData.address,
-        crops: formData.crops,
-        certifications: formData.certifications,
+        ...form,
+        bpl: form.bpl,
+        tribeId: form.category === "ST" && form.tribeId ? form.tribeId : undefined,
       };
-      if (isEditMode && id) {
+
+      if (isEdit && id) {
         await farmersApi.update(id, payload);
         toast({ title: "Farmer updated successfully!" });
       } else {
         await farmersApi.create(payload);
-        toast({ title: "Farmer added successfully!" });
+        toast({ title: "Farmer registered successfully!" });
       }
       router.push("/dashboard/farmers");
-    } catch (error: any) {
-      const msg = error?.response?.data?.message;
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
       toast({
         title: "Error",
-        description: Array.isArray(msg) ? msg.join(", ") : msg ?? "Something went wrong",
+        description: Array.isArray(msg) ? msg.join(", ") : msg || "Something went wrong",
         variant: "destructive",
       });
     } finally {
@@ -176,241 +126,203 @@ export function FarmerForm({ id }: { id?: string }) {
 
   if (loading) {
     return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-green-600"></div>
-          <p className="mt-2 text-sm text-gray-500">Loading farmer data...</p>
-        </div>
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0">
-          <Link href="/dashboard/farmers">
-            <ArrowLeft className="h-4 w-4" />
-            <span className="sr-only">Back</span>
-          </Link>
+    <div className="space-y-6 max-w-3xl">
+      <div className="flex items-center gap-3">
+        <Button asChild variant="ghost" size="icon">
+          <Link href="/dashboard/farmers"><ArrowLeft className="h-4 w-4" /></Link>
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight md:text-3xl">
-          {isEditMode ? "Edit Farmer" : "Add New Farmer"}
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold">{isEdit ? "Edit Farmer" : "Register New Farmer"}</h1>
+          <p className="text-sm text-muted-foreground">
+            Instance ID will be auto-generated (e.g. CG26-0011)
+          </p>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Personal Details */}
         <Card>
           <CardHeader>
-            <CardTitle>Farmer Information</CardTitle>
-            <CardDescription>
-              {isEditMode
-                ? "Update the details of the existing farmer"
-                : "Enter the details of the new farmer"}
-            </CardDescription>
+            <CardTitle className="text-base">Personal Details</CardTitle>
+            <CardDescription>Basic farmer identification information</CardDescription>
           </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="basic" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="basic">Basic Information</TabsTrigger>
-                <TabsTrigger value="contact">Contact Details</TabsTrigger>
-                <TabsTrigger value="farm">Farm Details</TabsTrigger>
-              </TabsList>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="farmerName">Full Name *</Label>
+              <Input id="farmerName" value={form.farmerName}
+                onChange={(e) => set("farmerName", e.target.value)}
+                placeholder="e.g. Jagat Singh Lakra" required />
+            </div>
 
-              <TabsContent value="basic" className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      placeholder="Enter farmer's full name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      name="location"
-                      placeholder="Region, Country"
-                      value={formData.location}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
+            <div className="space-y-2">
+              <Label>Gender *</Label>
+              <Select value={form.gender} onValueChange={(v) => set("gender", v)} required>
+                <SelectTrigger><SelectValue placeholder="Select gender" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MALE">Male</SelectItem>
+                  <SelectItem value="FEMALE">Female</SelectItem>
+                  <SelectItem value="OTHERS">Others</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea
-                    id="bio"
-                    name="bio"
-                    placeholder="Brief description of the farmer's background"
-                    rows={4}
-                    value={formData.bio}
-                    onChange={handleChange}
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="mobileNo">Mobile Number *</Label>
+              <Input id="mobileNo" value={form.mobileNo}
+                onChange={(e) => set("mobileNo", e.target.value)}
+                placeholder="10-digit mobile" maxLength={10} required />
+            </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="status">Verification Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) =>
-                        handleSelectChange("status", value)
-                      }
-                      required
-                    >
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Verified">Verified</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Join Date</Label>
-                    <DatePicker
-                      value={formData.joinDate}
-                      onChange={(date) => handleDateChange("joinDate", date)}
-                    />
-                  </div>
-                </div>
-              </TabsContent>
+            <div className="space-y-2">
+              <Label>Category *</Label>
+              <Select value={form.category} onValueChange={(v) => set("category", v)} required>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ST">ST (Scheduled Tribe)</SelectItem>
+                  <SelectItem value="SC">SC (Scheduled Caste)</SelectItem>
+                  <SelectItem value="OBC">OBC</SelectItem>
+                  <SelectItem value="GEN">General</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <TabsContent value="contact" className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    placeholder="Enter phone number"
-                    value={formData.phone}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter email address"
-                    value={formData.email}
-                    onChange={handleChange}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address">Physical Address</Label>
-                  <Textarea
-                    id="address"
-                    name="address"
-                    placeholder="Enter physical address"
-                    rows={3}
-                    value={formData.address}
-                    onChange={handleChange}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="farm" className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="area">Farm Area (hectares)</Label>
-                  <Input
-                    id="area"
-                    name="area"
-                    type="number"
-                    step="0.1"
-                    placeholder="Enter farm area in hectares"
-                    value={formData.area}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <div className="grid grid-cols-2 gap-2 rounded-md border p-4 md:grid-cols-3">
-                    {cropOptions.map((crop) => (
-                      <div
-                        key={crop.id}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`crop-${crop.id}`}
-                          checked={formData.crops.includes(crop.label)}
-                          onCheckedChange={() => handleCropToggle(crop.id)}
-                        />
-                        <Label
-                          htmlFor={`crop-${crop.id}`}
-                          className="text-sm font-normal"
-                        >
-                          {crop.label}
-                        </Label>
-                      </div>
+            {form.category === "ST" && (
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Tribe Name *</Label>
+                <Select value={form.tribeId} onValueChange={(v) => set("tribeId", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select tribe" /></SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {tribes.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.name} {t.isPvtg ? "(PVTG)" : ""}
+                      </SelectItem>
                     ))}
-                  </div>
-                </div>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-                <div className="space-y-2">
-                  <Label>Certifications</Label>
-                  <div className="grid grid-cols-1 gap-2 rounded-md border p-4 md:grid-cols-2">
-                    {certificationOptions.map((cert) => (
-                      <div
-                        key={cert.id}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`cert-${cert.id}`}
-                          checked={formData.certifications.includes(cert.label)}
-                          onCheckedChange={() =>
-                            handleCertificationToggle(cert.id)
-                          }
-                        />
-                        <Label
-                          htmlFor={`cert-${cert.id}`}
-                          className="text-sm font-normal"
-                        >
-                          {cert.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-
-            <div className="mt-6 flex justify-end gap-4">
-              <Button asChild variant="outline">
-                <Link href="/dashboard/farmers">Cancel</Link>
-              </Button>
-              <Button
-                type="submit"
-                className="bg-green-600 hover:bg-green-700"
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {isEditMode ? "Updating..." : "Creating..."}
-                  </>
-                ) : isEditMode ? (
-                  "Update Farmer"
-                ) : (
-                  "Add Farmer"
-                )}
-              </Button>
+            <div className="flex items-center gap-3 sm:col-span-2">
+              <input
+                type="checkbox"
+                id="bpl"
+                checked={form.bpl}
+                onChange={(e) => set("bpl", e.target.checked)}
+                className="h-4 w-4 accent-green-700"
+              />
+              <Label htmlFor="bpl" className="cursor-pointer font-normal">
+                BPL (Below Poverty Line) cardholder
+              </Label>
             </div>
           </CardContent>
         </Card>
+
+        {/* Location Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Location Details</CardTitle>
+            <CardDescription>Village and administrative location</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Gram Panchayat</Label>
+              <Select value={form.gramPanchayatId} onValueChange={(v) => set("gramPanchayatId", v)}>
+                <SelectTrigger><SelectValue placeholder="Select GP (optional)" /></SelectTrigger>
+                <SelectContent>
+                  {gps.map((gp) => (
+                    <SelectItem key={gp.id} value={gp.id}>
+                      {gp.gpName} — {gp.district}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="villageName">Village Name *</Label>
+              <Input id="villageName" value={form.villageName}
+                onChange={(e) => set("villageName", e.target.value)}
+                placeholder="e.g. Sonpur" required />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="villageLgdCode">Village LGD Code</Label>
+              <Input id="villageLgdCode" value={form.villageLgdCode}
+                onChange={(e) => set("villageLgdCode", e.target.value)}
+                placeholder="e.g. 471234" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="block">Block</Label>
+              <Input id="block" value={form.block}
+                onChange={(e) => set("block", e.target.value)}
+                placeholder="e.g. Kunkuri" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tehsil">Tehsil</Label>
+              <Input id="tehsil" value={form.tehsil}
+                onChange={(e) => set("tehsil", e.target.value)}
+                placeholder="e.g. Pathalgaon" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="district">District</Label>
+              <Input id="district" value={form.district}
+                onChange={(e) => set("district", e.target.value)}
+                placeholder="e.g. Jashpur" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="state">State</Label>
+              <Input id="state" value={form.state}
+                onChange={(e) => set("state", e.target.value)}
+                placeholder="e.g. Chhattisgarh" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="pinCode">PIN Code</Label>
+              <Input id="pinCode" value={form.pinCode}
+                onChange={(e) => set("pinCode", e.target.value)}
+                placeholder="e.g. 496001" maxLength={6} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Land Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Land Details</CardTitle>
+            <CardDescription>Revenue record information</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 max-w-xs">
+              <Label htmlFor="khasraNo">Khasra Number *</Label>
+              <Input id="khasraNo" value={form.khasraNo}
+                onChange={(e) => set("khasraNo", e.target.value)}
+                placeholder="e.g. 245/1" required />
+              <p className="text-xs text-muted-foreground">Revenue record / land parcel number</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Submit */}
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="outline" asChild>
+            <Link href="/dashboard/farmers">Cancel</Link>
+          </Button>
+          <Button type="submit" className="bg-green-700 hover:bg-green-800" disabled={submitting}>
+            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isEdit ? "Update Farmer" : "Register Farmer"}
+          </Button>
+        </div>
       </form>
     </div>
   );

@@ -1,163 +1,145 @@
 import axios from "axios";
 
-// Backend URL — EC2 server
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://43.204.144.76";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
-  withCredentials: true, // send cookies for refresh token
 });
 
-// ─── Request interceptor — attach access token ───────────────────────────────
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
-// ─── Response interceptor — auto-refresh on 401 ──────────────────────────────
-let isRefreshing = false;
-let failedQueue: any[] = [];
-
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-};
-
 api.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        const { data } = await axios.post(
-          `${API_BASE_URL}/auth/refresh`,
-          {},
-          { withCredentials: true }
-        );
-        const newToken = data.accessToken;
-        localStorage.setItem("accessToken", newToken);
-        processQueue(null, newToken);
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("user");
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
     }
-
     return Promise.reject(error);
   }
 );
 
-// ─── Auth APIs ───────────────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────────────────
 export const authApi = {
-  login: (email: string, password: string) =>
-    api.post("/auth/login", { email, password }),
-  logout: () => api.post("/auth/logout"),
-  me: () => api.get("/auth/me"),
+  adminLogin: (email: string, password: string) =>
+    api.post("/auth/admin/login", { email, password }),
+  sendOtp: (mobile: string) => api.post("/auth/send-otp", { mobile }),
+  verifyOtp: (mobile: string, otp: string) =>
+    api.post("/auth/verify-otp", { mobile, otp }),
 };
 
-// ─── Dashboard APIs ───────────────────────────────────────────────────────────
+// ── Dashboard Stats ───────────────────────────────────────────────────────────
 export const dashboardApi = {
   getStats: () => api.get("/dashboard/stats"),
 };
 
-// ─── Farmers APIs ────────────────────────────────────────────────────────────
+// ── Gram Panchayat ────────────────────────────────────────────────────────────
+export const gramPanchayatApi = {
+  getAll: (params?: { district?: string; state?: string }) =>
+    api.get("/gram-panchayat", { params }),
+  getOne: (id: string) => api.get(`/gram-panchayat/${id}`),
+  search: (q: string) => api.get("/gram-panchayat/search", { params: { q } }),
+  create: (data: any) => api.post("/gram-panchayat", data),
+  update: (id: string, data: any) => api.patch(`/gram-panchayat/${id}`, data),
+};
+
+// ── Farmers ───────────────────────────────────────────────────────────────────
 export const farmersApi = {
-  getAll: (params?: { search?: string; status?: string; location?: string }) =>
+  getAll: (params?: { page?: number; limit?: number; category?: string; state?: string }) =>
     api.get("/farmers", { params }),
   getOne: (id: string) => api.get(`/farmers/${id}`),
+  search: (q: string) => api.get("/farmers/search", { params: { q } }),
   create: (data: any) => api.post("/farmers", data),
   update: (id: string, data: any) => api.patch(`/farmers/${id}`, data),
   delete: (id: string) => api.delete(`/farmers/${id}`),
 };
 
-// ─── Projects APIs ────────────────────────────────────────────────────────────
+// ── Instances (Farm Plots) ────────────────────────────────────────────────────
+export const instancesApi = {
+  getAll: (params?: { farmerId?: string; page?: number; limit?: number }) =>
+    api.get("/instances", { params }),
+  getOne: (id: string) => api.get(`/instances/${id}`),
+  getAllGeoJson: () => api.get("/instances/map/all"),
+  create: (data: any) => api.post("/instances", data),
+  update: (id: string, data: any) => api.patch(`/instances/${id}`, data),
+};
+
+// ── Planting Units (Trees) ────────────────────────────────────────────────────
+export const treesApi = {
+  getByInstance: (instanceId: string) =>
+    api.get(`/planting-units/instance/${instanceId}`),
+  getOne: (id: string) => api.get(`/planting-units/${id}`),
+  create: (data: any) => api.post("/planting-units", data),
+  bulkCreate: (instanceId: string, units: any[]) =>
+    api.post("/planting-units/bulk", { instanceId, units }),
+  update: (id: string, data: any) => api.patch(`/planting-units/${id}`, data),
+  markLost: (id: string, lossDate: string) =>
+    api.patch(`/planting-units/${id}/loss`, { lossDate }),
+};
+
+// ── Species ───────────────────────────────────────────────────────────────────
+export const speciesApi = {
+  getAll: () => api.get("/species"),
+  getOne: (id: string) => api.get(`/species/${id}`),
+  create: (data: any) => api.post("/species", data),
+  update: (id: string, data: any) => api.patch(`/species/${id}`, data),
+};
+
+// ── Masters / Dropdowns ───────────────────────────────────────────────────────
+export const mastersApi = {
+  getDropdowns: () => api.get("/masters/dropdowns"),
+  getTribes: (state?: string, pvtgOnly?: boolean) =>
+    api.get("/masters/tribes", { params: { state, pvtgOnly } }),
+  searchTribes: (q: string) => api.get("/masters/tribes/search", { params: { q } }),
+  getIpccConstants: () => api.get("/masters/ipcc-constants"),
+};
+
+// ── Monitoring Periods ────────────────────────────────────────────────────────
+export const monitoringApi = {
+  getAll: (params?: { instanceId?: string; status?: string }) =>
+    api.get("/monitoring", { params }),
+  getOne: (id: string) => api.get(`/monitoring/${id}`),
+  getPending: () => api.get("/monitoring/pending-verification"),
+  create: (data: any) => api.post("/monitoring", data),
+  updateStatus: (id: string, status: string, comments?: string) =>
+    api.patch(`/monitoring/${id}/status`, { status, adminComments: comments }),
+};
+
+// ── Carbon Calculations ───────────────────────────────────────────────────────
+export const calculationsApi = {
+  run: (instanceId: string, periodId: string) =>
+    api.post(`/calculations/run/${instanceId}/${periodId}`),
+  getByInstance: (instanceId: string) =>
+    api.get(`/calculations/instance/${instanceId}`),
+  getSummary: () => api.get("/calculations/summary"),
+};
+
+// ── Legacy APIs ───────────────────────────────────────────────────────────────
 export const projectsApi = {
-  getAll: (params?: { search?: string; status?: string; type?: string }) =>
-    api.get("/projects", { params }),
+  getAll: () => api.get("/projects"),
   getOne: (id: string) => api.get(`/projects/${id}`),
   create: (data: any) => api.post("/projects", data),
   update: (id: string, data: any) => api.patch(`/projects/${id}`, data),
   delete: (id: string) => api.delete(`/projects/${id}`),
-  assignFarmers: (id: string, farmerIds: string[]) =>
-    api.post(`/projects/${id}/farmers`, { farmerIds }),
 };
-
-// ─── Partners APIs ────────────────────────────────────────────────────────────
-export const partnersApi = {
-  getAll: (params?: { search?: string; status?: string }) =>
-    api.get("/partners", { params }),
-  getOne: (id: string) => api.get(`/partners/${id}`),
-  create: (data: any) => api.post("/partners", data),
-  update: (id: string, data: any) => api.patch(`/partners/${id}`, data),
-  delete: (id: string) => api.delete(`/partners/${id}`),
-};
-
-// ─── Reports APIs ─────────────────────────────────────────────────────────────
-export const reportsApi = {
-  getAll: (params?: { search?: string; status?: string; projectId?: string }) =>
-    api.get("/reports", { params }),
-  getOne: (id: string) => api.get(`/reports/${id}`),
-  create: (data: any) => api.post("/reports", data),
-  update: (id: string, data: any) => api.patch(`/reports/${id}`, data),
-  delete: (id: string) => api.delete(`/reports/${id}`),
-  uploadFile: (id: string, file: File) => {
-    const form = new FormData();
-    form.append("file", file);
-    return api.post(`/reports/${id}/upload`, form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  },
-};
-
-// ─── Teams APIs ───────────────────────────────────────────────────────────────
+export const partnersApi = { getAll: () => api.get("/partners") };
+export const reportsApi = { getAll: () => api.get("/reports") };
 export const teamsApi = {
   getAll: () => api.get("/teams"),
   addMember: (data: any) => api.post("/teams", data),
   update: (id: string, data: any) => api.patch(`/teams/${id}`, data),
   remove: (id: string) => api.delete(`/teams/${id}`),
 };
-
-// ─── Users APIs ───────────────────────────────────────────────────────────────
 export const usersApi = {
   getAll: () => api.get("/users"),
-  getOne: (id: string) => api.get(`/users/${id}`),
-  create: (data: any) => api.post("/users", data),
   update: (id: string, data: any) => api.patch(`/users/${id}`, data),
-  updateMe: (data: any) => api.patch("/users/me", data),
-  delete: (id: string) => api.delete(`/users/${id}`),
 };
