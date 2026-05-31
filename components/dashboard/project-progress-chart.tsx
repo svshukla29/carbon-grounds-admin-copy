@@ -1,72 +1,35 @@
 "use client";
 
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+  Bar, BarChart, CartesianGrid, ResponsiveContainer,
+  Tooltip, XAxis, YAxis, Legend,
 } from "recharts";
 
+// Represents monthly tree planting targets vs actual for CG project
 const data = [
-  {
-    name: "Jan",
-    Agroforestry: 65,
-    "Soil Carbon": 45,
-    "Renewable Energy": 30,
-  },
-  {
-    name: "Feb",
-    Agroforestry: 59,
-    "Soil Carbon": 48,
-    "Renewable Energy": 38,
-  },
-  {
-    name: "Mar",
-    Agroforestry: 80,
-    "Soil Carbon": 52,
-    "Renewable Energy": 42,
-  },
-  {
-    name: "Apr",
-    Agroforestry: 81,
-    "Soil Carbon": 56,
-    "Renewable Energy": 45,
-  },
-  {
-    name: "May",
-    Agroforestry: 76,
-    "Soil Carbon": 61,
-    "Renewable Energy": 48,
-  },
-  {
-    name: "Jun",
-    Agroforestry: 84,
-    "Soil Carbon": 65,
-    "Renewable Energy": 52,
-  },
+  { month: "Jan", "Trees Planted": 0, "Target": 50 },
+  { month: "Feb", "Trees Planted": 0, "Target": 50 },
+  { month: "Mar", "Trees Planted": 0, "Target": 60 },
+  { month: "Apr", "Trees Planted": 0, "Target": 60 },
+  { month: "May", "Trees Planted": 308, "Target": 300 },
+  { month: "Jun", "Trees Planted": 0, "Target": 100 },
 ];
 
 export function ProjectProgressChart() {
   return (
-    <div className="h-[300px] w-full">
+    <div className="h-[280px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="Agroforestry" fill="#4ade80" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Soil Carbon" fill="#2dd4bf" radius={[4, 4, 0, 0]} />
-          <Bar
-            dataKey="Renewable Energy"
-            fill="#a3e635"
-            radius={[4, 4, 0, 0]}
+        <BarChart data={data} barGap={4}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+          <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+          <YAxis tick={{ fontSize: 12 }} />
+          <Tooltip
+            contentStyle={{ borderRadius: 8, fontSize: 12 }}
+            formatter={(value: any, name: string) => [`${value} trees`, name]}
           />
+          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Bar dataKey="Target" fill="#d1fae5" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Trees Planted" fill="#16a34a" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

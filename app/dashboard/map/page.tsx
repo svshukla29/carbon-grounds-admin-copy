@@ -227,12 +227,12 @@ export default function MapPage() {
         <div className="flex items-start gap-3">
           <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
           <div className="text-sm text-blue-800">
-            <span className="font-semibold">Real Boundaries Kaise Aayengi?</span>{" "}
-            Field mein{" "}
-            <span className="font-medium">SW Maps</span> (Android) ya{" "}
-            <span className="font-medium">Google Earth Pro</span> se khet ki boundary trace karo → 
-            GeoJSON export karo → Admin panel mein plot edit karke upload karo → 
-            Map pe satellite pe exact boundary dikhegi. Tree GPS coordinates bhi isi tarah add karo.
+            <span className="font-semibold">How to Get Real Boundaries?</span>{" "}
+            In the field, use{" "}
+            <span className="font-medium">SW Maps</span> (Android) or{" "}
+            <span className="font-medium">Google Earth Pro</span> to trace the farm boundary →
+            Export as GeoJSON → Edit the plot in admin panel and upload →
+            The exact boundary will appear on the satellite map. Add tree GPS coordinates the same way.
           </div>
         </div>
       </div>
@@ -249,7 +249,7 @@ export default function MapPage() {
               </Badge>
             </CardTitle>
             <CardDescription>
-              🛰️ Google Satellite view • Yellow outline = khet boundary • Click karo details ke liye
+              🛰️ Google Satellite view • Yellow outline = plot boundary • Click to view details
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -318,17 +318,17 @@ export default function MapPage() {
           {/* How to get real data */}
           <Card className="border-amber-200 bg-amber-50">
             <CardHeader className="pb-2">
-              <CardTitle className="text-xs text-amber-800">📱 Real GPS Data Kaise Add Karein</CardTitle>
+              <CardTitle className="text-xs text-amber-800">📱 How to Add Real GPS Data</CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-amber-700 space-y-1.5">
-              <p><b>Khet boundary:</b></p>
-              <p>1. SW Maps app (Android) se field mein trace karo</p>
-              <p>2. GeoJSON export → Plot edit mein upload</p>
-              <p className="mt-2"><b>Trees GPS:</b></p>
-              <p>1. Tree lagaate waqt GPS note karo</p>
-              <p>2. Tree record mein lat/lng enter karo</p>
+              <p><b>Farm boundary (khet):</b></p>
+              <p>1. Use SW Maps app (Android) in the field to trace the boundary</p>
+              <p>2. Export GeoJSON → upload via Plot edit</p>
+              <p className="mt-2"><b>Tree GPS:</b></p>
+              <p>1. Record GPS when planting each tree</p>
+              <p>2. Enter lat/lng in the tree record</p>
               <p className="mt-2 text-amber-600 font-medium">
-                Desktop pe: FIELD-GPS-GUIDE.txt dekho
+                See desktop file: FIELD-GPS-GUIDE.txt
               </p>
             </CardContent>
           </Card>
