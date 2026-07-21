@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { treesApi, instancesApi } from "@/lib/api";
+import { treesApi, instancesApi, speciesApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,7 +13,10 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { TreePine, Loader2, AlertTriangle } from "lucide-react";
+import { TreePine, Loader2, AlertTriangle, Download } from "lucide-react";
+import { AddTreesDialog } from "@/components/instances/add-trees-dialog";
+import { TreeRowActions } from "@/components/instances/tree-row-actions";
+import { useToast } from "@/hooks/use-toast";
 
 export default function TreesPage() {
   const [instances, setInstances] = useState<any[]>([]);
@@ -21,21 +24,55 @@ export default function TreesPage() {
   const [trees, setTrees] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingInstances, setLoadingInstances] = useState(true);
+  const [species, setSpecies] = useState<{ id: string; commonName: string }[]>([]);
+  const [exportSpecies, setExportSpecies] = useState("all");
+  const [exporting, setExporting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     instancesApi.getAll({ limit: 100 })
       .then((res) => setInstances(res.data?.data || []))
       .catch(console.error)
       .finally(() => setLoadingInstances(false));
+    speciesApi.getAll()
+      .then((res) => setSpecies(res.data || []))
+      .catch(console.error);
   }, []);
 
-  useEffect(() => {
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const res = await treesApi.export({
+        species: exportSpecies !== "all" ? exportSpecies : undefined,
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "trees-export.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast({ title: "Failed to export trees", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const refreshTrees = () => {
     if (!selectedInstance) return;
     setLoading(true);
     treesApi.getByInstance(selectedInstance)
       .then((res) => setTrees(res.data || []))
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (!selectedInstance) return;
+    refreshTrees();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedInstance]);
 
   const aliveTrees = trees.filter((t) => !t.lossDate);
@@ -43,9 +80,30 @@ export default function TreesPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Trees</h1>
-        <p className="text-muted-foreground">View individual tree records by farm plot</p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Trees</h1>
+          <p className="text-muted-foreground">View individual tree records by farm plot</p>
+        </div>
+        <div className="flex gap-2">
+          <Select value={exportSpecies} onValueChange={setExportSpecies}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Species" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Species</SelectItem>
+              {species.map((s) => (
+                <SelectItem key={s.id} value={s.commonName}>{s.commonName}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={handleExport} disabled={exporting}>
+            {exporting
+              ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              : <Download className="mr-2 h-4 w-4" />}
+            Export to Excel
+          </Button>
+        </div>
       </div>
 
       {/* Plot selector */}
@@ -121,8 +179,13 @@ export default function TreesPage() {
           {/* Trees table */}
           <Card>
             <CardHeader>
-              <CardTitle>Tree Records</CardTitle>
-              <CardDescription>Individual trees registered on this plot</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Tree Records</CardTitle>
+                  <CardDescription>Individual trees registered on this plot</CardDescription>
+                </div>
+                <AddTreesDialog instanceId={selectedInstance} onTreesAdded={refreshTrees} />
+              </div>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -140,12 +203,13 @@ export default function TreesPage() {
                       <TableHead>Planting Date</TableHead>
                       <TableHead>GPS Location</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {trees.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                           No trees registered for this plot
                         </TableCell>
                       </TableRow>
@@ -178,6 +242,9 @@ export default function TreesPage() {
                             ) : (
                               <Badge className="bg-green-100 text-green-700">Alive</Badge>
                             )}
+                          </TableCell>
+                          <TableCell>
+                            <TreeRowActions tree={tree} onUpdated={refreshTrees} />
                           </TableCell>
                         </TableRow>
                       ))

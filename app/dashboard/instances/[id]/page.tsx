@@ -16,6 +16,8 @@ import {
   ArrowLeft, Loader2, TreePine, MapPin, Sprout, Calendar,
   Droplets, Zap, Wifi, AlertTriangle,
 } from "lucide-react";
+import { TreeRowActions } from "@/components/instances/tree-row-actions";
+import { MonitoringSection } from "@/components/instances/monitoring-section";
 
 export default function InstanceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -38,6 +40,16 @@ export default function InstanceDetailPage() {
       .finally(() => setLoading(false));
   }, [id, router]);
 
+  const refreshTrees = async () => {
+    if (!id) return;
+    try {
+      const treesRes = await treesApi.getByInstance(id);
+      setTrees(Array.isArray(treesRes.data) ? treesRes.data : []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -54,20 +66,25 @@ export default function InstanceDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button asChild variant="ghost" size="icon">
-          <Link href="/dashboard/instances"><ArrowLeft className="h-4 w-4" /></Link>
-        </Button>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">{instance.instanceId}</h1>
-            <Badge className="bg-green-100 text-green-700">{instance.monitoringFrequency}</Badge>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Button asChild variant="ghost" size="icon">
+            <Link href="/dashboard/instances"><ArrowLeft className="h-4 w-4" /></Link>
+          </Button>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold">{instance.instanceId}</h1>
+              <Badge className="bg-green-100 text-green-700">{instance.monitoringFrequency}</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Farm Plot — {instance.farmer?.farmerName} •{" "}
+              {instance.farmer?.villageName}, {instance.farmer?.district}
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Farm Plot — {instance.farmer?.farmerName} •{" "}
-            {instance.farmer?.villageName}, {instance.farmer?.district}
-          </p>
         </div>
+        <Button asChild variant="outline">
+          <Link href={`/dashboard/instances/edit/${id}`}>Edit Plot</Link>
+        </Button>
       </div>
 
       {/* Key Stats */}
@@ -186,8 +203,15 @@ export default function InstanceDetailPage() {
       {/* Trees Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Tree Records ({trees.length})</CardTitle>
-          <CardDescription>Individual trees registered on this plot</CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Tree Records ({trees.length})</CardTitle>
+              <CardDescription>Individual trees registered on this plot</CardDescription>
+            </div>
+            <Button className="bg-green-600 hover:bg-green-700" onClick={() => window.location.href = `/dashboard/instances/${id}/add-trees`}>
+              <TreePine className="mr-2 h-4 w-4" /> Add Trees
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {trees.length === 0 ? (
@@ -206,6 +230,7 @@ export default function InstanceDetailPage() {
                   <TableHead>Planting Date</TableHead>
                   <TableHead>GPS</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -238,6 +263,9 @@ export default function InstanceDetailPage() {
                         <Badge className="bg-green-100 text-green-700">Alive</Badge>
                       )}
                     </TableCell>
+                    <TableCell>
+                      <TreeRowActions tree={tree} onUpdated={refreshTrees} />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -245,6 +273,9 @@ export default function InstanceDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Monitoring & Calculations */}
+      <MonitoringSection instanceId={id} />
     </div>
   );
 }

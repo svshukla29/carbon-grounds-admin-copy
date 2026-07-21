@@ -65,7 +65,7 @@ export function LoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="admin@carbongrounds.com"
+              placeholder="admin@carboncredit.in"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -109,7 +109,7 @@ export function LoginForm() {
         </form>
       </CardContent>
       <CardFooter className="flex justify-center text-xs text-gray-500">
-        Use: admin@carbongrounds.com / Admin@123
+        Use: admin@carboncredit.in / Admin@1234
       </CardFooter>
     </Card>
   );

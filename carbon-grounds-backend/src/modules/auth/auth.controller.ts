@@ -13,6 +13,9 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { SendOtpDto } from './dto/send-otp.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { CompleteSignupDto } from './dto/complete-signup.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Auth')
@@ -85,5 +88,30 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current logged-in user' })
   getMe(@CurrentUser() user: any) {
     return { success: true, user };
+  }
+
+  // ── Farmer OTP auth (mobile app) ────────────────────────────────────────
+
+  @Post('send-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send a login OTP to a farmer\'s mobile number' })
+  sendOtp(@Body() dto: SendOtpDto) {
+    return this.authService.sendOtp(dto.mobile);
+  }
+
+  @Post('verify-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify OTP — logs in if the mobile is registered, otherwise returns a signupToken',
+  })
+  verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.authService.verifyOtp(dto.mobile, dto.otp);
+  }
+
+  @Post('complete-signup')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Create a new (pending) farmer account after OTP verification' })
+  completeSignup(@Body() dto: CompleteSignupDto) {
+    return this.authService.completeFarmerSignup(dto.signupToken, dto.name, dto.village);
   }
 }

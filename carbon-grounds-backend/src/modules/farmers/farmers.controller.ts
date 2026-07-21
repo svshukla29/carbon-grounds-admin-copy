@@ -11,6 +11,7 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
@@ -20,31 +21,55 @@ import { UpdateFarmerDto } from './dto/update-farmer.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
-import { FarmerStatus } from './entities/farmer.entity';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Farmers')
 @ApiBearerAuth('access-token')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard(['jwt', 'jwt-farmer']), RolesGuard)
 @Controller('farmers')
 export class FarmersController {
   constructor(private farmersService: FarmersService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all farmers (with optional search/filter)' })
-  @ApiQuery({ name: 'search', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: FarmerStatus })
-  @ApiQuery({ name: 'location', required: false })
+  @ApiOperation({ summary: 'Get paginated farmers' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'category', required: false })
+  @ApiQuery({ name: 'state', required: false })
   findAll(
-    @Query('search') search?: string,
-    @Query('status') status?: FarmerStatus,
-    @Query('location') location?: string,
+    @CurrentUser() requester: any,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('category') category?: string,
+    @Query('state') state?: string,
   ) {
-    return this.farmersService.findAll({ search, status, location });
+    if (requester?.type === 'farmer') {
+      throw new ForbiddenException('Farmers cannot list other farmers');
+    }
+    return this.farmersService.findAll({
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      category,
+      state,
+    });
+  }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Search farmers by name, ID, mobile or village' })
+  @ApiQuery({ name: 'q', required: true })
+  search(@CurrentUser() requester: any, @Query('q') q: string) {
+    if (requester?.type === 'farmer') {
+      throw new ForbiddenException('Farmers cannot search other farmers');
+    }
+    return this.farmersService.search(q || '');
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a farmer by ID' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@CurrentUser() requester: any, @Param('id', ParseUUIDPipe) id: string) {
+    if (requester?.type === 'farmer' && requester.id !== id) {
+      throw new ForbiddenException('Farmers can only view their own profile');
+    }
     return this.farmersService.findOne(id);
   }
 

@@ -37,7 +37,7 @@ async function run() {
     // Insert admin user
     await client.query(
       `INSERT INTO "users" (id, name, email, password, role, "isActive", "createdAt", "updatedAt")
-       VALUES (gen_random_uuid(), 'Super Admin', 'admin@carbongrounds.com', $1, 'admin', true, NOW(), NOW())`,
+       VALUES (gen_random_uuid(), 'Super Admin', 'admin@carbongrounds.com', $1, 'ADMIN', true, NOW(), NOW())`,
       [hashedPassword]
     );
 

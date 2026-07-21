@@ -18,9 +18,7 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiQuery,
-  ApiBody,
 } from '@nestjs/swagger';
-import { IsArray, IsUUID } from 'class-validator';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -28,12 +26,6 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { ProjectStatus } from './entities/project.entity';
-
-class AssignFarmersDto {
-  @IsArray()
-  @IsUUID('all', { each: true })
-  farmerIds: string[];
-}
 
 @ApiTags('Projects')
 @ApiBearerAuth('access-token')
@@ -56,7 +48,7 @@ export class ProjectsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a project by ID (includes farmers & reports)' })
+  @ApiOperation({ summary: 'Get a project by ID (includes reports)' })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.projectsService.findOne(id);
   }
@@ -66,17 +58,6 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Create a new project' })
   create(@Body() dto: CreateProjectDto) {
     return this.projectsService.create(dto);
-  }
-
-  @Post(':id/farmers')
-  @Roles(UserRole.ADMIN, UserRole.PROJECT_MANAGER)
-  @ApiOperation({ summary: 'Assign farmers to a project' })
-  @ApiBody({ type: AssignFarmersDto })
-  assignFarmers(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: AssignFarmersDto,
-  ) {
-    return this.projectsService.assignFarmers(id, body.farmerIds);
   }
 
   @Patch(':id')

@@ -18,6 +18,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -61,6 +62,13 @@ export class UsersController {
   @ApiOperation({ summary: 'Update own profile' })
   updateMe(@CurrentUser() user: any, @Body() dto: UpdateUserDto) {
     return this.usersService.update(user.id, dto);
+  }
+
+  @Patch('me/password')
+  @ApiOperation({ summary: 'Change own password' })
+  async changePassword(@CurrentUser() user: any, @Body() dto: ChangePasswordDto) {
+    await this.usersService.changePassword(user.id, dto);
+    return { message: 'Password updated successfully' };
   }
 
   @Patch(':id')

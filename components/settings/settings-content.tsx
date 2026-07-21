@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,17 +12,93 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { usersApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { UsersManagement } from "./users-management";
+
+const roleColors: Record<string, string> = {
+  ADMIN: "bg-red-100 text-red-700",
+  PROJECT_MANAGER: "bg-blue-100 text-blue-700",
+  FIELD_OFFICER: "bg-yellow-100 text-yellow-700",
+  ANALYST: "bg-purple-100 text-purple-700",
+  VIEWER: "bg-gray-100 text-gray-700",
+};
 
 export function SettingsContent() {
+  const { user, updateUser } = useAuth();
+  const { toast } = useToast();
+
+  const [profile, setProfile] = useState({ name: "", email: "" });
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setProfile({ name: user.name || "", email: user.email || "" });
+    }
+  }, [user]);
+
+  const handleSaveProfile = async () => {
+    if (!profile.name || !profile.email) {
+      return toast({ title: "Name and email are required", variant: "destructive" });
+    }
+    setSavingProfile(true);
+    try {
+      const { data } = await usersApi.updateMe(profile);
+      updateUser(data);
+      toast({ title: "Profile updated successfully" });
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      toast({
+        title: "Error",
+        description: Array.isArray(msg) ? msg.join(", ") : msg || "Failed to update profile",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    const { currentPassword, newPassword, confirmPassword } = passwordForm;
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return toast({ title: "Please fill in all password fields", variant: "destructive" });
+    }
+    if (newPassword.length < 6) {
+      return toast({ title: "New password must be at least 6 characters", variant: "destructive" });
+    }
+    if (newPassword !== confirmPassword) {
+      return toast({ title: "New passwords do not match", variant: "destructive" });
+    }
+
+    setChangingPassword(true);
+    try {
+      await usersApi.changePassword({ currentPassword, newPassword });
+      toast({ title: "Password changed successfully" });
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      toast({
+        title: "Error",
+        description: Array.isArray(msg) ? msg.join(", ") : msg || "Failed to change password",
+        variant: "destructive",
+      });
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
+  const isAdmin = user?.role === "ADMIN";
+
   return (
     <div className="space-y-6">
       <div>
@@ -34,9 +113,8 @@ export function SettingsContent() {
       <Tabs defaultValue="account" className="space-y-6">
         <TabsList>
           <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          {isAdmin && <TabsTrigger value="users">Users</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="account">
@@ -44,256 +122,49 @@ export function SettingsContent() {
             <CardHeader>
               <CardTitle>Account Information</CardTitle>
               <CardDescription>
-                Update your account details and preferences
+                Update your account details
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Personal Information</h3>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" defaultValue="John Doe" />
+                    <Input
+                      id="name"
+                      value={profile.name}
+                      onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
                     <Input
                       id="email"
-                      defaultValue="john.doe@carbongrounds.com"
+                      type="email"
+                      value={profile.email}
+                      onChange={(e) => setProfile((p) => ({ ...p, email: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="title">Job Title</Label>
-                    <Input id="title" defaultValue="Project Manager" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
-                    <Select defaultValue="field-operations">
-                      <SelectTrigger id="department">
-                        <SelectValue placeholder="Select department" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="management">Management</SelectItem>
-                        <SelectItem value="field-operations">
-                          Field Operations
-                        </SelectItem>
-                        <SelectItem value="research">Research</SelectItem>
-                        <SelectItem value="technology">Technology</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Preferences</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Language</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Select your preferred language
-                      </p>
+                    <Label>Role</Label>
+                    <div>
+                      {user?.role && (
+                        <Badge className={roleColors[user.role] || "bg-gray-100 text-gray-700"}>
+                          {user.role.replace("_", " ")}
+                        </Badge>
+                      )}
                     </div>
-                    <Select defaultValue="en">
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="fr">French</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                        <SelectItem value="de">German</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Time Zone</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Set your local time zone
-                      </p>
-                    </div>
-                    <Select defaultValue="utc">
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select time zone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="utc">UTC (GMT+0)</SelectItem>
-                        <SelectItem value="est">Eastern (GMT-5)</SelectItem>
-                        <SelectItem value="cst">Central (GMT-6)</SelectItem>
-                        <SelectItem value="pst">Pacific (GMT-8)</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Button className="bg-green-600 hover:bg-green-700">
-                  Save Changes
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="appearance">
-          <Card>
-            <CardHeader>
-              <CardTitle>Appearance</CardTitle>
-              <CardDescription>
-                Customize the look and feel of the dashboard
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Theme</h3>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="flex flex-col items-center gap-2 rounded-md border p-4">
-                    <div className="h-20 w-full rounded-md bg-white"></div>
-                    <Label className="text-center">Light</Label>
-                    <div className="flex items-center">
-                      <Switch defaultChecked id="theme-light" />
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-2 rounded-md border p-4">
-                    <div className="h-20 w-full rounded-md bg-gray-950"></div>
-                    <Label className="text-center">Dark</Label>
-                    <div className="flex items-center">
-                      <Switch id="theme-dark" />
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-2 rounded-md border p-4">
-                    <div className="h-20 w-full rounded-md bg-gradient-to-b from-white to-gray-950"></div>
-                    <Label className="text-center">System</Label>
-                    <div className="flex items-center">
-                      <Switch id="theme-system" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Dashboard Layout</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Compact Mode</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Use a more compact layout for the dashboard
-                      </p>
-                    </div>
-                    <Switch id="compact-mode" />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Sidebar Position</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Choose the position of the sidebar
-                      </p>
-                    </div>
-                    <Select defaultValue="left">
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select position" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="left">Left</SelectItem>
-                        <SelectItem value="right">Right</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button className="bg-green-600 hover:bg-green-700">
-                  Save Changes
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
-              <CardDescription>
-                Configure how and when you receive notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Email Notifications</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Project Updates</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receive emails about project status changes
-                      </p>
-                    </div>
-                    <Switch defaultChecked id="email-projects" />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Farmer Verifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receive emails when farmers need verification
-                      </p>
-                    </div>
-                    <Switch defaultChecked id="email-farmers" />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Team Activity</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receive emails about team member actions
-                      </p>
-                    </div>
-                    <Switch id="email-team" />
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">In-App Notifications</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">All Notifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Enable or disable all in-app notifications
-                      </p>
-                    </div>
-                    <Switch defaultChecked id="app-all" />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="text-base">Sound Alerts</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Play sound when receiving notifications
-                      </p>
-                    </div>
-                    <Switch id="app-sound" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button className="bg-green-600 hover:bg-green-700">
+                <Button
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={handleSaveProfile}
+                  disabled={savingProfile}
+                >
+                  {savingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Save Changes
                 </Button>
               </div>
@@ -306,82 +177,61 @@ export function SettingsContent() {
             <CardHeader>
               <CardTitle>Security Settings</CardTitle>
               <CardDescription>
-                Manage your account security and authentication
+                Manage your account password
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Password</h3>
+                <h3 className="text-lg font-medium">Change Password</h3>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="current-password">Current Password</Label>
-                    <Input id="current-password" type="password" />
+                    <Input
+                      id="current-password"
+                      type="password"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) => setPasswordForm((p) => ({ ...p, currentPassword: e.target.value }))}
+                    />
                   </div>
-                  <div className="md:col-span-2 md:h-0"></div>
                   <div className="space-y-2">
                     <Label htmlFor="new-password">New Password</Label>
-                    <Input id="new-password" type="password" />
+                    <Input
+                      id="new-password"
+                      type="password"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirm-password">
                       Confirm New Password
                     </Label>
-                    <Input id="confirm-password" type="password" />
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))}
+                    />
                   </div>
                 </div>
-                <Button className="mt-2">Change Password</Button>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">
-                  Two-Factor Authentication
-                </h3>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base">Enable 2FA</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Add an extra layer of security to your account with
-                      two-factor authentication
-                    </p>
-                  </div>
-                  <Switch id="enable-2fa" />
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Session Management</h3>
-                <div className="rounded-md border">
-                  <div className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="font-medium">Current Session</p>
-                      <p className="text-sm text-muted-foreground">
-                        Chrome on Windows • 192.168.1.1
-                      </p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Active now</p>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between p-4">
-                    <div>
-                      <p className="font-medium">Mobile App</p>
-                      <p className="text-sm text-muted-foreground">
-                        iPhone 13 • 192.168.1.2
-                      </p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">3 days ago</p>
-                  </div>
-                </div>
-                <Button variant="outline" className="mt-2">
-                  Sign Out All Devices
+                <Button
+                  className="mt-2 bg-green-600 hover:bg-green-700"
+                  onClick={handleChangePassword}
+                  disabled={changingPassword}
+                >
+                  {changingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Change Password
                 </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isAdmin && (
+          <TabsContent value="users">
+            <UsersManagement />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

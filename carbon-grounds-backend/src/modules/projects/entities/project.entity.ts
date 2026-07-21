@@ -4,13 +4,8 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToMany,
-  JoinTable,
   OneToMany,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
-import { Farmer } from '../../farmers/entities/farmer.entity';
 import { Report } from '../../reports/entities/report.entity';
 
 // Status kept for backward-compat but no longer exposed in form
@@ -104,25 +99,6 @@ export class Project {
 
   @Column({ length: 100, nullable: true })
   coordinates: string; // GPS coordinates string
-
-  // ─── Primary Farmer (single assignment) ─────────────────────────────────────
-
-  @Column({ nullable: true })
-  farmerId: string;
-
-  @ManyToOne(() => Farmer, { nullable: true, onDelete: 'SET NULL', eager: false })
-  @JoinColumn({ name: 'farmerId' })
-  farmer: Farmer;
-
-  // ─── Many-to-Many (for bulk assign via /projects/:id/farmers) ───────────────
-
-  @ManyToMany(() => Farmer, (farmer) => farmer.projects)
-  @JoinTable({
-    name: 'project_farmers',
-    joinColumn: { name: 'projectId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'farmerId', referencedColumnName: 'id' },
-  })
-  farmers: Farmer[];
 
   @OneToMany(() => Report, (report) => report.project)
   reports: Report[];

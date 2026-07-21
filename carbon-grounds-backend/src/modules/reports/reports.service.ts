@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { join, basename } from 'path';
+import * as fs from 'fs';
 import { Report, ReportStatus } from './entities/report.entity';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
+
+const UPLOADS_DIR = join(process.cwd(), 'uploads', 'reports');
 
 @Injectable()
 export class ReportsService {
@@ -54,6 +58,12 @@ export class ReportsService {
 
   async attachFile(id: string, fileUrl: string, fileName: string): Promise<Report> {
     const report = await this.findOne(id);
+    if (report.fileUrl) {
+      const oldPath = join(UPLOADS_DIR, basename(report.fileUrl));
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
     report.fileUrl = fileUrl;
     report.fileName = fileName;
     return this.reportsRepo.save(report);

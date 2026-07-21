@@ -28,10 +28,11 @@ async function bootstrap() {
       'http://43.204.144.76',
       'http://43.204.144.76:3000',
       'http://localhost:3000',
+      'http://localhost:3001',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'multipart/form-data'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Swagger docs
@@ -48,7 +49,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = process.env.PORT || 3001;
+  const port = process.env.PORT || 3000;
   await app.listen(port);
   console.log(`\n🚀 Carbon Grounds API running on: http://localhost:${port}`);
   console.log(`📚 Swagger Docs: http://localhost:${port}/api\n`);

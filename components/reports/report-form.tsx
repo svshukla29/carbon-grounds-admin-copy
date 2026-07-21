@@ -13,7 +13,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { reportsApi, projectsApi } from "@/lib/api";
+import { api, reportsApi, projectsApi } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import {
   Card,
@@ -35,9 +35,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatePicker } from "@/components/ui/date-picker";
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
 export function ReportForm({ id }: { id?: string }) {
   const isEditMode = !!id;
   const router = useRouter();
@@ -52,6 +49,7 @@ export function ReportForm({ id }: { id?: string }) {
     url: string;
   } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [viewingFile, setViewingFile] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -170,6 +168,21 @@ export function ReportForm({ id }: { id?: string }) {
     setSelectedFile(null);
     setUploadedFile(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleViewFile = async () => {
+    if (!uploadedFile) return;
+    setViewingFile(true);
+    try {
+      const res = await api.get(uploadedFile.url, { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => window.URL.revokeObjectURL(url), 60000);
+    } catch {
+      toast({ title: "Failed to open file", variant: "destructive" });
+    } finally {
+      setViewingFile(false);
+    }
   };
 
   const getFileIcon = (name: string) => {
@@ -401,14 +414,14 @@ export function ReportForm({ id }: { id?: string }) {
                       <span className="text-sm font-medium">
                         {getFileIcon(uploadedFile.name)} {uploadedFile.name}
                       </span>
-                      <a
-                        href={`${BACKEND_URL}${uploadedFile.url}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="ml-auto text-xs text-green-700 underline"
+                      <button
+                        type="button"
+                        onClick={handleViewFile}
+                        disabled={viewingFile}
+                        className="ml-auto text-xs text-green-700 underline disabled:opacity-50"
                       >
-                        View
-                      </a>
+                        {viewingFile ? "Opening..." : "View"}
+                      </button>
                       <button
                         type="button"
                         onClick={removeFile}
@@ -484,43 +497,14 @@ export function ReportForm({ id }: { id?: string }) {
               <TabsContent value="content" className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="content">Report Content</Label>
-                  <div className="rounded-md border">
-                    <div className="flex items-center gap-1 border-b bg-muted/50 px-2 py-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                      >
-                        <span className="font-bold">B</span>
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                      >
-                        <span className="italic">I</span>
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                      >
-                        <span className="underline">U</span>
-                      </Button>
-                    </div>
-                    <Textarea
-                      id="content"
-                      name="content"
-                      placeholder="Write your report content here..."
-                      rows={15}
-                      value={formData.content}
-                      onChange={handleChange}
-                      className="border-0 focus-visible:ring-0"
-                    />
-                  </div>
+                  <Textarea
+                    id="content"
+                    name="content"
+                    placeholder="Write your report content here..."
+                    rows={15}
+                    value={formData.content}
+                    onChange={handleChange}
+                  />
                 </div>
               </TabsContent>
             </Tabs>

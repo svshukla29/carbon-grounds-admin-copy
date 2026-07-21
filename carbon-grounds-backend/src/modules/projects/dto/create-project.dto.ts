@@ -4,8 +4,6 @@ import {
   IsEnum,
   IsNumber,
   IsDateString,
-  IsArray,
-  IsUUID,
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -99,22 +97,4 @@ export class CreateProjectDto {
   @IsOptional()
   @IsString()
   coordinates?: string;
-
-  // ─── Farmer Assignment ─────────────────────────────────────────────────────
-
-  @ApiPropertyOptional({
-    description: 'UUID of the primary farmer assigned to this project',
-  })
-  @IsOptional()
-  @IsUUID()
-  farmerId?: string;
-
-  @ApiPropertyOptional({
-    type: [String],
-    description: 'Array of Farmer UUIDs (bulk assignment)',
-  })
-  @IsOptional()
-  @IsArray()
-  @IsUUID('all', { each: true })
-  farmerIds?: string[];
 }

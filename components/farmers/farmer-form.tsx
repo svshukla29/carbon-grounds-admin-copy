@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ import { toast } from "@/hooks/use-toast";
 export function FarmerForm({ id }: { id?: string }) {
   const isEdit = !!id;
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const lockedGpId = !isEdit ? searchParams.get("gpId") : null;
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [gps, setGps] = useState<any[]>([]);
@@ -31,7 +33,7 @@ export function FarmerForm({ id }: { id?: string }) {
     category: "",
     tribeId: "",
     bpl: false,
-    gramPanchayatId: "",
+    gramPanchayatId: lockedGpId || "",
     villageName: "",
     villageLgdCode: "",
     block: "",
@@ -107,11 +109,16 @@ export function FarmerForm({ id }: { id?: string }) {
       if (isEdit && id) {
         await farmersApi.update(id, payload);
         toast({ title: "Farmer updated successfully!" });
+        router.push("/dashboard/farmers");
       } else {
         await farmersApi.create(payload);
         toast({ title: "Farmer registered successfully!" });
+        router.push(
+          lockedGpId
+            ? `/dashboard/gram-panchayat?gpId=${lockedGpId}`
+            : "/dashboard/farmers"
+        );
       }
-      router.push("/dashboard/farmers");
     } catch (err: any) {
       const msg = err?.response?.data?.message;
       toast({
@@ -141,7 +148,7 @@ export function FarmerForm({ id }: { id?: string }) {
         <div>
           <h1 className="text-2xl font-bold">{isEdit ? "Edit Farmer" : "Register New Farmer"}</h1>
           <p className="text-sm text-muted-foreground">
-            Instance ID will be auto-generated (e.g. CG26-0011)
+            Farmer ID will be auto-generated (e.g. FR-GP5-5)
           </p>
         </div>
       </div>
@@ -233,16 +240,32 @@ export function FarmerForm({ id }: { id?: string }) {
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Gram Panchayat</Label>
-              <Select value={form.gramPanchayatId} onValueChange={(v) => set("gramPanchayatId", v)}>
-                <SelectTrigger><SelectValue placeholder="Select GP (optional)" /></SelectTrigger>
-                <SelectContent>
-                  {gps.map((gp) => (
-                    <SelectItem key={gp.id} value={gp.id}>
-                      {gp.gpName} — {gp.district}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {lockedGpId ? (
+                <>
+                  <Input
+                    disabled
+                    value={
+                      gps.find((gp) => gp.id === lockedGpId)
+                        ? `${gps.find((gp) => gp.id === lockedGpId).gpName} — ${gps.find((gp) => gp.id === lockedGpId).district}`
+                        : "Loading…"
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Registering under this Gram Panchayat
+                  </p>
+                </>
+              ) : (
+                <Select value={form.gramPanchayatId} onValueChange={(v) => set("gramPanchayatId", v)}>
+                  <SelectTrigger><SelectValue placeholder="Select GP (optional)" /></SelectTrigger>
+                  <SelectContent>
+                    {gps.map((gp) => (
+                      <SelectItem key={gp.id} value={gp.id}>
+                        {gp.gpName} — {gp.district}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div className="space-y-2">

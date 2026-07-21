@@ -8,109 +8,37 @@ import {
   Calendar,
   Download,
   FileEdit,
-  Printer,
-  Share2,
   Trash2,
   FileText,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-// Mock report data
-const reportsData = [
-  {
-    id: "1",
-    title: "Q2 2023 Carbon Credits Report",
-    type: "Quarterly Summary",
-    project: "Sustainable Rice Cultivation",
-    author: {
-      name: "Sarah Chen",
-      email: "sarah.chen@carbongrounds.com",
-      avatar: "/placeholder.svg?height=40&width=40",
-      initials: "SC",
-    },
-    status: "Published",
-    date: "2023-07-15",
-    summary:
-      "This quarterly report summarizes the carbon credit generation and verification for the Sustainable Rice Cultivation project during Q2 2023. The project has shown significant progress in reducing methane emissions and improving farmer livelihoods.",
-    content: `
-      <h2>Executive Summary</h2>
-      <p>The Sustainable Rice Cultivation project has successfully implemented alternate wetting and drying techniques across 124 farms in the Mekong Delta region. This has resulted in a 32% reduction in methane emissions compared to traditional cultivation methods.</p>
-      
-      <h2>Carbon Credit Generation</h2>
-      <p>During Q2 2023, the project generated 450 tons of verified carbon credits. This represents a 15% increase from the previous quarter and puts the project on track to meet its annual target of 1,800 tons.</p>
-      
-      <h2>Farmer Participation</h2>
-      <p>Farmer participation has increased by 12% this quarter, with 15 new farmers joining the program. Training sessions on sustainable practices were conducted for all participants, with a 95% attendance rate.</p>
-      
-      <h2>Challenges and Solutions</h2>
-      <p>The main challenge faced this quarter was water management during unexpected dry periods. The project team implemented improved irrigation scheduling and provided additional support to affected farmers.</p>
-      
-      <h2>Next Steps</h2>
-      <p>In Q3, the project will focus on expanding to neighboring communities and implementing digital monitoring tools to improve data collection efficiency.</p>
-    `,
-    attachments: [
-      {
-        name: "Q2_2023_Data_Summary.xlsx",
-        size: "2.4 MB",
-        type: "spreadsheet",
-      },
-      {
-        name: "Farmer_Verification_Photos.zip",
-        size: "15.8 MB",
-        type: "archive",
-      },
-      { name: "Carbon_Credit_Certificates.pdf", size: "1.2 MB", type: "pdf" },
-    ],
-    comments: [
-      {
-        id: 1,
-        user: {
-          name: "Michael Rodriguez",
-          avatar: "/placeholder.svg?height=32&width=32",
-          initials: "MR",
-        },
-        text: "Great report! The increase in farmer participation is particularly encouraging.",
-        date: "2023-07-16",
-      },
-      {
-        id: 2,
-        user: {
-          name: "Emma Wilson",
-          avatar: "/placeholder.svg?height=32&width=32",
-          initials: "EW",
-        },
-        text: "Could we add more details about the water management solutions for the next report?",
-        date: "2023-07-17",
-      },
-    ],
-  },
-];
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { api, reportsApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export function ReportDetails({ id }: { id: string }) {
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Simulate API fetch
     const fetchReport = async () => {
       setLoading(true);
       try {
-        // In a real app, this would be an API call
-        const foundReport = reportsData.find((r) => r.id === id);
-
-        if (foundReport) {
-          setReport(foundReport);
-        } else {
-          // Report not found
-          router.push("/dashboard/reports");
-        }
+        const res = await reportsApi.getOne(id);
+        setReport(res.data);
       } catch (error) {
         console.error("Error fetching report:", error);
+        router.push("/dashboard/reports");
       } finally {
         setLoading(false);
       }
@@ -119,9 +47,36 @@ export function ReportDetails({ id }: { id: string }) {
     fetchReport();
   }, [id, router]);
 
-  const handleDelete = () => {
-    // In a real app, this would be an API call to delete the report
-    router.push("/dashboard/reports");
+  const handleDelete = async () => {
+    try {
+      await reportsApi.delete(id);
+      toast({ title: "Report deleted" });
+      router.push("/dashboard/reports");
+    } catch {
+      toast({ title: "Failed to delete report", variant: "destructive" });
+    } finally {
+      setConfirmDelete(false);
+    }
+  };
+
+  const handleDownload = async () => {
+    if (!report?.fileUrl) return;
+    setDownloading(true);
+    try {
+      const res = await api.get(report.fileUrl, { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = report.fileName || "report-file";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast({ title: "Failed to download file", variant: "destructive" });
+    } finally {
+      setDownloading(false);
+    }
   };
 
   if (loading) {
@@ -188,25 +143,23 @@ export function ReportDetails({ id }: { id: string }) {
           <p className="text-muted-foreground">{report.summary}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </Button>
-          <Button variant="outline">
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Button>
-          <Button variant="outline">
-            <Share2 className="mr-2 h-4 w-4" />
-            Share
-          </Button>
+          {report.fileUrl && (
+            <Button variant="outline" onClick={handleDownload} disabled={downloading}>
+              {downloading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Download
+            </Button>
+          )}
           <Button asChild variant="outline">
             <Link href={`/dashboard/reports/edit/${report.id}`}>
               <FileEdit className="mr-2 h-4 w-4" />
               Edit
             </Link>
           </Button>
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
@@ -219,95 +172,61 @@ export function ReportDetails({ id }: { id: string }) {
             <CardTitle>Report Information</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex flex-col items-center space-y-4 pb-6 text-center">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage
-                    src={report.author.avatar || "/placeholder.svg"}
-                    alt={report.author.name}
-                  />
-                  <AvatarFallback className="bg-blue-100 text-blue-800">
-                    {report.author.initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-medium">{report.author.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {report.author.email}
-                  </p>
-                </div>
+            <div className="space-y-2 rounded-md border p-3 text-sm">
+              <div className="grid grid-cols-3">
+                <span className="text-muted-foreground">Type:</span>
+                <span className="col-span-2">{report.type}</span>
               </div>
-
-              <div className="space-y-4">
-                <div>
-                  <h4 className="mb-2 text-sm font-medium">Report Details</h4>
-                  <div className="space-y-2 rounded-md border p-3 text-sm">
-                    <div className="grid grid-cols-3">
-                      <span className="text-muted-foreground">Type:</span>
-                      <span className="col-span-2">{report.type}</span>
-                    </div>
-                    <div className="grid grid-cols-3">
-                      <span className="text-muted-foreground">Project:</span>
-                      <span className="col-span-2">{report.project}</span>
-                    </div>
-                    <div className="grid grid-cols-3">
-                      <span className="text-muted-foreground">Date:</span>
-                      <span className="col-span-2 flex items-center gap-1">
-                        <Calendar className="h-3 w-3 text-muted-foreground" />
-                        {new Date(report.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3">
-                      <span className="text-muted-foreground">Status:</span>
-                      <span className="col-span-2">
-                        <Badge
-                          variant="outline"
-                          className={getStatusBadgeColor(report.status)}
-                        >
-                          {report.status}
-                        </Badge>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="mb-2 text-sm font-medium">Attachments</h4>
-                  <div className="space-y-2">
-                    {report.attachments.map(
-                      (attachment: any, index: number) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between rounded-md border p-2 text-sm"
-                        >
-                          <div className="flex items-center gap-2">
-                            {attachment.type === "pdf" && (
-                              <div className="rounded-md bg-red-100 p-1">
-                                <FileText className="h-3 w-3 text-red-600" />
-                              </div>
-                            )}
-                            {attachment.type === "spreadsheet" && (
-                              <div className="rounded-md bg-green-100 p-1">
-                                <FileText className="h-3 w-3 text-green-600" />
-                              </div>
-                            )}
-                            {attachment.type === "archive" && (
-                              <div className="rounded-md bg-yellow-100 p-1">
-                                <FileText className="h-3 w-3 text-yellow-600" />
-                              </div>
-                            )}
-                            <span>{attachment.name}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {attachment.size}
-                          </span>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                </div>
+              <div className="grid grid-cols-3">
+                <span className="text-muted-foreground">Project:</span>
+                <span className="col-span-2">{report.project?.name || "—"}</span>
+              </div>
+              <div className="grid grid-cols-3">
+                <span className="text-muted-foreground">Date:</span>
+                <span className="col-span-2 flex items-center gap-1">
+                  <Calendar className="h-3 w-3 text-muted-foreground" />
+                  {report.date ? new Date(report.date).toLocaleDateString() : "—"}
+                </span>
+              </div>
+              <div className="grid grid-cols-3">
+                <span className="text-muted-foreground">Status:</span>
+                <span className="col-span-2">
+                  <Badge
+                    variant="outline"
+                    className={getStatusBadgeColor(report.status)}
+                  >
+                    {report.status}
+                  </Badge>
+                </span>
+              </div>
+              <div className="grid grid-cols-3">
+                <span className="text-muted-foreground">Created By:</span>
+                <span className="col-span-2">{report.createdBy?.name || "—"}</span>
               </div>
             </div>
+
+            {report.fileName && (
+              <div className="mt-4">
+                <h4 className="mb-2 text-sm font-medium">Attachment</h4>
+                <button
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="flex w-full items-center justify-between rounded-md border p-2 text-sm hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="rounded-md bg-red-100 p-1">
+                      <FileText className="h-3 w-3 text-red-600" />
+                    </div>
+                    <span className="truncate">{report.fileName}</span>
+                  </div>
+                  {downloading ? (
+                    <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Download className="h-3 w-3 text-muted-foreground" />
+                  )}
+                </button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -316,63 +235,34 @@ export function ReportDetails({ id }: { id: string }) {
             <CardTitle>Report Content</CardTitle>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="content">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="content">Content</TabsTrigger>
-                <TabsTrigger value="comments">Comments</TabsTrigger>
-              </TabsList>
-              <TabsContent value="content" className="pt-4">
-                <div
-                  className="prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: report.content }}
-                ></div>
-              </TabsContent>
-              <TabsContent value="comments" className="pt-4">
-                <div className="space-y-4">
-                  {report.comments.map((comment: any) => (
-                    <div key={comment.id} className="rounded-md border p-4">
-                      <div className="flex items-start gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage
-                            src={comment.user.avatar || "/placeholder.svg"}
-                            alt={comment.user.name}
-                          />
-                          <AvatarFallback className="bg-green-100 text-green-800">
-                            {comment.user.initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium">{comment.user.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(comment.date).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <p className="mt-1 text-sm">{comment.text}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  <div className="mt-4 rounded-md border p-4">
-                    <h4 className="mb-2 text-sm font-medium">Add a Comment</h4>
-                    <textarea
-                      className="w-full rounded-md border p-2 text-sm"
-                      rows={3}
-                      placeholder="Write your comment here..."
-                    ></textarea>
-                    <div className="mt-2 flex justify-end">
-                      <Button className="bg-green-600 hover:bg-green-700">
-                        Post Comment
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+            {report.content ? (
+              <div
+                className="prose max-w-none"
+                dangerouslySetInnerHTML={{ __html: report.content }}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">No additional content provided.</p>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Report</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{report.title}</strong>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

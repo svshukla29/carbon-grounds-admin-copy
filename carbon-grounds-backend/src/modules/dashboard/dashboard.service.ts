@@ -1,45 +1,51 @@
 import { Injectable } from '@nestjs/common';
 import { FarmersService } from '../farmers/farmers.service';
-import { ProjectsService } from '../projects/projects.service';
-import { ReportsService } from '../reports/reports.service';
-import { TeamsService } from '../teams/teams.service';
+import { InstancesService } from '../instances/instances.service';
+import { PlantingUnitsService } from '../planting-units/planting-units.service';
+import { GramPanchayatService } from '../gram-panchayat/gram-panchayat.service';
+import { SpeciesService } from '../species/species.service';
+import { CalculationsService } from '../calculations/calculations.service';
+import { MonitoringService } from '../monitoring/monitoring.service';
 
 @Injectable()
 export class DashboardService {
   constructor(
     private farmersService: FarmersService,
-    private projectsService: ProjectsService,
-    private reportsService: ReportsService,
-    private teamsService: TeamsService,
+    private instancesService: InstancesService,
+    private plantingUnitsService: PlantingUnitsService,
+    private gramPanchayatService: GramPanchayatService,
+    private speciesService: SpeciesService,
+    private calculationsService: CalculationsService,
+    private monitoringService: MonitoringService,
   ) {}
 
   async getStats() {
     const [
       totalFarmers,
-      activeFarmers,   // Verified farmers — "Active Farmers" metric
-      totalProjects,
-      totalVillages,   // Distinct project locations — "Total Villages" metric
-      totalReports,
-      totalTeamMembers,
+      totalInstances,
+      totalTrees,
+      totalGramPanchayats,
+      totalSpecies,
       totalCarbonCredits,
+      totalReports,
     ] = await Promise.all([
       this.farmersService.count(),
-      this.farmersService.countActive(),
-      this.projectsService.count(),
-      this.projectsService.totalVillages(),
-      this.reportsService.count(),
-      this.teamsService.count(),
-      this.projectsService.totalCarbonCredits(),
+      this.instancesService.count(),
+      this.plantingUnitsService.count(),
+      this.gramPanchayatService.count(),
+      this.speciesService.count(),
+      this.calculationsService.totalNetCredits(),
+      this.monitoringService.count(),
     ]);
 
     return {
       totalFarmers,
-      activeFarmers,
-      totalProjects,
-      totalVillages,
-      totalReports,
-      totalTeamMembers,
+      totalInstances,
+      totalTrees,
+      totalGramPanchayats,
+      totalSpecies,
       totalCarbonCredits,
+      totalReports,
     };
   }
 }

@@ -9,17 +9,22 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Leaf, Loader2, Plus } from "lucide-react";
+import { Leaf, Loader2 } from "lucide-react";
+import { SpeciesDialog } from "@/components/species/species-dialog";
 
 export default function SpeciesPage() {
   const [species, setSpecies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refreshSpecies = () => {
     speciesApi.getAll()
       .then((res) => setSpecies(res.data || []))
       .catch(console.error)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    refreshSpecies();
   }, []);
 
   return (
@@ -29,9 +34,7 @@ export default function SpeciesPage() {
           <h1 className="text-2xl font-bold tracking-tight">Species Master</h1>
           <p className="text-muted-foreground">Tree species with biomass coefficients for carbon calculation</p>
         </div>
-        <Button className="bg-green-700 hover:bg-green-800">
-          <Plus className="mr-2 h-4 w-4" /> Add Species
-        </Button>
+        <SpeciesDialog onSaved={refreshSpecies} />
       </div>
 
       <Card>
@@ -58,12 +61,13 @@ export default function SpeciesPage() {
                   <TableHead>Allometric a</TableHead>
                   <TableHead>Allometric b</TableHead>
                   <TableHead>Max Age (yrs)</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {species.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                       No species found
                     </TableCell>
                   </TableRow>
@@ -84,6 +88,9 @@ export default function SpeciesPage() {
                       <TableCell className="text-sm font-mono">{s.allometricA ?? "—"}</TableCell>
                       <TableCell className="text-sm font-mono">{s.allometricB ?? "—"}</TableCell>
                       <TableCell className="text-sm">{s.maxRotationYears ?? "—"}</TableCell>
+                      <TableCell className="text-right">
+                        <SpeciesDialog species={s} onSaved={refreshSpecies} />
+                      </TableCell>
                     </TableRow>
                   ))
                 )}

@@ -9,6 +9,13 @@ import { PartnersModule } from './modules/partners/partners.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { GramPanchayatModule } from './modules/gram-panchayat/gram-panchayat.module';
+import { MastersModule } from './modules/masters/masters.module';
+import { SpeciesModule } from './modules/species/species.module';
+import { InstancesModule } from './modules/instances/instances.module';
+import { PlantingUnitsModule } from './modules/planting-units/planting-units.module';
+import { MonitoringModule } from './modules/monitoring/monitoring.module';
+import { CalculationsModule } from './modules/calculations/calculations.module';
 
 @Module({
   imports: [
@@ -44,6 +51,13 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     ReportsModule,
     TeamsModule,
     DashboardModule,
+    GramPanchayatModule,
+    MastersModule,
+    SpeciesModule,
+    InstancesModule,
+    PlantingUnitsModule,
+    MonitoringModule,
+    CalculationsModule,
   ],
 })
 export class AppModule {}

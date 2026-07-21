@@ -31,7 +31,7 @@ api.interceptors.response.use(
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export const authApi = {
   adminLogin: (email: string, password: string) =>
-    api.post("/auth/admin/login", { email, password }),
+    api.post("/auth/login", { email, password }),
   sendOtp: (mobile: string) => api.post("/auth/send-otp", { mobile }),
   verifyOtp: (mobile: string, otp: string) =>
     api.post("/auth/verify-otp", { mobile, otp }),
@@ -84,6 +84,9 @@ export const treesApi = {
   update: (id: string, data: any) => api.patch(`/planting-units/${id}`, data),
   markLost: (id: string, lossDate: string) =>
     api.patch(`/planting-units/${id}/loss`, { lossDate }),
+  restoreAlive: (id: string) => api.patch(`/planting-units/${id}/restore`),
+  export: (params?: { species?: string; instanceId?: string }) =>
+    api.get("/planting-units/export", { params, responseType: "blob" }),
 };
 
 // ── Species ───────────────────────────────────────────────────────────────────
@@ -132,7 +135,21 @@ export const projectsApi = {
   delete: (id: string) => api.delete(`/projects/${id}`),
 };
 export const partnersApi = { getAll: () => api.get("/partners") };
-export const reportsApi = { getAll: () => api.get("/reports") };
+export const reportsApi = {
+  getAll: (params?: { search?: string; status?: string; projectId?: string }) =>
+    api.get("/reports", { params }),
+  getOne: (id: string) => api.get(`/reports/${id}`),
+  create: (data: any) => api.post("/reports", data),
+  update: (id: string, data: any) => api.patch(`/reports/${id}`, data),
+  delete: (id: string) => api.delete(`/reports/${id}`),
+  uploadFile: (id: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return api.post(`/reports/${id}/upload`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+};
 export const teamsApi = {
   getAll: () => api.get("/teams"),
   addMember: (data: any) => api.post("/teams", data),
@@ -141,5 +158,11 @@ export const teamsApi = {
 };
 export const usersApi = {
   getAll: () => api.get("/users"),
+  getMe: () => api.get("/users/me"),
+  create: (data: any) => api.post("/users", data),
+  updateMe: (data: any) => api.patch("/users/me", data),
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    api.patch("/users/me/password", data),
   update: (id: string, data: any) => api.patch(`/users/${id}`, data),
+  delete: (id: string) => api.delete(`/users/${id}`),
 };

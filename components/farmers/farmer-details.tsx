@@ -166,7 +166,7 @@ export function FarmerDetails({ id }: { id: string }) {
               Farm Plots ({instances.length}) — Total {totalArea.toFixed(2)} acres, {totalTrees} trees
             </CardTitle>
             <Button asChild size="sm" className="bg-green-700 hover:bg-green-800">
-              <Link href="/dashboard/instances/create">Add Plot</Link>
+              <Link href={`/dashboard/instances/create?farmerId=${farmer.id}`}>Add Plot</Link>
             </Button>
           </div>
         </CardHeader>

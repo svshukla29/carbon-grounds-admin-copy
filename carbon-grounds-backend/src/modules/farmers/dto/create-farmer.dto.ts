@@ -2,81 +2,86 @@ import {
   IsString,
   IsOptional,
   IsEnum,
-  IsNumber,
-  IsArray,
-  IsDateString,
-  IsEmail,
+  IsBoolean,
   IsUUID,
-  Min,
+  Length,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { FarmerStatus } from '../entities/farmer.entity';
+import { Gender, FarmerCategory } from '../entities/farmer.entity';
+
+const emptyToUndefined = ({ value }: { value: unknown }) =>
+  value === '' ? undefined : value;
 
 export class CreateFarmerDto {
   @ApiProperty({ example: 'Ramesh Kumar' })
   @IsString()
-  name: string;
+  farmerName: string;
 
-  @ApiPropertyOptional({ example: 'Experienced farmer from Maharashtra' })
-  @IsOptional()
+  @ApiProperty({ enum: Gender })
+  @IsEnum(Gender)
+  gender: Gender;
+
+  @ApiProperty({ example: '9876543210' })
   @IsString()
-  bio?: string;
+  @Length(10, 15)
+  mobileNo: string;
 
-  @ApiProperty({ example: 'Nashik, Maharashtra' })
-  @IsString()
-  location: string;
+  @ApiProperty({ enum: FarmerCategory })
+  @IsEnum(FarmerCategory)
+  category: FarmerCategory;
 
-  @ApiProperty({ example: 2.5, description: 'Farm area in hectares' })
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  area: number;
-
-  @ApiPropertyOptional({
-    example: ['Rice', 'Wheat'],
-    description: 'Crop / plant types (shown as "Type" in admin UI)',
-  })
+  @ApiPropertyOptional({ description: 'Tribe UUID (required when category = ST)' })
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  crops?: string[];
-
-  @ApiPropertyOptional({ example: ['Organic Farming'] })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  certifications?: string[];
-
-  @ApiPropertyOptional({ enum: FarmerStatus })
-  @IsOptional()
-  @IsEnum(FarmerStatus)
-  status?: FarmerStatus;
-
-  @ApiPropertyOptional({ example: '2024-01-15' })
-  @IsOptional()
-  @IsDateString()
-  joinDate?: string;
-
-  @ApiPropertyOptional({ example: '+91 98765 43210' })
-  @IsOptional()
-  @IsString()
-  phone?: string;
-
-  @ApiPropertyOptional({ example: 'ramesh@example.com' })
-  @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @ApiPropertyOptional({ example: 'Village Road, Nashik' })
-  @IsOptional()
-  @IsString()
-  address?: string;
-
-  @ApiPropertyOptional({
-    description: 'UUID of the primary project this farmer belongs to',
-  })
-  @IsOptional()
+  @Transform(emptyToUndefined)
   @IsUUID()
-  projectId?: string;
+  tribeId?: string;
+
+  @ApiPropertyOptional({ default: false, description: 'Below Poverty Line' })
+  @IsOptional()
+  @IsBoolean()
+  bpl?: boolean;
+
+  @ApiPropertyOptional({ description: 'Gram Panchayat UUID' })
+  @IsOptional()
+  @Transform(emptyToUndefined)
+  @IsUUID()
+  gramPanchayatId?: string;
+
+  @ApiProperty({ example: 'Kondagaon' })
+  @IsString()
+  villageName: string;
+
+  @ApiPropertyOptional({ example: '123456' })
+  @IsOptional()
+  @IsString()
+  villageLgdCode?: string;
+
+  @ApiPropertyOptional({ example: 'Kondagaon Block' })
+  @IsOptional()
+  @IsString()
+  block?: string;
+
+  @ApiPropertyOptional({ example: 'Kondagaon Tehsil' })
+  @IsOptional()
+  @IsString()
+  tehsil?: string;
+
+  @ApiProperty({ example: 'Bastar' })
+  @IsString()
+  district: string;
+
+  @ApiPropertyOptional({ example: 'Chhattisgarh', default: 'Chhattisgarh' })
+  @IsOptional()
+  @IsString()
+  state?: string;
+
+  @ApiPropertyOptional({ example: '494226' })
+  @IsOptional()
+  @IsString()
+  pinCode?: string;
+
+  @ApiProperty({ example: 'Khasra No. 123/4' })
+  @IsString()
+  khasraNo: string;
 }

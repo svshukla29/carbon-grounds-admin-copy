@@ -4,13 +4,31 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToMany,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
 } from 'typeorm';
-import { Project } from '../../projects/entities/project.entity';
+import { Tribe } from '../../masters/entities/tribe.entity';
+import { GramPanchayat } from '../../gram-panchayat/entities/gram-panchayat.entity';
+import { Instance } from '../../instances/entities/instance.entity';
+
+export enum Gender {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+  OTHERS = 'OTHERS',
+}
+
+export enum FarmerCategory {
+  ST = 'ST',
+  SC = 'SC',
+  OBC = 'OBC',
+  GEN = 'GEN',
+}
 
 export enum FarmerStatus {
-  VERIFIED = 'Verified',
-  PENDING = 'Pending',
+  /** Self-registered via the app, awaiting field-staff verification of land/bank/tribal details */
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
 }
 
 @Entity('farmers')
@@ -18,54 +36,72 @@ export class Farmer {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 100 })
-  name: string;
+  /** Auto-generated display ID, e.g. CG26-0011 */
+  @Column({ unique: true })
+  instanceId: string;
 
-  @Column({ type: 'text', nullable: true })
-  bio: string;
-
-  @Column({ length: 200 })
-  location: string;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  area: number; // in hectares
-
-  /** Crop / plant types — shown as "Type" in the admin UI */
-  @Column({ type: 'text', array: true, default: '{}' })
-  crops: string[];
-
-  @Column({ type: 'text', array: true, default: '{}' })
-  certifications: string[];
-
-  @Column({ type: 'enum', enum: FarmerStatus, default: FarmerStatus.PENDING })
+  @Column({ type: 'enum', enum: FarmerStatus, default: FarmerStatus.ACTIVE })
   status: FarmerStatus;
 
-  @Column({ type: 'date', nullable: true })
-  joinDate: Date;
+  @Column({ length: 150 })
+  farmerName: string;
 
-  @Column({ nullable: true, length: 30 })
-  phone: string;
-
-  @Column({ nullable: true, length: 150 })
-  email: string;
-
-  @Column({ type: 'text', nullable: true })
-  address: string;
-
-  @Column({ nullable: true })
-  avatarUrl: string;
+  @Column({ type: 'enum', enum: Gender, nullable: true })
+  gender: Gender;
 
   /**
-   * Primary project this farmer is assigned to.
-   * Stored as a plain UUID column for quick lookup without a JOIN.
-   * Kept in sync by ProjectsService when farmerId is set on a project.
+   * Not DB-unique — existing data has duplicate mobile numbers (shared household
+   * phones). OTP login resolves ties by picking the most recently created match.
    */
-  @Column({ nullable: true })
-  projectId: string;
+  @Column({ length: 15 })
+  mobileNo: string;
 
-  /** Many-to-many relationship with Projects (bulk assignment) */
-  @ManyToMany(() => Project, (project) => project.farmers)
-  projects: Project[];
+  @Column({ type: 'enum', enum: FarmerCategory, nullable: true })
+  category: FarmerCategory;
+
+  @Column({ nullable: true })
+  tribeId: string;
+
+  @ManyToOne(() => Tribe, { nullable: true, eager: true })
+  @JoinColumn({ name: 'tribeId' })
+  tribe: Tribe;
+
+  @Column({ default: false })
+  bpl: boolean;
+
+  @Column({ nullable: true })
+  gramPanchayatId: string;
+
+  @ManyToOne(() => GramPanchayat, (gp) => gp.farmers, { nullable: true })
+  @JoinColumn({ name: 'gramPanchayatId' })
+  gramPanchayat: GramPanchayat;
+
+  @Column({ length: 150 })
+  villageName: string;
+
+  @Column({ nullable: true, length: 50 })
+  villageLgdCode: string;
+
+  @Column({ nullable: true, length: 100 })
+  block: string;
+
+  @Column({ nullable: true, length: 100 })
+  tehsil: string;
+
+  @Column({ nullable: true, length: 100 })
+  district: string;
+
+  @Column({ length: 100, default: 'Chhattisgarh' })
+  state: string;
+
+  @Column({ nullable: true, length: 10 })
+  pinCode: string;
+
+  @Column({ nullable: true, length: 100 })
+  khasraNo: string;
+
+  @OneToMany(() => Instance, (instance) => instance.farmer)
+  instances: Instance[];
 
   @CreateDateColumn()
   createdAt: Date;
