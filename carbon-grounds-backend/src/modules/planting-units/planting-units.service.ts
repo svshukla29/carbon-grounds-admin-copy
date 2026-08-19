@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PlantingUnit } from './entities/planting-unit.entity';
@@ -20,14 +20,18 @@ export class PlantingUnitsService {
     private idSequenceService: IdSequenceService,
   ) {}
 
-  private async findInstanceOrThrow(instanceId: string): Promise<Instance> {
+  async findInstanceOrThrow(instanceId: string): Promise<Instance> {
     const instance = await this.instancesRepo.findOne({ where: { id: instanceId } });
     if (!instance) throw new NotFoundException(`Instance #${instanceId} not found`);
     return instance;
   }
 
-  async create(dto: CreatePlantingUnitDto): Promise<PlantingUnit> {
+  /** @param requesterFarmerId When set (farmer JWT), the instance must belong to this farmer. */
+  async create(dto: CreatePlantingUnitDto, requesterFarmerId?: string): Promise<PlantingUnit> {
     const instance = await this.findInstanceOrThrow(dto.instanceId);
+    if (requesterFarmerId && instance.farmerId !== requesterFarmerId) {
+      throw new ForbiddenException('You can only add trees to your own farm plot');
+    }
     const instanceSeq = extractSeq(instance.instanceId);
     const seq = await this.idSequenceService.next(`TR:${instance.id}`);
     const treeId = `TR-INS${instanceSeq}-${seq}`;

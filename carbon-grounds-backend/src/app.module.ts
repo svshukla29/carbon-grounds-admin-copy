@@ -16,6 +16,11 @@ import { InstancesModule } from './modules/instances/instances.module';
 import { PlantingUnitsModule } from './modules/planting-units/planting-units.module';
 import { MonitoringModule } from './modules/monitoring/monitoring.module';
 import { CalculationsModule } from './modules/calculations/calculations.module';
+import { KyariBedsModule } from './modules/kyari-beds/kyari-beds.module';
+import { CropAreasModule } from './modules/crop-areas/crop-areas.module';
+import { TreePhotosModule } from './modules/tree-photos/tree-photos.module';
+import { MonitoringChecklistModule } from './modules/monitoring-checklist/monitoring-checklist.module';
+import { SyncModule } from './modules/sync/sync.module';
 
 @Module({
   imports: [
@@ -58,6 +63,11 @@ import { CalculationsModule } from './modules/calculations/calculations.module';
     PlantingUnitsModule,
     MonitoringModule,
     CalculationsModule,
+    KyariBedsModule,
+    CropAreasModule,
+    TreePhotosModule,
+    MonitoringChecklistModule,
+    SyncModule,
   ],
 })
 export class AppModule {}

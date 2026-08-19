@@ -89,6 +89,44 @@ export const treesApi = {
     api.get("/planting-units/export", { params, responseType: "blob" }),
 };
 
+// ── Kyari Beds ────────────────────────────────────────────────────────────────
+export const kyariBedsApi = {
+  getByInstance: (instanceId: string) => api.get(`/kyari-beds/instance/${instanceId}`),
+  create: (data: any) => api.post("/kyari-beds", data),
+  bulkCreate: (instanceId: string, beds: any[]) =>
+    api.post("/kyari-beds/bulk", { instanceId, beds }),
+  update: (id: string, data: any) => api.patch(`/kyari-beds/${id}`, data),
+  delete: (id: string) => api.delete(`/kyari-beds/${id}`),
+};
+
+// ── Crop Areas ────────────────────────────────────────────────────────────────
+export const cropAreasApi = {
+  getByInstance: (instanceId: string) => api.get(`/crop-areas/instance/${instanceId}`),
+  create: (data: any) => api.post("/crop-areas", data),
+  bulkCreate: (instanceId: string, areas: any[]) =>
+    api.post("/crop-areas/bulk", { instanceId, areas }),
+  update: (id: string, data: any) => api.patch(`/crop-areas/${id}`, data),
+  delete: (id: string) => api.delete(`/crop-areas/${id}`),
+};
+
+// ── Tree Photos (Tree Gallery) ───────────────────────────────────────────────
+export const treePhotosApi = {
+  getAll: (params?: {
+    instanceId?: string;
+    speciesId?: string;
+    plantingUnitId?: string;
+    page?: number;
+    limit?: number;
+  }) => api.get("/tree-photos", { params }),
+  getByTree: (plantingUnitId: string) => api.get(`/tree-photos/tree/${plantingUnitId}`),
+  upload: (formData: FormData) =>
+    api.post("/tree-photos", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+  update: (id: string, data: any) => api.patch(`/tree-photos/${id}`, data),
+  delete: (id: string) => api.delete(`/tree-photos/${id}`),
+};
+
 // ── Species ───────────────────────────────────────────────────────────────────
 export const speciesApi = {
   getAll: () => api.get("/species"),
@@ -115,6 +153,15 @@ export const monitoringApi = {
   create: (data: any) => api.post("/monitoring", data),
   updateStatus: (id: string, status: string, comments?: string) =>
     api.patch(`/monitoring/${id}/status`, { status, adminComments: comments }),
+};
+
+// ── Monitoring Checklist ──────────────────────────────────────────────────────
+export const monitoringChecklistApi = {
+  getForPeriod: (periodId: string) => api.get(`/monitoring-checklist/period/${periodId}`),
+  updateItem: (id: string, data: { completed?: boolean; remarks?: string }) =>
+    api.patch(`/monitoring-checklist/${id}`, data),
+  bulkUpdate: (periodId: string, items: { id: string; completed: boolean; remarks?: string }[]) =>
+    api.patch(`/monitoring-checklist/period/${periodId}/bulk`, { items }),
 };
 
 // ── Carbon Calculations ───────────────────────────────────────────────────────

@@ -8,6 +8,8 @@ import { GramPanchayatModule } from '../gram-panchayat/gram-panchayat.module';
 import { SpeciesModule } from '../species/species.module';
 import { CalculationsModule } from '../calculations/calculations.module';
 import { MonitoringModule } from '../monitoring/monitoring.module';
+import { KyariBedsModule } from '../kyari-beds/kyari-beds.module';
+import { CropAreasModule } from '../crop-areas/crop-areas.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { MonitoringModule } from '../monitoring/monitoring.module';
     SpeciesModule,
     CalculationsModule,
     MonitoringModule,
+    KyariBedsModule,
+    CropAreasModule,
   ],
   controllers: [DashboardController],
   providers: [DashboardService],

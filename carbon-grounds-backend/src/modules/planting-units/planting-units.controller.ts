@@ -9,6 +9,7 @@ import {
   Res,
   UseGuards,
   ParseUUIDPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
@@ -22,10 +23,11 @@ import { MarkLossDto } from './dto/mark-loss.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
 @ApiTags('Planting Units')
 @ApiBearerAuth('access-token')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard(['jwt', 'jwt-farmer']), RolesGuard)
 @Controller('planting-units')
 export class PlantingUnitsController {
   constructor(private plantingUnitsService: PlantingUnitsService) {}
@@ -130,9 +132,18 @@ export class PlantingUnitsController {
   }
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.FIELD_OFFICER)
-  @ApiOperation({ summary: 'Create a new planting unit (tree)' })
-  create(@Body() dto: CreatePlantingUnitDto) {
+  @ApiOperation({ summary: 'Create a new planting unit (tree) — farmers can only add to their own farm plot' })
+  create(@CurrentUser() requester: any, @Body() dto: CreatePlantingUnitDto) {
+    if (requester?.type === 'farmer') {
+      return this.plantingUnitsService.create(dto, requester.id);
+    }
+    if (
+      ![UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.FIELD_OFFICER].includes(
+        requester?.role,
+      )
+    ) {
+      throw new ForbiddenException('Not allowed to create planting units');
+    }
     return this.plantingUnitsService.create(dto);
   }
 

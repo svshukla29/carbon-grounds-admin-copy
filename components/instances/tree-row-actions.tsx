@@ -11,8 +11,9 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { MeasurementInput } from "@/components/ui/measurement-input";
 import { DBH_UNITS, HEIGHT_UNITS, dbhToCm, heightToM, cmToDbhUnit, mToHeightUnit } from "@/lib/units";
-import { Pencil, Leaf, AlertTriangle, Loader2 } from "lucide-react";
+import { Pencil, Leaf, AlertTriangle, Loader2, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { TreePhotoHistoryDialog } from "@/components/trees/tree-photo-history-dialog";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
@@ -117,6 +118,16 @@ export function TreeRowActions({ tree, onUpdated }: { tree: any; onUpdated: () =
       <Button variant="ghost" size="sm" onClick={openEdit} title="Edit tree">
         <Pencil className="h-4 w-4" />
       </Button>
+
+      <TreePhotoHistoryDialog
+        plantingUnitId={tree.id}
+        treeLabel={tree.treeId}
+        trigger={
+          <Button variant="ghost" size="sm" title="Photos">
+            <Camera className="h-4 w-4 text-blue-600" />
+          </Button>
+        }
+      />
 
       {tree.lossDate ? (
         <Button variant="ghost" size="sm" onClick={handleMarkAlive} disabled={markingAlive} title="Mark as alive">

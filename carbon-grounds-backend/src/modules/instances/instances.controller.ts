@@ -64,9 +64,17 @@ export class InstancesController {
   }
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.FIELD_OFFICER)
-  @ApiOperation({ summary: 'Create a new farm plot' })
-  create(@Body() dto: CreateInstanceDto) {
+  @ApiOperation({ summary: 'Create a new farm plot (farmers can create their own; staff can create for any farmer)' })
+  create(@CurrentUser() requester: any, @Body() dto: CreateInstanceDto) {
+    if (requester?.type === 'farmer') {
+      dto.farmerId = requester.id;
+    } else if (
+      ![UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.FIELD_OFFICER].includes(
+        requester?.role,
+      )
+    ) {
+      throw new ForbiddenException('Not allowed to create farm plots');
+    }
     return this.instancesService.create(dto);
   }
 

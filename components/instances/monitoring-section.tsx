@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Calculator, Loader2, Plus, CalendarRange } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { MonitoringChecklistDialog } from "@/components/instances/monitoring-checklist-dialog";
 
 const STATUS_OPTIONS = ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "APPROVED", "REJECTED"];
 
@@ -238,17 +239,23 @@ export function MonitoringSection({ instanceId }: { instanceId: string }) {
                     </TableCell>
                     <TableCell>{calc ? Number(calc.netCredits).toFixed(2) : "—"}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRun(period.id)}
-                        disabled={runningId === period.id}
-                      >
-                        {runningId === period.id
-                          ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                          : <Calculator className="mr-2 h-3.5 w-3.5" />}
-                        Run Calculation
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <MonitoringChecklistDialog
+                          periodId={period.id}
+                          periodLabel={period.periodName || `Period ${period.periodNumber ?? "—"}`}
+                        />
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRun(period.id)}
+                          disabled={runningId === period.id}
+                        >
+                          {runningId === period.id
+                            ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                            : <Calculator className="mr-2 h-3.5 w-3.5" />}
+                          Run Calculation
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { Instance } from '../../instances/entities/instance.entity';
 import { Calculation } from '../../calculations/entities/calculation.entity';
+import { MonitoringChecklistItem } from '../../monitoring-checklist/entities/monitoring-checklist-item.entity';
 
 export enum MonitoringStatus {
   DRAFT = 'DRAFT',
@@ -60,6 +61,9 @@ export class MonitoringPeriod {
 
   @OneToMany(() => Calculation, (calc) => calc.period)
   calculations: Calculation[];
+
+  @OneToMany(() => MonitoringChecklistItem, (item) => item.period)
+  checklistItems: MonitoringChecklistItem[];
 
   @CreateDateColumn()
   createdAt: Date;

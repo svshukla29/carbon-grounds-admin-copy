@@ -7,7 +7,7 @@ import {
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { ProjectProgressChart } from "@/components/dashboard/project-progress-chart";
 import { dashboardApi } from "@/lib/api";
-import { Loader2, Users, Sprout, TreePine, MapPin, Leaf, Building2 } from "lucide-react";
+import { Loader2, Users, Sprout, TreePine, MapPin, Leaf, Building2, Ruler, LayoutGrid, Wheat } from "lucide-react";
 import Link from "next/link";
 
 export function DashboardContent() {
@@ -109,6 +109,55 @@ export function DashboardContent() {
                         <p className="text-xs text-muted-foreground">{s.label}</p>
                         <p className="text-xl font-bold">
                           {s.value?.toLocaleString()}{s.suffix || ""}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+
+          {/* Area Stats */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                label: "Total Farm Area",
+                value: stats?.totalFarmArea ?? 0,
+                icon: Ruler,
+                color: "amber",
+                href: "/dashboard/instances",
+                suffix: " acres",
+              },
+              {
+                label: "Total Kyari (Bed) Area",
+                value: stats?.totalKyariArea ?? 0,
+                icon: LayoutGrid,
+                color: "emerald",
+                href: "/dashboard/instances",
+                suffix: " acres",
+              },
+              {
+                label: "Total Crop Area",
+                value: stats?.totalCropArea ?? 0,
+                icon: Wheat,
+                color: "orange",
+                href: "/dashboard/instances",
+                suffix: " acres",
+              },
+            ].map((s) => (
+              <Link key={s.label} href={s.href}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="pt-5">
+                    <div className="flex items-center gap-3">
+                      <div className={`rounded-full bg-${s.color}-100 p-2 shrink-0`}>
+                        <s.icon className={`h-4 w-4 text-${s.color}-700`} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{s.label}</p>
+                        <p className="text-xl font-bold">
+                          {Number(s.value).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          {s.suffix || ""}
                         </p>
                       </div>
                     </div>

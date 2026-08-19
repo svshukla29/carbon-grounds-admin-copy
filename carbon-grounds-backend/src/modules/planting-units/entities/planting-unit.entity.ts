@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { Instance } from '../../instances/entities/instance.entity';
 import { Species } from '../../species/entities/species.entity';
+import { TreePhoto } from '../../tree-photos/entities/tree-photo.entity';
 
 @Entity('planting_units')
 export class PlantingUnit {
@@ -51,6 +53,9 @@ export class PlantingUnit {
 
   @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   gpsLng: number;
+
+  @OneToMany(() => TreePhoto, (photo) => photo.plantingUnit)
+  photos: TreePhoto[];
 
   @CreateDateColumn()
   createdAt: Date;

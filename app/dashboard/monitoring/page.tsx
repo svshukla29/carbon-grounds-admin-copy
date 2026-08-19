@@ -11,6 +11,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Loader2, ShieldCheck, CheckCircle, Clock, XCircle } from "lucide-react";
+import { MonitoringChecklistDialog } from "@/components/instances/monitoring-checklist-dialog";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-600",
@@ -117,6 +118,10 @@ export default function MonitoringPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+                        <MonitoringChecklistDialog
+                          periodId={p.id}
+                          periodLabel={p.periodName || `Period ${p.periodNumber}`}
+                        />
                         <Button
                           size="sm"
                           className="bg-green-700 hover:bg-green-800"
@@ -164,12 +169,13 @@ export default function MonitoringPage() {
                   <TableHead>Start Date</TableHead>
                   <TableHead>End Date</TableHead>
                   <TableHead>Admin Comments</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {periods.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                       No monitoring periods yet
                     </TableCell>
                   </TableRow>
@@ -197,6 +203,12 @@ export default function MonitoringPage() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                         {p.adminComments || "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <MonitoringChecklistDialog
+                          periodId={p.id}
+                          periodLabel={p.periodName || `Period ${p.periodNumber}`}
+                        />
                       </TableCell>
                     </TableRow>
                   ))

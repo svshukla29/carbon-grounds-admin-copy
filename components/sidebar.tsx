@@ -17,6 +17,7 @@ import {
   Calculator,
   Sprout,
   LogOut,
+  Images,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -64,6 +65,12 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
       icon: TreePine,
       href: "/dashboard/trees",
       active: pathname.startsWith("/dashboard/trees"),
+    },
+    {
+      label: "Tree Gallery",
+      icon: Images,
+      href: "/dashboard/tree-gallery",
+      active: pathname.startsWith("/dashboard/tree-gallery"),
     },
     {
       label: "GIS Map",

@@ -6,6 +6,8 @@ import { GramPanchayatService } from '../gram-panchayat/gram-panchayat.service';
 import { SpeciesService } from '../species/species.service';
 import { CalculationsService } from '../calculations/calculations.service';
 import { MonitoringService } from '../monitoring/monitoring.service';
+import { KyariBedsService } from '../kyari-beds/kyari-beds.service';
+import { CropAreasService } from '../crop-areas/crop-areas.service';
 
 @Injectable()
 export class DashboardService {
@@ -17,6 +19,8 @@ export class DashboardService {
     private speciesService: SpeciesService,
     private calculationsService: CalculationsService,
     private monitoringService: MonitoringService,
+    private kyariBedsService: KyariBedsService,
+    private cropAreasService: CropAreasService,
   ) {}
 
   async getStats() {
@@ -28,6 +32,9 @@ export class DashboardService {
       totalSpecies,
       totalCarbonCredits,
       totalReports,
+      totalFarmArea,
+      totalKyariArea,
+      totalCropArea,
     ] = await Promise.all([
       this.farmersService.count(),
       this.instancesService.count(),
@@ -36,6 +43,9 @@ export class DashboardService {
       this.speciesService.count(),
       this.calculationsService.totalNetCredits(),
       this.monitoringService.count(),
+      this.instancesService.totalAreaAcres(),
+      this.kyariBedsService.totalAreaAcres(),
+      this.cropAreasService.totalAreaAcres(),
     ]);
 
     return {
@@ -46,6 +56,9 @@ export class DashboardService {
       totalSpecies,
       totalCarbonCredits,
       totalReports,
+      totalFarmArea,
+      totalKyariArea,
+      totalCropArea,
     };
   }
 }

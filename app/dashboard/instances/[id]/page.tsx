@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { TreeRowActions } from "@/components/instances/tree-row-actions";
 import { MonitoringSection } from "@/components/instances/monitoring-section";
+import { KyariBedsSection } from "@/components/instances/kyari-beds-section";
+import { CropAreasSection } from "@/components/instances/crop-areas-section";
 
 export default function InstanceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -273,6 +275,12 @@ export default function InstanceDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Kyari Beds & Crop Areas */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <KyariBedsSection instanceId={id} />
+        <CropAreasSection instanceId={id} />
+      </div>
 
       {/* Monitoring & Calculations */}
       <MonitoringSection instanceId={id} />

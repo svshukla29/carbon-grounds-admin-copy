@@ -120,4 +120,13 @@ export class InstancesService {
   count(): Promise<number> {
     return this.instancesRepo.count();
   }
+
+  /** Sum of all farm plot areas (dashboard) */
+  async totalAreaAcres(): Promise<number> {
+    const { total } = await this.instancesRepo
+      .createQueryBuilder('instance')
+      .select('COALESCE(SUM(instance.areaAcres), 0)', 'total')
+      .getRawOne();
+    return parseFloat(total);
+  }
 }

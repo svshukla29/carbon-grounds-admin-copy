@@ -11,6 +11,8 @@ import {
 import { Farmer } from '../../farmers/entities/farmer.entity';
 import { PlantingUnit } from '../../planting-units/entities/planting-unit.entity';
 import { MonitoringPeriod } from '../../monitoring/entities/monitoring-period.entity';
+import { KyariBed } from '../../kyari-beds/entities/kyari-bed.entity';
+import { CropArea } from '../../crop-areas/entities/crop-area.entity';
 
 export enum MonitoringFrequency {
   ANNUAL = 'ANNUAL',
@@ -77,6 +79,12 @@ export class Instance {
 
   @OneToMany(() => MonitoringPeriod, (period) => period.instance)
   monitoringPeriods: MonitoringPeriod[];
+
+  @OneToMany(() => KyariBed, (bed) => bed.instance)
+  kyariBeds: KyariBed[];
+
+  @OneToMany(() => CropArea, (crop) => crop.instance)
+  cropAreas: CropArea[];
 
   @CreateDateColumn()
   createdAt: Date;
