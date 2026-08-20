@@ -18,7 +18,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: { sub: string; email: string; role: string }) {
-    const user = await this.usersService.findById(payload.sub);
-    return user;
+    // Must return null (not throw) on a miss: this strategy runs as part of
+    // AuthGuard(['jwt', 'jwt-farmer']) on shared endpoints, and a thrown
+    // NotFoundException here aborts the whole chain before 'jwt-farmer' ever
+    // gets a chance to validate a farmer token against the same endpoint.
+    return this.usersService.findByIdOrNull(payload.sub);
   }
 }

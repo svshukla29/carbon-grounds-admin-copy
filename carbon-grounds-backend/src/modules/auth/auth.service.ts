@@ -190,7 +190,11 @@ export class AuthService {
       { sub: farmerId, mobile, type: 'farmer' },
       {
         secret: this.config.get<string>('JWT_ACCESS_SECRET')!,
-        expiresIn: (this.config.get<string>('JWT_ACCESS_EXPIRES_IN') ?? '15m') as any,
+        // Farmers fill multi-step field registration wizards (GPS, photos, tree
+        // logging) that routinely take longer than the 15m admin session window,
+        // and the mobile app has no refresh-token flow — so a short expiry here
+        // silently fails their submission with no way to recover in-progress data.
+        expiresIn: (this.config.get<string>('JWT_FARMER_ACCESS_EXPIRES_IN') ?? '24h') as any,
       },
     );
   }

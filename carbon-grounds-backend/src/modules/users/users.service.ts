@@ -43,6 +43,10 @@ export class UsersService {
     return user;
   }
 
+  async findByIdOrNull(id: string): Promise<User | null> {
+    return this.usersRepo.findOne({ where: { id } });
+  }
+
   async findByEmailWithPassword(email: string): Promise<User | null> {
     return this.usersRepo
       .createQueryBuilder('user')

@@ -19,7 +19,9 @@ import { UserRole } from '../users/entities/user.entity';
 
 @ApiTags('Species')
 @ApiBearerAuth('access-token')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+// Farmers need read access to populate the tree-species picker in the
+// mobile app's registration wizard; mutating routes stay admin-only below.
+@UseGuards(AuthGuard(['jwt', 'jwt-farmer']), RolesGuard)
 @Controller('species')
 export class SpeciesController {
   constructor(private speciesService: SpeciesService) {}
