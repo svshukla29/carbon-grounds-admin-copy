@@ -52,6 +52,24 @@ export class Instance {
   @Column({ nullable: true, length: 100, default: 'Rainfed' })
   irrigationType: string;
 
+  @Column({ nullable: true, length: 150 })
+  plotName: string;
+
+  @Column({ nullable: true, length: 100 })
+  surveyNumber: string;
+
+  @Column({ nullable: true, length: 50 })
+  ownershipType: string;
+
+  @Column({ nullable: true, length: 50 })
+  soilType: string;
+
+  @Column({ nullable: true, length: 50 })
+  plantationType: string;
+
+  @Column({ nullable: true, length: 50 })
+  treeSpacing: string;
+
   @Column({ nullable: true })
   powerAvailability: boolean;
 

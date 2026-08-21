@@ -38,6 +38,8 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
+import { PlantingUnitsService } from '../planting-units/planting-units.service';
+import { ForbiddenException } from '@nestjs/common';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads', 'tree-photos');
 
@@ -47,10 +49,13 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 
 @ApiTags('Tree Photos')
 @ApiBearerAuth('access-token')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
+@UseGuards(AuthGuard(['jwt', 'jwt-farmer']), RolesGuard)
 @Controller('tree-photos')
 export class TreePhotosController {
-  constructor(private treePhotosService: TreePhotosService) {}
+  constructor(
+    private treePhotosService: TreePhotosService,
+    private plantingUnitsService: PlantingUnitsService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get tree photos (Tree Gallery), filterable and paginated' })
@@ -88,8 +93,7 @@ export class TreePhotosController {
   }
 
   @Post()
-  @Roles(UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.FIELD_OFFICER)
-  @ApiOperation({ summary: 'Upload a dated photo for a tree' })
+  @ApiOperation({ summary: 'Upload a dated photo for a tree (farmers can upload for their own trees; staff for any)' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -129,7 +133,19 @@ export class TreePhotosController {
     @CurrentUser() user: any,
   ) {
     if (!file) throw new BadRequestException('No photo uploaded');
-    return this.treePhotosService.create(dto, file.filename, file.originalname, user?.id);
+
+    if (user?.type === 'farmer') {
+      const unit = await this.plantingUnitsService.findOne(dto.plantingUnitId);
+      if (unit.instance?.farmerId !== user.id) {
+        throw new ForbiddenException('You can only upload photos for your own trees');
+      }
+    } else if (
+      ![UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.FIELD_OFFICER].includes(user?.role)
+    ) {
+      throw new ForbiddenException('Not allowed to upload tree photos');
+    }
+
+    return this.treePhotosService.create(dto, file.filename, file.originalname, user?.type === 'farmer' ? undefined : user?.id);
   }
 
   @Get('files/:filename')

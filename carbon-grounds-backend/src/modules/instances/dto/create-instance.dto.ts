@@ -44,6 +44,36 @@ export class CreateInstanceDto {
   @IsString()
   irrigationType?: string;
 
+  @ApiPropertyOptional({ example: 'Plot 1' })
+  @IsOptional()
+  @IsString()
+  plotName?: string;
+
+  @ApiPropertyOptional({ example: 'SUR-0042' })
+  @IsOptional()
+  @IsString()
+  surveyNumber?: string;
+
+  @ApiPropertyOptional({ example: 'OWNED', description: 'OWNED, LEASED, or COMMUNITY' })
+  @IsOptional()
+  @IsString()
+  ownershipType?: string;
+
+  @ApiPropertyOptional({ example: 'LOAM', description: 'LOAM, CLAY, SANDY, or RED' })
+  @IsOptional()
+  @IsString()
+  soilType?: string;
+
+  @ApiPropertyOptional({ example: 'BLOCK', description: 'BLOCK, BOUNDARY, or SCATTER' })
+  @IsOptional()
+  @IsString()
+  plantationType?: string;
+
+  @ApiPropertyOptional({ example: '3m x 3m' })
+  @IsOptional()
+  @IsString()
+  treeSpacing?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsBoolean()
