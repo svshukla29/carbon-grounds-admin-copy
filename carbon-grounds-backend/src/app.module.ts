@@ -19,6 +19,7 @@ import { CalculationsModule } from './modules/calculations/calculations.module';
 import { KyariBedsModule } from './modules/kyari-beds/kyari-beds.module';
 import { CropAreasModule } from './modules/crop-areas/crop-areas.module';
 import { TreePhotosModule } from './modules/tree-photos/tree-photos.module';
+import { TreeMeasurementsModule } from './modules/tree-measurements/tree-measurements.module';
 import { MonitoringChecklistModule } from './modules/monitoring-checklist/monitoring-checklist.module';
 import { SyncModule } from './modules/sync/sync.module';
 
@@ -66,6 +67,7 @@ import { SyncModule } from './modules/sync/sync.module';
     KyariBedsModule,
     CropAreasModule,
     TreePhotosModule,
+    TreeMeasurementsModule,
     MonitoringChecklistModule,
     SyncModule,
   ],

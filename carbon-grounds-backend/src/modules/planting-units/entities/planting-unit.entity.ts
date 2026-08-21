@@ -11,6 +11,7 @@ import {
 import { Instance } from '../../instances/entities/instance.entity';
 import { Species } from '../../species/entities/species.entity';
 import { TreePhoto } from '../../tree-photos/entities/tree-photo.entity';
+import { TreeMeasurement } from '../../tree-measurements/entities/tree-measurement.entity';
 
 @Entity('planting_units')
 export class PlantingUnit {
@@ -56,6 +57,9 @@ export class PlantingUnit {
 
   @OneToMany(() => TreePhoto, (photo) => photo.plantingUnit)
   photos: TreePhoto[];
+
+  @OneToMany(() => TreeMeasurement, (measurement) => measurement.plantingUnit)
+  measurements: TreeMeasurement[];
 
   @CreateDateColumn()
   createdAt: Date;
