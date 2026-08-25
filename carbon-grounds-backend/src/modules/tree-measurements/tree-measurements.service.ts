@@ -20,6 +20,8 @@ export class TreeMeasurementsService {
       dbhCm: dto.dbhCm,
       healthStatus: dto.healthStatus,
       notes: dto.notes,
+      gpsLat: dto.gpsLat,
+      gpsLng: dto.gpsLng,
       measuredAt: dto.measuredAt ? new Date(dto.measuredAt) : new Date(),
       measuredById,
     });
@@ -41,5 +43,19 @@ export class TreeMeasurementsService {
       where: { plantingUnitId },
       order: { measuredAt: 'DESC', createdAt: 'DESC' },
     });
+  }
+
+  /** Every monitoring-visit measurement, joined with tree/plot/farmer context, for the staff overview list. */
+  findRecent(limit = 200): Promise<TreeMeasurement[]> {
+    return this.measurementsRepo
+      .createQueryBuilder('measurement')
+      .leftJoinAndSelect('measurement.plantingUnit', 'plantingUnit')
+      .leftJoinAndSelect('plantingUnit.species', 'species')
+      .leftJoinAndSelect('plantingUnit.instance', 'instance')
+      .leftJoinAndSelect('instance.farmer', 'farmer')
+      .orderBy('measurement.measuredAt', 'DESC')
+      .addOrderBy('measurement.createdAt', 'DESC')
+      .take(limit)
+      .getMany();
   }
 }

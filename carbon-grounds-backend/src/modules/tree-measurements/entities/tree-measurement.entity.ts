@@ -32,6 +32,12 @@ export class TreeMeasurement {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
+  gpsLat: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
+  gpsLng: number;
+
   @Column({ type: 'date' })
   measuredAt: Date;
 

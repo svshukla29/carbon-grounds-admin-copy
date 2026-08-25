@@ -33,4 +33,16 @@ export class CreateTreeMeasurementDto {
   @IsOptional()
   @IsDateString()
   measuredAt?: string;
+
+  @ApiPropertyOptional({ example: 21.2787 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  gpsLat?: number;
+
+  @ApiPropertyOptional({ example: 81.8661 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  gpsLng?: number;
 }

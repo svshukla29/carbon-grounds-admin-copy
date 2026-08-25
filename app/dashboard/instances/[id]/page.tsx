@@ -121,9 +121,16 @@ export default function InstanceDetailPage() {
           <CardContent className="space-y-3 text-sm">
             {[
               { label: "Instance ID", value: instance.instanceId },
+              { label: "Plot Name / ID", value: instance.plotName || "—" },
+              { label: "Survey Number", value: instance.surveyNumber || "—" },
+              { label: "Ownership Type", value: instance.ownershipType || "—" },
               { label: "Land Use Type", value: instance.landUseType || "—" },
               { label: "Ecological Zone", value: instance.ecologicalZone || "—" },
+              { label: "Soil Type", value: instance.soilType || "—" },
+              { label: "Plantation Type", value: instance.plantationType || "—" },
+              { label: "Tree Spacing", value: instance.treeSpacing || "—" },
               { label: "Survey Date", value: instance.surveyDate ? new Date(instance.surveyDate).toLocaleDateString("en-IN") : "—" },
+              { label: "GPS", value: instance.gpsLat && instance.gpsLng ? `${Number(instance.gpsLat).toFixed(6)}, ${Number(instance.gpsLng).toFixed(6)}` : "—" },
               { label: "Khasra No", value: instance.farmer?.khasraNo || "—" },
             ].map((r) => (
               <div key={r.label} className="flex justify-between border-b pb-2 last:border-0">
@@ -231,6 +238,7 @@ export default function InstanceDetailPage() {
                   <TableHead>Height (m)</TableHead>
                   <TableHead>Planting Date</TableHead>
                   <TableHead>GPS</TableHead>
+                  <TableHead>Health</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -242,6 +250,9 @@ export default function InstanceDetailPage() {
                       <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
                         {tree.treeId}
                       </code>
+                      {tree.qrCode && (
+                        <div className="text-[10px] text-muted-foreground mt-0.5">QR: {tree.qrCode}</div>
+                      )}
                     </TableCell>
                     <TableCell className="font-medium">
                       {tree.species?.commonName || tree.species?.scientificName || "—"}
@@ -257,6 +268,9 @@ export default function InstanceDetailPage() {
                       {tree.gpsLat && tree.gpsLng
                         ? `${Number(tree.gpsLat).toFixed(4)}, ${Number(tree.gpsLng).toFixed(4)}`
                         : "—"}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {tree.healthStatus || "—"}
                     </TableCell>
                     <TableCell>
                       {tree.lossDate ? (

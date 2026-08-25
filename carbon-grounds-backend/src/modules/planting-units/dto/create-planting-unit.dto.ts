@@ -3,6 +3,7 @@ import {
   IsUUID,
   IsNumber,
   IsDateString,
+  IsString,
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -47,4 +48,14 @@ export class CreatePlantingUnitDto {
   @Type(() => Number)
   @IsNumber()
   gpsLng?: number;
+
+  @ApiPropertyOptional({ example: 'HEALTHY' })
+  @IsOptional()
+  @IsString()
+  healthStatus?: string;
+
+  @ApiPropertyOptional({ description: 'QR code affixed to the tree at planting time' })
+  @IsOptional()
+  @IsString()
+  qrCode?: string;
 }

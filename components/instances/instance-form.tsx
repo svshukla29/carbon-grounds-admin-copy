@@ -55,6 +55,12 @@ export function InstanceForm({ id }: { id?: string } = {}) {
     gpsLng: "",
     powerAvailability: false,
     internetAvailability: false,
+    plotName: "",
+    surveyNumber: "",
+    ownershipType: "",
+    soilType: "",
+    plantationType: "",
+    treeSpacing: "",
   });
 
   const set = (key: string, value: string | boolean) =>
@@ -89,6 +95,12 @@ export function InstanceForm({ id }: { id?: string } = {}) {
             gpsLng: inst.gpsLng != null ? String(inst.gpsLng) : "",
             powerAvailability: !!inst.powerAvailability,
             internetAvailability: !!inst.internetAvailability,
+            plotName: inst.plotName || "",
+            surveyNumber: inst.surveyNumber || "",
+            ownershipType: inst.ownershipType || "",
+            soilType: inst.soilType || "",
+            plantationType: inst.plantationType || "",
+            treeSpacing: inst.treeSpacing || "",
           });
         } else if (lockedFarmerId) {
           const r = await farmersApi.getOne(lockedFarmerId);
@@ -129,6 +141,12 @@ export function InstanceForm({ id }: { id?: string } = {}) {
         gpsLng: form.gpsLng ? Number(form.gpsLng) : undefined,
         powerAvailability: form.powerAvailability,
         internetAvailability: form.internetAvailability,
+        plotName: form.plotName || undefined,
+        surveyNumber: form.surveyNumber || undefined,
+        ownershipType: form.ownershipType || undefined,
+        soilType: form.soilType || undefined,
+        plantationType: form.plantationType || undefined,
+        treeSpacing: form.treeSpacing || undefined,
       };
 
       if (isEditMode && id) {
@@ -322,6 +340,77 @@ export function InstanceForm({ id }: { id?: string } = {}) {
                   {dropdowns.monitoringFrequencies.map((f) => (
                     <SelectItem key={f} value={f}>{f.replace("_", "-")}</SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Farmer-App Plot Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Plot Identification &amp; Crop System</CardTitle>
+            <CardDescription>As recorded by the farmer in the mobile app</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="plotName">Plot Name / ID</Label>
+              <Input id="plotName" value={form.plotName}
+                onChange={(e) => set("plotName", e.target.value)}
+                placeholder="e.g. North field" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="surveyNumber">Survey Number</Label>
+              <Input id="surveyNumber" value={form.surveyNumber}
+                onChange={(e) => set("surveyNumber", e.target.value)} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Ownership Type</Label>
+              <Select value={form.ownershipType} onValueChange={(v) => set("ownershipType", v)}>
+                <SelectTrigger><SelectValue placeholder="Select ownership type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="OWNED">Owned</SelectItem>
+                  <SelectItem value="LEASED">Leased</SelectItem>
+                  <SelectItem value="COMMUNITY">Community</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Soil Type</Label>
+              <Select value={form.soilType} onValueChange={(v) => set("soilType", v)}>
+                <SelectTrigger><SelectValue placeholder="Select soil type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LOAM">Loam</SelectItem>
+                  <SelectItem value="CLAY">Clay</SelectItem>
+                  <SelectItem value="SANDY">Sandy</SelectItem>
+                  <SelectItem value="RED">Red</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Plantation Type</Label>
+              <Select value={form.plantationType} onValueChange={(v) => set("plantationType", v)}>
+                <SelectTrigger><SelectValue placeholder="Select plantation type" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="BLOCK">Block</SelectItem>
+                  <SelectItem value="BOUNDARY">Boundary</SelectItem>
+                  <SelectItem value="SCATTER">Scatter</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Tree Spacing</Label>
+              <Select value={form.treeSpacing} onValueChange={(v) => set("treeSpacing", v)}>
+                <SelectTrigger><SelectValue placeholder="Select tree spacing" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="3m x 3m">3m x 3m</SelectItem>
+                  <SelectItem value="4m x 4m">4m x 4m</SelectItem>
+                  <SelectItem value="5m x 5m">5m x 5m</SelectItem>
                 </SelectContent>
               </Select>
             </div>

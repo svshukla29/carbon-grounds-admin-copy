@@ -100,6 +100,15 @@ export class Farmer {
   @Column({ nullable: true, length: 100 })
   khasraNo: string;
 
+  @Column({ nullable: true, length: 12 })
+  aadhaarNumber: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
+  gpsLat: number;
+
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
+  gpsLng: number;
+
   @OneToMany(() => Instance, (instance) => instance.farmer)
   instances: Instance[];
 

@@ -143,7 +143,12 @@ export class FarmersService {
   }
 
   /** Minimal self-service registration — record starts PENDING until field staff verify it. */
-  async createFromSignup(mobileNo: string, farmerName: string, villageName: string): Promise<Farmer> {
+  async createFromSignup(
+    mobileNo: string,
+    farmerName: string,
+    villageName: string,
+    extra?: { aadhaarNumber?: string; gpsLat?: number; gpsLng?: number },
+  ): Promise<Farmer> {
     const instanceId = await this.generateFarmerCode();
     const farmer = this.farmersRepo.create({
       farmerName,
@@ -151,6 +156,9 @@ export class FarmersService {
       villageName,
       status: FarmerStatus.PENDING,
       instanceId,
+      aadhaarNumber: extra?.aadhaarNumber,
+      gpsLat: extra?.gpsLat,
+      gpsLng: extra?.gpsLng,
     });
     return this.farmersRepo.save(farmer);
   }

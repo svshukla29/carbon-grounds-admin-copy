@@ -161,7 +161,12 @@ export class AuthService {
     return { needsSignup: false, accessToken, farmer: this.sanitizeFarmer(farmer) };
   }
 
-  async completeFarmerSignup(signupToken: string, name: string, village: string) {
+  async completeFarmerSignup(
+    signupToken: string,
+    name: string,
+    village: string,
+    extra?: { aadhaarNumber?: string; gpsLat?: number; gpsLng?: number },
+  ) {
     let payload: { mobile: string; purpose: string };
     try {
       payload = await this.jwtService.verifyAsync(signupToken, {
@@ -180,7 +185,7 @@ export class AuthService {
       throw new BadRequestException('This mobile number is already registered — please login instead');
     }
 
-    const farmer = await this.farmersService.createFromSignup(payload.mobile, name, village);
+    const farmer = await this.farmersService.createFromSignup(payload.mobile, name, village, extra);
     const accessToken = await this.generateFarmerAccessToken(farmer.id, farmer.mobileNo);
     return { accessToken, farmer: this.sanitizeFarmer(farmer) };
   }

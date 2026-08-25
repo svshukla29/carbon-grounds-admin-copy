@@ -202,6 +202,7 @@ export default function TreesPage() {
                       <TableHead>Height (m)</TableHead>
                       <TableHead>Planting Date</TableHead>
                       <TableHead>GPS Location</TableHead>
+                      <TableHead>Health</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -209,7 +210,7 @@ export default function TreesPage() {
                   <TableBody>
                     {trees.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                           No trees registered for this plot
                         </TableCell>
                       </TableRow>
@@ -220,6 +221,9 @@ export default function TreesPage() {
                             <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
                               {tree.treeId}
                             </code>
+                            {tree.qrCode && (
+                              <div className="text-[10px] text-muted-foreground mt-0.5">QR: {tree.qrCode}</div>
+                            )}
                           </TableCell>
                           <TableCell className="font-medium">
                             {tree.species?.commonName || tree.species?.scientificName || "—"}
@@ -235,6 +239,9 @@ export default function TreesPage() {
                             {tree.gpsLat && tree.gpsLng
                               ? `${Number(tree.gpsLat).toFixed(4)}, ${Number(tree.gpsLng).toFixed(4)}`
                               : "—"}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {tree.healthStatus || "—"}
                           </TableCell>
                           <TableCell>
                             {tree.lossDate ? (

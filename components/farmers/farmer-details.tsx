@@ -126,6 +126,13 @@ export function FarmerDetails({ id }: { id: string }) {
               { label: "PVTG", value: farmer.isPvtg ? "Yes" : "No" },
               { label: "BPL", value: farmer.bpl ? "Yes" : "No" },
               { label: "Mobile", value: farmer.mobileNo },
+              { label: "Aadhaar Number", value: farmer.aadhaarNumber },
+              {
+                label: "GPS",
+                value: farmer.gpsLat && farmer.gpsLng
+                  ? `${Number(farmer.gpsLat).toFixed(6)}, ${Number(farmer.gpsLng).toFixed(6)}`
+                  : null,
+              },
             ].map((r) => (
               <div key={r.label} className="flex justify-between border-b pb-1.5 last:border-0">
                 <span className="text-muted-foreground">{r.label}</span>

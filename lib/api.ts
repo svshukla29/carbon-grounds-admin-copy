@@ -89,6 +89,12 @@ export const treesApi = {
     api.get("/planting-units/export", { params, responseType: "blob" }),
 };
 
+// ── Tree Measurements (Monitoring Visits) ───────────────────────────────────
+export const treeMeasurementsApi = {
+  getRecent: () => api.get("/tree-measurements"),
+  getByTree: (plantingUnitId: string) => api.get(`/tree-measurements/tree/${plantingUnitId}`),
+};
+
 // ── Kyari Beds ────────────────────────────────────────────────────────────────
 export const kyariBedsApi = {
   getByInstance: (instanceId: string) => api.get(`/kyari-beds/instance/${instanceId}`),

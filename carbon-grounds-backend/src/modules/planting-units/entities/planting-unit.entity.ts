@@ -55,6 +55,12 @@ export class PlantingUnit {
   @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   gpsLng: number;
 
+  @Column({ nullable: true, length: 50 })
+  healthStatus: string;
+
+  @Column({ nullable: true, length: 100 })
+  qrCode: string;
+
   @OneToMany(() => TreePhoto, (photo) => photo.plantingUnit)
   photos: TreePhoto[];
 

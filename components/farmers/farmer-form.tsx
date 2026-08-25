@@ -42,6 +42,9 @@ export function FarmerForm({ id }: { id?: string }) {
     pinCode: "",
     state: "Chhattisgarh",
     khasraNo: "",
+    aadhaarNumber: "",
+    gpsLat: "",
+    gpsLng: "",
   });
 
   // Load dropdowns
@@ -78,6 +81,9 @@ export function FarmerForm({ id }: { id?: string }) {
           pinCode: f.pinCode || "",
           state: f.state || "Chhattisgarh",
           khasraNo: f.khasraNo || "",
+          aadhaarNumber: f.aadhaarNumber || "",
+          gpsLat: f.gpsLat != null ? String(f.gpsLat) : "",
+          gpsLng: f.gpsLng != null ? String(f.gpsLng) : "",
         });
       })
       .catch(() => router.push("/dashboard/farmers"))
@@ -104,6 +110,9 @@ export function FarmerForm({ id }: { id?: string }) {
         ...form,
         bpl: form.bpl,
         tribeId: form.category === "ST" && form.tribeId ? form.tribeId : undefined,
+        aadhaarNumber: form.aadhaarNumber || undefined,
+        gpsLat: form.gpsLat ? Number(form.gpsLat) : undefined,
+        gpsLng: form.gpsLng ? Number(form.gpsLng) : undefined,
       };
 
       if (isEdit && id) {
@@ -325,13 +334,34 @@ export function FarmerForm({ id }: { id?: string }) {
             <CardTitle className="text-base">Land Details</CardTitle>
             <CardDescription>Revenue record information</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-w-xs">
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
               <Label htmlFor="khasraNo">Khasra Number *</Label>
               <Input id="khasraNo" value={form.khasraNo}
                 onChange={(e) => set("khasraNo", e.target.value)}
                 placeholder="e.g. 245/1" required />
               <p className="text-xs text-muted-foreground">Revenue record / land parcel number</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="aadhaarNumber">Aadhaar Number</Label>
+              <Input id="aadhaarNumber" value={form.aadhaarNumber}
+                onChange={(e) => set("aadhaarNumber", e.target.value)}
+                placeholder="12-digit Aadhaar" maxLength={12} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gpsLat">GPS Latitude</Label>
+              <Input id="gpsLat" type="number" step="any" value={form.gpsLat}
+                onChange={(e) => set("gpsLat", e.target.value)}
+                placeholder="e.g. 22.1234" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gpsLng">GPS Longitude</Label>
+              <Input id="gpsLng" type="number" step="any" value={form.gpsLng}
+                onChange={(e) => set("gpsLng", e.target.value)}
+                placeholder="e.g. 84.1234" />
             </div>
           </CardContent>
         </Card>

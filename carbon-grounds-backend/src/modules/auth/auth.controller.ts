@@ -112,6 +112,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Create a new (pending) farmer account after OTP verification' })
   completeSignup(@Body() dto: CompleteSignupDto) {
-    return this.authService.completeFarmerSignup(dto.signupToken, dto.name, dto.village);
+    return this.authService.completeFarmerSignup(dto.signupToken, dto.name, dto.village, {
+      aadhaarNumber: dto.aadhaarNumber,
+      gpsLat: dto.gpsLat,
+      gpsLng: dto.gpsLng,
+    });
   }
 }

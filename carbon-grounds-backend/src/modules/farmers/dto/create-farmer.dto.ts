@@ -4,6 +4,7 @@ import {
   IsEnum,
   IsBoolean,
   IsUUID,
+  IsNumber,
   Length,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
@@ -84,4 +85,21 @@ export class CreateFarmerDto {
   @ApiProperty({ example: 'Khasra No. 123/4' })
   @IsString()
   khasraNo: string;
+
+  @ApiPropertyOptional({ example: '123456789012' })
+  @IsOptional()
+  @Transform(emptyToUndefined)
+  @Length(12, 12)
+  @IsString()
+  aadhaarNumber?: string;
+
+  @ApiPropertyOptional({ example: 22.1234 })
+  @IsOptional()
+  @IsNumber()
+  gpsLat?: number;
+
+  @ApiPropertyOptional({ example: 84.1234 })
+  @IsOptional()
+  @IsNumber()
+  gpsLng?: number;
 }

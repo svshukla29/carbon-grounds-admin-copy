@@ -40,6 +40,8 @@ export function TreeRowActions({ tree, onUpdated }: { tree: any; onUpdated: () =
     plantingDate: tree.plantingDate ? String(tree.plantingDate).slice(0, 10) : "",
     gpsLat: tree.gpsLat != null ? String(tree.gpsLat) : "",
     gpsLng: tree.gpsLng != null ? String(tree.gpsLng) : "",
+    healthStatus: tree.healthStatus || "",
+    qrCode: tree.qrCode || "",
   });
 
   const openEdit = async () => {
@@ -64,6 +66,8 @@ export function TreeRowActions({ tree, onUpdated }: { tree: any; onUpdated: () =
         plantingDate: form.plantingDate || undefined,
         gpsLat: form.gpsLat ? Number(form.gpsLat) : undefined,
         gpsLng: form.gpsLng ? Number(form.gpsLng) : undefined,
+        healthStatus: form.healthStatus || undefined,
+        qrCode: form.qrCode || undefined,
       });
       toast({ title: "Tree updated" });
       setEditOpen(false);
@@ -233,6 +237,24 @@ export function TreeRowActions({ tree, onUpdated }: { tree: any; onUpdated: () =
                   step="0.0001"
                   value={form.gpsLng}
                   onChange={(e) => setForm((p) => ({ ...p, gpsLng: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Health Status</Label>
+                <Input
+                  value={form.healthStatus}
+                  onChange={(e) => setForm((p) => ({ ...p, healthStatus: e.target.value }))}
+                  placeholder="e.g. HEALTHY"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>QR Code</Label>
+                <Input
+                  value={form.qrCode}
+                  onChange={(e) => setForm((p) => ({ ...p, qrCode: e.target.value }))}
                 />
               </div>
             </div>

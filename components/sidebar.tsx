@@ -18,6 +18,7 @@ import {
   Sprout,
   LogOut,
   Images,
+  Ruler,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -82,7 +83,13 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
       label: "Monitoring",
       icon: ShieldCheck,
       href: "/dashboard/monitoring",
-      active: pathname.startsWith("/dashboard/monitoring"),
+      active: pathname.startsWith("/dashboard/monitoring") && !pathname.startsWith("/dashboard/monitoring-visits"),
+    },
+    {
+      label: "Monitoring Visits",
+      icon: Ruler,
+      href: "/dashboard/monitoring-visits",
+      active: pathname.startsWith("/dashboard/monitoring-visits"),
     },
     {
       label: "Carbon Credits",

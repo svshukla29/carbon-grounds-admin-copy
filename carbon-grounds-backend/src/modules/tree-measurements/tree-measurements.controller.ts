@@ -24,6 +24,15 @@ export class TreeMeasurementsController {
     return this.measurementsService.findByTree(plantingUnitId);
   }
 
+  @Get()
+  @ApiOperation({ summary: 'Staff overview: most recent monitoring-visit measurements across all farms' })
+  findRecent(@CurrentUser() user: any) {
+    if (![UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.FIELD_OFFICER].includes(user?.role)) {
+      throw new ForbiddenException('Not allowed to view monitoring visits');
+    }
+    return this.measurementsService.findRecent();
+  }
+
   @Post()
   @ApiOperation({ summary: 'Log a monitoring-visit measurement (farmers can log for their own trees; staff for any)' })
   async create(@Body() dto: CreateTreeMeasurementDto, @CurrentUser() user: any) {
