@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/table";
 import { Leaf, Loader2 } from "lucide-react";
 import { SpeciesDialog } from "@/components/species/species-dialog";
+import { useCan } from "@/lib/permissions";
 
 export default function SpeciesPage() {
+  const can = useCan();
   const [species, setSpecies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +36,7 @@ export default function SpeciesPage() {
           <h1 className="text-2xl font-bold tracking-tight">Species Master</h1>
           <p className="text-muted-foreground">Tree species with biomass coefficients for carbon calculation</p>
         </div>
-        <SpeciesDialog onSaved={refreshSpecies} />
+        {can("manageSpecies") && <SpeciesDialog onSaved={refreshSpecies} />}
       </div>
 
       <Card>
@@ -89,7 +91,7 @@ export default function SpeciesPage() {
                       <TableCell className="text-sm font-mono">{s.allometricB ?? "—"}</TableCell>
                       <TableCell className="text-sm">{s.maxRotationYears ?? "—"}</TableCell>
                       <TableCell className="text-right">
-                        <SpeciesDialog species={s} onSaved={refreshSpecies} />
+                        {can("manageSpecies") && <SpeciesDialog species={s} onSaved={refreshSpecies} />}
                       </TableCell>
                     </TableRow>
                   ))

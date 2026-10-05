@@ -20,6 +20,7 @@ import {
 import { Calculator, Loader2, Plus, CalendarRange, ListTree } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MonitoringChecklistDialog } from "@/components/instances/monitoring-checklist-dialog";
+import { useCan } from "@/lib/permissions";
 
 const STATUS_OPTIONS = ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "APPROVED", "REJECTED"];
 
@@ -383,6 +384,7 @@ function RunCalculationDialog({
 }
 
 export function MonitoringSection({ instanceId }: { instanceId: string }) {
+  const can = useCan();
   const [periods, setPeriods] = useState<any[]>([]);
   const [calculations, setCalculations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -434,7 +436,7 @@ export function MonitoringSection({ instanceId }: { instanceId: string }) {
             <CardTitle>Monitoring & Calculations</CardTitle>
             <CardDescription>Monitoring periods and carbon credit calculations for this plot</CardDescription>
           </div>
-          <CreatePeriodDialog instanceId={instanceId} onCreated={refresh} />
+          {can("editFieldData") && <CreatePeriodDialog instanceId={instanceId} onCreated={refresh} />}
         </div>
       </CardHeader>
       <CardContent>
@@ -472,7 +474,7 @@ export function MonitoringSection({ instanceId }: { instanceId: string }) {
                       {period.endDate ? new Date(period.endDate).toLocaleDateString("en-IN") : "—"}
                     </TableCell>
                     <TableCell>
-                      <Select value={period.status} onValueChange={(v) => handleStatusChange(period.id, v)}>
+                      <Select value={period.status} onValueChange={(v) => handleStatusChange(period.id, v)} disabled={!can("approveMonitoring")}>
                         <SelectTrigger className="w-40">
                           <SelectValue />
                         </SelectTrigger>
@@ -490,12 +492,14 @@ export function MonitoringSection({ instanceId }: { instanceId: string }) {
                           periodId={period.id}
                           periodLabel={period.periodName || `Period ${period.periodNumber ?? "—"}`}
                         />
-                        <RunCalculationDialog
-                          instanceId={instanceId}
-                          periodId={period.id}
-                          periodLabel={period.periodName || `Period ${period.periodNumber ?? "—"}`}
-                          onRun={refresh}
-                        />
+                        {can("runCalculations") && (
+                          <RunCalculationDialog
+                            instanceId={instanceId}
+                            periodId={period.id}
+                            periodLabel={period.periodName || `Period ${period.periodNumber ?? "—"}`}
+                            onRun={refresh}
+                          />
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

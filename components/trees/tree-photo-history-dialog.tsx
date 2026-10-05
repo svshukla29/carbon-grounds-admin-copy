@@ -11,6 +11,7 @@ import {
 import { UploadTreePhotoDialog } from "@/components/trees/upload-tree-photo-dialog";
 import { Camera, ImageOff, Loader2, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCan } from "@/lib/permissions";
 
 export function TreePhotoHistoryDialog({
   plantingUnitId,
@@ -21,6 +22,7 @@ export function TreePhotoHistoryDialog({
   treeLabel?: string;
   trigger: React.ReactNode;
 }) {
+  const can = useCan();
   const [open, setOpen] = useState(false);
   const [photos, setPhotos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -63,16 +65,18 @@ export function TreePhotoHistoryDialog({
               <DialogTitle>Photo History{treeLabel ? ` — ${treeLabel}` : ""}</DialogTitle>
               <DialogDescription>Dated photos captured for this tree</DialogDescription>
             </div>
-            <UploadTreePhotoDialog
-              plantingUnitId={plantingUnitId}
-              treeLabel={treeLabel}
-              onUploaded={refresh}
-              trigger={
-                <Button size="sm" variant="outline">
-                  <Camera className="mr-2 h-4 w-4" /> Add Photo
-                </Button>
-              }
-            />
+            {can("editFieldData") && (
+              <UploadTreePhotoDialog
+                plantingUnitId={plantingUnitId}
+                treeLabel={treeLabel}
+                onUploaded={refresh}
+                trigger={
+                  <Button size="sm" variant="outline">
+                    <Camera className="mr-2 h-4 w-4" /> Add Photo
+                  </Button>
+                }
+              />
+            )}
           </div>
         </DialogHeader>
 
@@ -99,9 +103,11 @@ export function TreePhotoHistoryDialog({
                     <p className="text-xs font-medium">
                       {photo.takenAt ? new Date(photo.takenAt).toLocaleDateString("en-IN") : "—"}
                     </p>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(photo.id)}>
-                      <Trash2 className="h-3.5 w-3.5 text-red-600" />
-                    </Button>
+                    {can("deleteRecords") && (
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(photo.id)}>
+                        <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                      </Button>
+                    )}
                   </div>
                   {photo.notes && (
                     <p className="text-xs text-muted-foreground line-clamp-2">{photo.notes}</p>

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Search, Plus, Eye, FileEdit, Trash2, Loader2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCan } from "@/lib/permissions";
 
 const statusColors: Record<string, string> = {
   Draft: "bg-gray-100 text-gray-700",
@@ -29,6 +30,7 @@ const statusColors: Record<string, string> = {
 };
 
 export function ReportsList() {
+  const can = useCan();
   const [reports, setReports] = useState<any[]>([]);
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,11 +86,13 @@ export function ReportsList() {
           <h1 className="text-2xl font-bold tracking-tight">Reports</h1>
           <p className="text-muted-foreground">Generate and manage carbon credit reports</p>
         </div>
-        <Button asChild className="bg-green-700 hover:bg-green-800">
-          <Link href="/dashboard/reports/create">
-            <Plus className="mr-2 h-4 w-4" /> Create Report
-          </Link>
-        </Button>
+        {can("editReports") && (
+          <Button asChild className="bg-green-700 hover:bg-green-800">
+            <Link href="/dashboard/reports/create">
+              <Plus className="mr-2 h-4 w-4" /> Create Report
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -181,12 +185,16 @@ export function ReportsList() {
                           <Button asChild variant="ghost" size="sm">
                             <Link href={`/dashboard/reports/${r.id}`}><Eye className="h-4 w-4" /></Link>
                           </Button>
-                          <Button asChild variant="ghost" size="sm">
-                            <Link href={`/dashboard/reports/edit/${r.id}`}><FileEdit className="h-4 w-4" /></Link>
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setDeleteId(r.id)}>
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
+                          {can("editReports") && (
+                            <Button asChild variant="ghost" size="sm">
+                              <Link href={`/dashboard/reports/edit/${r.id}`}><FileEdit className="h-4 w-4" /></Link>
+                            </Button>
+                          )}
+                          {can("deleteRecords") && (
+                            <Button variant="ghost" size="sm" onClick={() => setDeleteId(r.id)}>
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

@@ -20,6 +20,7 @@ import { Search, Plus, Building2, Loader2, Phone, MapPin, Check, ChevronsUpDown,
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useCan } from "@/lib/permissions";
 
 export default function GramPanchayatPage() {
   return (
@@ -30,6 +31,7 @@ export default function GramPanchayatPage() {
 }
 
 function GramPanchayatPageInner() {
+  const can = useCan();
   const searchParams = useSearchParams();
   const [gps, setGps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,11 +125,13 @@ function GramPanchayatPageInner() {
           <h1 className="text-2xl font-bold tracking-tight">Gram Panchayats</h1>
           <p className="text-muted-foreground">Select a Gram Panchayat to view details and registered farmers.</p>
         </div>
-        <Button asChild className="bg-green-700 hover:bg-green-800">
-          <Link href="/dashboard/gram-panchayat/create">
-            <Plus className="mr-2 h-4 w-4" /> Add New GP
-          </Link>
-        </Button>
+        {can("editFieldData") && (
+          <Button asChild className="bg-green-700 hover:bg-green-800">
+            <Link href="/dashboard/gram-panchayat/create">
+              <Plus className="mr-2 h-4 w-4" /> Add New GP
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* GP Selection Box */}
@@ -235,14 +239,18 @@ function GramPanchayatPageInner() {
                       {downloadingReport ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Download className="mr-1 h-4 w-4" />}
                       Report
                     </Button>
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/dashboard/gram-panchayat/edit/${gpDetails.id}`}>Edit GP</Link>
-                    </Button>
-                    <Button asChild size="sm" className="bg-green-700 hover:bg-green-800">
-                      <Link href={`/dashboard/farmers/create?gpId=${gpDetails.id}`}>
-                        <Plus className="mr-1 h-4 w-4" /> Add Farmer
-                      </Link>
-                    </Button>
+                    {can("editFieldData") && (
+                      <>
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/dashboard/gram-panchayat/edit/${gpDetails.id}`}>Edit GP</Link>
+                        </Button>
+                        <Button asChild size="sm" className="bg-green-700 hover:bg-green-800">
+                          <Link href={`/dashboard/farmers/create?gpId=${gpDetails.id}`}>
+                            <Plus className="mr-1 h-4 w-4" /> Add Farmer
+                          </Link>
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

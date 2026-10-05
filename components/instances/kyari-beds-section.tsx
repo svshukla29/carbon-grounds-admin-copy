@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { LayoutGrid, Loader2, Plus, Trash2, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCan } from "@/lib/permissions";
 
 function AddKyariBedsDialog({ instanceId, onCreated }: { instanceId: string; onCreated: () => void }) {
   const [open, setOpen] = useState(false);
@@ -129,6 +130,7 @@ function AddKyariBedsDialog({ instanceId, onCreated }: { instanceId: string; onC
 }
 
 export function KyariBedsSection({ instanceId }: { instanceId: string }) {
+  const can = useCan();
   const [beds, setBeds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -171,7 +173,7 @@ export function KyariBedsSection({ instanceId }: { instanceId: string }) {
               Total Kyari area: {totalArea.toFixed(2)} acres
             </CardDescription>
           </div>
-          <AddKyariBedsDialog instanceId={instanceId} onCreated={refresh} />
+          {can("editFieldData") && <AddKyariBedsDialog instanceId={instanceId} onCreated={refresh} />}
         </div>
       </CardHeader>
       <CardContent>
@@ -201,9 +203,11 @@ export function KyariBedsSection({ instanceId }: { instanceId: string }) {
                   <TableCell>{Number(bed.areaAcres).toFixed(2)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{bed.notes || "—"}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(bed.id)}>
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
+                    {can("deleteRecords") && (
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(bed.id)}>
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

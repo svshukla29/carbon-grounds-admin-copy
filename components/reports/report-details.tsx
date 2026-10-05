@@ -21,8 +21,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { api, reportsApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useCan } from "@/lib/permissions";
 
 export function ReportDetails({ id }: { id: string }) {
+  const can = useCan();
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
@@ -153,16 +155,20 @@ export function ReportDetails({ id }: { id: string }) {
               Download
             </Button>
           )}
-          <Button asChild variant="outline">
-            <Link href={`/dashboard/reports/edit/${report.id}`}>
-              <FileEdit className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </Button>
-          <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
+          {can("editReports") && (
+            <Button asChild variant="outline">
+              <Link href={`/dashboard/reports/edit/${report.id}`}>
+                <FileEdit className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
+            </Button>
+          )}
+          {can("deleteRecords") && (
+            <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          )}
         </div>
       </div>
 

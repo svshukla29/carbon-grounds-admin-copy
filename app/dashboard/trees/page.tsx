@@ -17,8 +17,10 @@ import { TreePine, Loader2, AlertTriangle, Download } from "lucide-react";
 import { AddTreesDialog } from "@/components/instances/add-trees-dialog";
 import { TreeRowActions } from "@/components/instances/tree-row-actions";
 import { useToast } from "@/hooks/use-toast";
+import { useCan } from "@/lib/permissions";
 
 export default function TreesPage() {
+  const can = useCan();
   const [instances, setInstances] = useState<any[]>([]);
   const [selectedInstance, setSelectedInstance] = useState<string>("");
   const [trees, setTrees] = useState<any[]>([]);
@@ -184,7 +186,9 @@ export default function TreesPage() {
                   <CardTitle>Tree Records</CardTitle>
                   <CardDescription>Individual trees registered on this plot</CardDescription>
                 </div>
-                <AddTreesDialog instanceId={selectedInstance} onTreesAdded={refreshTrees} />
+                {can("editFieldData") && (
+                  <AddTreesDialog instanceId={selectedInstance} onTreesAdded={refreshTrees} />
+                )}
               </div>
             </CardHeader>
             <CardContent>

@@ -21,8 +21,10 @@ import { TreeRowActions } from "@/components/instances/tree-row-actions";
 import { MonitoringSection } from "@/components/instances/monitoring-section";
 import { KyariBedsSection } from "@/components/instances/kyari-beds-section";
 import { CropAreasSection } from "@/components/instances/crop-areas-section";
+import { useCan } from "@/lib/permissions";
 
 export default function InstanceDetailPage() {
+  const can = useCan();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [instance, setInstance] = useState<any>(null);
@@ -114,9 +116,11 @@ export default function InstanceDetailPage() {
             {downloadingReport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
             Report
           </Button>
-          <Button asChild variant="outline">
-            <Link href={`/dashboard/instances/edit/${id}`}>Edit Plot</Link>
-          </Button>
+          {can("editFieldData") && (
+            <Button asChild variant="outline">
+              <Link href={`/dashboard/instances/edit/${id}`}>Edit Plot</Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -249,9 +253,11 @@ export default function InstanceDetailPage() {
               <CardTitle>Tree Records ({trees.length})</CardTitle>
               <CardDescription>Individual trees registered on this plot</CardDescription>
             </div>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={() => router.push(`/dashboard/instances/${id}/add-trees`)}>
-              <TreePine className="mr-2 h-4 w-4" /> Add Trees
-            </Button>
+            {can("editFieldData") && (
+              <Button className="bg-green-600 hover:bg-green-700" onClick={() => router.push(`/dashboard/instances/${id}/add-trees`)}>
+                <TreePine className="mr-2 h-4 w-4" /> Add Trees
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>

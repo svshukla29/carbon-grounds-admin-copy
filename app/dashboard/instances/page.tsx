@@ -16,8 +16,10 @@ import {
   ChevronLeft, ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { useCan } from "@/lib/permissions";
 
 export default function InstancesPage() {
+  const can = useCan();
   const [instances, setInstances] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -68,11 +70,13 @@ export default function InstancesPage() {
               <MapPin className="mr-2 h-4 w-4" /> View Map
             </Link>
           </Button>
-          <Button asChild className="bg-green-700 hover:bg-green-800">
-            <Link href="/dashboard/instances/create">
-              <Plus className="mr-2 h-4 w-4" /> Add Plot
-            </Link>
-          </Button>
+          {can("editFieldData") && (
+            <Button asChild className="bg-green-700 hover:bg-green-800">
+              <Link href="/dashboard/instances/create">
+                <Plus className="mr-2 h-4 w-4" /> Add Plot
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 

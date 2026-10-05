@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Loader2, ShieldCheck, CheckCircle, Clock, XCircle } from "lucide-react";
 import { MonitoringChecklistDialog } from "@/components/instances/monitoring-checklist-dialog";
+import { useCan } from "@/lib/permissions";
 
 const statusColors: Record<string, string> = {
   DRAFT: "bg-gray-100 text-gray-600",
@@ -22,6 +23,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function MonitoringPage() {
+  const can = useCan();
   const [periods, setPeriods] = useState<any[]>([]);
   const [pending, setPending] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,22 +124,26 @@ export default function MonitoringPage() {
                           periodId={p.id}
                           periodLabel={p.periodName || `Period ${p.periodNumber}`}
                         />
-                        <Button
-                          size="sm"
-                          className="bg-green-700 hover:bg-green-800"
-                          disabled={updatingId === p.id}
-                          onClick={() => updateStatus(p.id, "APPROVED")}
-                        >
-                          {updatingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          disabled={updatingId === p.id}
-                          onClick={() => updateStatus(p.id, "REJECTED", "Does not meet criteria")}
-                        >
-                          Reject
-                        </Button>
+                        {can("approveMonitoring") && (
+                          <>
+                            <Button
+                              size="sm"
+                              className="bg-green-700 hover:bg-green-800"
+                              disabled={updatingId === p.id}
+                              onClick={() => updateStatus(p.id, "APPROVED")}
+                            >
+                              {updatingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={updatingId === p.id}
+                              onClick={() => updateStatus(p.id, "REJECTED", "Does not meet criteria")}
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

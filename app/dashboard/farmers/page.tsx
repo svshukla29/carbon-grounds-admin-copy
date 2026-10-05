@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Search, Plus, Users, Leaf, Eye, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useCan } from "@/lib/permissions";
 
 const categoryColors: Record<string, string> = {
   ST: "bg-green-100 text-green-700",
@@ -22,6 +23,7 @@ const categoryColors: Record<string, string> = {
 };
 
 export default function FarmersPage() {
+  const can = useCan();
   const [farmers, setFarmers] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -65,11 +67,13 @@ export default function FarmersPage() {
             Manage all registered farmers and their land details
           </p>
         </div>
-        <Button asChild className="bg-green-700 hover:bg-green-800">
-          <Link href="/dashboard/farmers/create">
-            <Plus className="mr-2 h-4 w-4" /> Add Farmer
-          </Link>
-        </Button>
+        {can("editFieldData") && (
+          <Button asChild className="bg-green-700 hover:bg-green-800">
+            <Link href="/dashboard/farmers/create">
+              <Plus className="mr-2 h-4 w-4" /> Add Farmer
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Stats */}

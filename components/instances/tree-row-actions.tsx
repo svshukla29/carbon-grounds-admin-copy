@@ -30,8 +30,10 @@ import {
 } from "@/components/ui/command";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCan } from "@/lib/permissions";
 
 export function TreeRowActions({ tree, onUpdated }: { tree: any; onUpdated: () => void }) {
+  const can = useCan();
   const { toast } = useToast();
 
   // ── Edit Tree dialog ─────────────────────────────────────────────
@@ -223,9 +225,11 @@ export function TreeRowActions({ tree, onUpdated }: { tree: any; onUpdated: () =
 
   return (
     <div className="flex justify-end gap-1">
-      <Button variant="ghost" size="sm" onClick={openEdit} title="Edit tree">
-        <Pencil className="h-4 w-4" />
-      </Button>
+      {can("editFieldData") && (
+        <Button variant="ghost" size="sm" onClick={openEdit} title="Edit tree">
+          <Pencil className="h-4 w-4" />
+        </Button>
+      )}
 
       <TreePhotoHistoryDialog
         plantingUnitId={tree.id}
@@ -241,22 +245,26 @@ export function TreeRowActions({ tree, onUpdated }: { tree: any; onUpdated: () =
         <HistoryIcon className="h-4 w-4 text-muted-foreground" />
       </Button>
 
-      <Button variant="ghost" size="sm" onClick={() => setMeasureOpen(true)} title="Log Measurement">
-        <Ruler className="h-4 w-4 text-blue-600" />
-      </Button>
-
-      {tree.lossDate ? (
-        <Button variant="ghost" size="sm" onClick={handleMarkAlive} disabled={markingAlive} title="Mark as alive">
-          {markingAlive ? <Loader2 className="h-4 w-4 animate-spin" /> : <Leaf className="h-4 w-4 text-green-600" />}
-        </Button>
-      ) : (
+      {can("editFieldData") && (
         <>
-          <Button variant="ghost" size="sm" onClick={() => setLossOpen(true)} title="Mark Dead/Lost">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+          <Button variant="ghost" size="sm" onClick={() => setMeasureOpen(true)} title="Log Measurement">
+            <Ruler className="h-4 w-4 text-blue-600" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setReplaceOpen(true)} title="Replace with new tree">
-            <Repeat className="h-4 w-4 text-amber-600" />
-          </Button>
+
+          {tree.lossDate ? (
+            <Button variant="ghost" size="sm" onClick={handleMarkAlive} disabled={markingAlive} title="Mark as alive">
+              {markingAlive ? <Loader2 className="h-4 w-4 animate-spin" /> : <Leaf className="h-4 w-4 text-green-600" />}
+            </Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setLossOpen(true)} title="Mark Dead/Lost">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setReplaceOpen(true)} title="Replace with new tree">
+                <Repeat className="h-4 w-4 text-amber-600" />
+              </Button>
+            </>
+          )}
         </>
       )}
 

@@ -13,8 +13,10 @@ import {
 } from "@/components/ui/table";
 import { DeleteFarmerDialog } from "@/components/farmers/delete-farmer-dialog";
 import { AuthImage } from "@/components/ui/auth-image";
+import { useCan } from "@/lib/permissions";
 
 export function FarmerDetails({ id }: { id: string }) {
+  const can = useCan();
   const [farmer, setFarmer] = useState<any>(null);
   const [instances, setInstances] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,14 +94,18 @@ export function FarmerDetails({ id }: { id: string }) {
           </div>
         </div>
         <div className="flex gap-2 shrink-0">
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/dashboard/farmers/edit/${farmer.id}`}>
-              <FileEdit className="mr-2 h-4 w-4" /> Edit
-            </Link>
-          </Button>
-          <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
-            <Trash2 className="mr-2 h-4 w-4" /> Delete
-          </Button>
+          {can("editFieldData") && (
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/farmers/edit/${farmer.id}`}>
+                <FileEdit className="mr-2 h-4 w-4" /> Edit
+              </Link>
+            </Button>
+          )}
+          {can("deleteRecords") && (
+            <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </Button>
+          )}
         </div>
       </div>
 
@@ -181,9 +187,11 @@ export function FarmerDetails({ id }: { id: string }) {
             <CardTitle className="text-base">
               Farm Plots ({instances.length}) — Total {totalArea.toFixed(2)} acres, {totalTrees} trees
             </CardTitle>
-            <Button asChild size="sm" className="bg-green-700 hover:bg-green-800">
-              <Link href={`/dashboard/instances/create?farmerId=${farmer.id}`}>Add Plot</Link>
-            </Button>
+            {can("editFieldData") && (
+              <Button asChild size="sm" className="bg-green-700 hover:bg-green-800">
+                <Link href={`/dashboard/instances/create?farmerId=${farmer.id}`}>Add Plot</Link>
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>

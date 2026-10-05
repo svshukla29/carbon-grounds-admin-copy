@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { ClipboardCheck, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useCan } from "@/lib/permissions";
 
 export function MonitoringChecklistDialog({
   periodId,
@@ -21,6 +22,7 @@ export function MonitoringChecklistDialog({
   periodLabel?: string;
   trigger?: React.ReactNode;
 }) {
+  const canEdit = useCan()("editFieldData");
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -89,6 +91,7 @@ export function MonitoringChecklistDialog({
                 <label className="flex items-start gap-2 cursor-pointer">
                   <Checkbox
                     checked={item.completed}
+                    disabled={!canEdit}
                     onCheckedChange={(checked) => {
                       const next = [...items];
                       next[idx].completed = checked === true;
@@ -101,6 +104,7 @@ export function MonitoringChecklistDialog({
                   placeholder="Remarks (optional)"
                   rows={1}
                   value={item.remarks || ""}
+                  readOnly={!canEdit}
                   onChange={(e) => {
                     const next = [...items];
                     next[idx].remarks = e.target.value;
@@ -114,11 +118,15 @@ export function MonitoringChecklistDialog({
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancel</Button>
-          <Button className="bg-green-600 hover:bg-green-700" onClick={handleSave} disabled={saving || loading}>
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Checklist
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+            {canEdit ? "Cancel" : "Close"}
           </Button>
+          {canEdit && (
+            <Button className="bg-green-600 hover:bg-green-700" onClick={handleSave} disabled={saving || loading}>
+              {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Checklist
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
