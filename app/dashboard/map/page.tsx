@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { instancesApi } from "@/lib/api";
+import { instancesApi, treesApi } from "@/lib/api";
+import { withBasePath } from "@/lib/utils";
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from "@/components/ui/card";
@@ -17,14 +18,18 @@ export default function MapPage() {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const [geoData, setGeoData] = useState<any>(null);
+  const [treePoints, setTreePoints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [treeMode, setTreeMode] = useState(false);
 
   useEffect(() => {
-    instancesApi.getAllGeoJson()
-      .then((res) => setGeoData(res.data))
+    Promise.all([instancesApi.getAllGeoJson(), treesApi.getMapPoints()])
+      .then(([geoRes, treesRes]) => {
+        setGeoData(geoRes.data);
+        setTreePoints(treesRes.data || []);
+      })
       .catch(() => setError("Failed to load map data. Make sure backend is running."))
       .finally(() => setLoading(false));
   }, []);
@@ -92,8 +97,50 @@ export default function MapPage() {
       L.control.scale({ imperial: false }).addTo(map);
 
       // ── Plot Boundaries (GeoJSON Polygons) ────────────────────────────────────
-      if (geoData?.features?.length > 0) {
-        const geoLayer = L.geoJSON(geoData, {
+      // Filter out malformed geometry (e.g. a boundary saved with fewer than the
+      // 4 points a closed polygon ring needs) before handing it to Leaflet — one
+      // bad record here previously sent fitBounds to a degenerate single point,
+      // which zoomed the whole map to z21 over blank tiles.
+      const validFeatures = (geoData?.features || []).filter((f: any) => {
+        const ring = f?.geometry?.type === "Polygon" ? f.geometry.coordinates?.[0] : null;
+        return Array.isArray(ring) && ring.length >= 4;
+      });
+      const filteredGeoData = { ...geoData, features: validFeatures };
+
+      // ── Tree Markers (GPS points) ──────────────────────────────────────────────
+      const treeIcon = L.divIcon({
+        html: `<div style="background:#15803d;color:white;border-radius:50%;width:16px;height:16px;
+                           display:flex;align-items:center;justify-content:center;font-size:10px;
+                           border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)">🌳</div>`,
+        className: "",
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      });
+
+      const treeMarkers: any[] = [];
+      for (const tree of treePoints) {
+        if (typeof tree.gpsLat !== "number" || typeof tree.gpsLng !== "number") continue;
+        const marker = L.marker([tree.gpsLat, tree.gpsLng], { icon: treeIcon });
+        marker.bindPopup(
+          `<div style="font-family:system-ui;min-width:180px;padding:4px">
+            <div style="font-weight:700;color:#15803d;font-size:13px">🌳 ${tree.speciesName}</div>
+            <div style="color:#6b7280;font-size:11px;margin-top:2px">${tree.treeId}</div>
+            <div style="color:#6b7280;font-size:11px">${tree.farmerName || ""} • ${tree.instanceId}</div>
+          </div>`,
+          { maxWidth: 220 }
+        );
+        marker.addTo(map);
+        treeMarkers.push(marker);
+      }
+
+      let combinedBounds: any = null;
+      const extendBounds = (b: any) => {
+        if (!b) return;
+        combinedBounds = combinedBounds ? combinedBounds.extend(b) : L.latLngBounds(b.getSouthWest(), b.getNorthEast());
+      };
+
+      if (validFeatures.length > 0) {
+        const geoLayer = L.geoJSON(filteredGeoData, {
           style: () => ({
             color: "#facc15",        // yellow outline — visible on satellite
             weight: 2.5,
@@ -115,7 +162,7 @@ export default function MapPage() {
                   📐 Area: <b>${area} acres</b>
                 </div>
                 <div style="margin-top:8px">
-                  <a href="/dashboard/instances/${p.id}" 
+                  <a href="${withBasePath(`/dashboard/instances/${p.id}`)}"
                      style="display:block;text-align:center;background:#15803d;color:white;padding:4px 8px;border-radius:4px;text-decoration:none;font-size:12px">
                     View Full Details →
                   </a>
@@ -130,35 +177,34 @@ export default function MapPage() {
         }).addTo(map);
 
         try {
-          map.fitBounds(geoLayer.getBounds(), { padding: [60, 60] });
+          extendBounds(geoLayer.getBounds());
         } catch {
-          map.setView([22.0, 82.5], 8);
+          // degenerate geometry slipped past the filter — ignore, tree bounds (if any) still apply
         }
+      }
+
+      if (treeMarkers.length > 0) {
+        try {
+          extendBounds(L.featureGroup(treeMarkers).getBounds());
+        } catch {
+          // ignore
+        }
+      }
+
+      if (combinedBounds) {
+        // Cap the zoom fitBounds can reach — a single tiny plot or a lone tree
+        // would otherwise zoom in past what satellite tiles actually cover.
+        map.fitBounds(combinedBounds, { padding: [60, 60], maxZoom: 18 });
       } else {
-        // No data — center on Chhattisgarh
+        // No plot boundaries and no tree GPS points at all — center on Chhattisgarh
         map.setView([21.2787, 81.8661], 8);
         const marker = L.marker([21.2787, 81.8661]).addTo(map);
         marker.bindPopup(
-          "<b>No farm plots with GPS boundaries yet</b><br>" +
+          "<b>No farm plots or trees with GPS data yet</b><br>" +
           "Use SW Maps app in the field to record boundaries,<br>" +
           "then upload GeoJSON to admin panel."
         ).openPopup();
       }
-
-      // ── Tree Markers (GPS points) ──────────────────────────────────────────────
-      // Custom tree icon
-      const treeIcon = L.divIcon({
-        html: `<div style="background:#15803d;color:white;border-radius:50%;width:16px;height:16px;
-                           display:flex;align-items:center;justify-content:center;font-size:10px;
-                           border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.4)">🌳</div>`,
-        className: "",
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
-      });
-
-      // TODO: When real tree GPS data comes from DB, add markers here
-      // For now show instruction
-      (mapInstanceRef.current as any)._treeIcon = treeIcon;
     };
 
     const existingScript = document.getElementById("leaflet-js");
@@ -192,6 +238,7 @@ export default function MapPage() {
   }, []);
 
   const totalPlots = geoData?.features?.length || 0;
+  const totalTreePoints = treePoints.length;
 
   return (
     <div className="space-y-4">
@@ -199,7 +246,7 @@ export default function MapPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">GIS Map</h1>
           <p className="text-muted-foreground">
-            {totalPlots} farm plots with boundaries • Google Satellite view
+            {totalPlots} farm plots with boundaries • {totalTreePoints} trees mapped • Google Satellite view
           </p>
         </div>
         <div className="flex gap-2">

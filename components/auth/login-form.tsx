@@ -10,7 +10,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -65,7 +64,7 @@ export function LoginForm() {
             <Input
               id="email"
               type="email"
-              placeholder="admin@carboncredit.in"
+              placeholder="you@carbongrounds.iitr.ac.in"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -108,9 +107,6 @@ export function LoginForm() {
           </Button>
         </form>
       </CardContent>
-      <CardFooter className="flex justify-center text-xs text-gray-500">
-        Use: admin@carboncredit.in / Admin@1234
-      </CardFooter>
     </Card>
   );
 }

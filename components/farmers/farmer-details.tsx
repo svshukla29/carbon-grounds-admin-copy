@@ -12,6 +12,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { DeleteFarmerDialog } from "@/components/farmers/delete-farmer-dialog";
+import { AuthImage } from "@/components/ui/auth-image";
 
 export function FarmerDetails({ id }: { id: string }) {
   const [farmer, setFarmer] = useState<any>(null);
@@ -66,9 +67,17 @@ export function FarmerDetails({ id }: { id: string }) {
           <Button asChild variant="ghost" size="icon">
             <Link href="/dashboard/farmers"><ArrowLeft className="h-4 w-4" /></Link>
           </Button>
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-800 font-bold text-lg shrink-0">
-            {initials}
-          </div>
+          {farmer.photoUrl ? (
+            <AuthImage
+              src={farmer.photoUrl}
+              alt={farmer.farmerName}
+              className="h-12 w-12 rounded-full object-cover shrink-0"
+            />
+          ) : (
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-800 font-bold text-lg shrink-0">
+              {initials}
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-2xl font-bold">{farmer.farmerName}</h1>

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { withBasePath } from "@/lib/utils";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -22,7 +23,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
-      window.location.href = "/login";
+      window.location.href = withBasePath("/login");
     }
     return Promise.reject(error);
   }
@@ -47,6 +48,9 @@ export const gramPanchayatApi = {
   getAll: (params?: { district?: string; state?: string }) =>
     api.get("/gram-panchayat", { params }),
   getOne: (id: string) => api.get(`/gram-panchayat/${id}`),
+  getSummary: (id: string) => api.get(`/gram-panchayat/${id}/summary`),
+  downloadReport: (id: string) =>
+    api.get(`/gram-panchayat/${id}/report.xlsx`, { responseType: "blob" }),
   search: (q: string) => api.get("/gram-panchayat/search", { params: { q } }),
   create: (data: any) => api.post("/gram-panchayat", data),
   update: (id: string, data: any) => api.patch(`/gram-panchayat/${id}`, data),
@@ -69,6 +73,9 @@ export const instancesApi = {
     api.get("/instances", { params }),
   getOne: (id: string) => api.get(`/instances/${id}`),
   getAllGeoJson: () => api.get("/instances/map/all"),
+  getSummary: (id: string) => api.get(`/instances/${id}/summary`),
+  downloadReport: (id: string) =>
+    api.get(`/instances/${id}/report.xlsx`, { responseType: "blob" }),
   create: (data: any) => api.post("/instances", data),
   update: (id: string, data: any) => api.patch(`/instances/${id}`, data),
 };
@@ -82,17 +89,21 @@ export const treesApi = {
   bulkCreate: (instanceId: string, units: any[]) =>
     api.post("/planting-units/bulk", { instanceId, units }),
   update: (id: string, data: any) => api.patch(`/planting-units/${id}`, data),
-  markLost: (id: string, lossDate: string) =>
-    api.patch(`/planting-units/${id}/loss`, { lossDate }),
+  markLost: (id: string, lossDate: string, status?: "DEAD" | "LOST", reason?: string) =>
+    api.patch(`/planting-units/${id}/loss`, { lossDate, status, reason }),
   restoreAlive: (id: string) => api.patch(`/planting-units/${id}/restore`),
+  replace: (id: string, data: any) => api.post(`/planting-units/${id}/replace`, data),
+  getHistory: (id: string) => api.get(`/planting-units/${id}/history`),
   export: (params?: { species?: string; instanceId?: string }) =>
     api.get("/planting-units/export", { params, responseType: "blob" }),
+  getMapPoints: () => api.get("/planting-units/map/all"),
 };
 
 // ── Tree Measurements (Monitoring Visits) ───────────────────────────────────
 export const treeMeasurementsApi = {
   getRecent: () => api.get("/tree-measurements"),
   getByTree: (plantingUnitId: string) => api.get(`/tree-measurements/tree/${plantingUnitId}`),
+  create: (data: any) => api.post("/tree-measurements", data),
 };
 
 // ── Kyari Beds ────────────────────────────────────────────────────────────────
@@ -131,6 +142,22 @@ export const treePhotosApi = {
     }),
   update: (id: string, data: any) => api.patch(`/tree-photos/${id}`, data),
   delete: (id: string) => api.delete(`/tree-photos/${id}`),
+};
+
+// ── Farmer Photos ─────────────────────────────────────────────────────────────
+export const farmerPhotosApi = {
+  getByFarmer: (farmerId: string) => api.get(`/farmer-photos/farmer/${farmerId}`),
+  upload: (formData: FormData) =>
+    api.post("/farmer-photos", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+};
+
+// ── Locations (State / District / Village) ───────────────────────────────────
+export const locationsApi = {
+  getStates: () => api.get("/locations/states"),
+  getDistricts: (state?: string) => api.get("/locations/districts", { params: { state } }),
+  getVillages: (district?: string) => api.get("/locations/villages", { params: { district } }),
 };
 
 // ── Species ───────────────────────────────────────────────────────────────────
@@ -172,11 +199,13 @@ export const monitoringChecklistApi = {
 
 // ── Carbon Calculations ───────────────────────────────────────────────────────
 export const calculationsApi = {
+  preview: (instanceId: string) => api.get(`/calculations/preview/${instanceId}`),
   run: (instanceId: string, periodId: string) =>
     api.post(`/calculations/run/${instanceId}/${periodId}`),
   getByInstance: (instanceId: string) =>
     api.get(`/calculations/instance/${instanceId}`),
   getSummary: () => api.get("/calculations/summary"),
+  getDetails: (id: string) => api.get(`/calculations/${id}/details`),
 };
 
 // ── Legacy APIs ───────────────────────────────────────────────────────────────
@@ -209,6 +238,11 @@ export const teamsApi = {
   update: (id: string, data: any) => api.patch(`/teams/${id}`, data),
   remove: (id: string) => api.delete(`/teams/${id}`),
 };
+// ── Public (unauthenticated) ────────────────────────────────────────────────
+export const publicApi = {
+  getSummary: () => api.get("/public/summary"),
+};
+
 export const usersApi = {
   getAll: () => api.get("/users"),
   getMe: () => api.get("/users/me"),

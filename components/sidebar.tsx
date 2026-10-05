@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
+import { cn, withBasePath } from "@/lib/utils";
 import {
   BarChart3,
   FileText,
@@ -207,7 +207,7 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
             onClick={() => {
               localStorage.removeItem("accessToken");
               localStorage.removeItem("user");
-              window.location.href = "/login";
+              window.location.href = withBasePath("/login");
             }}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
           >

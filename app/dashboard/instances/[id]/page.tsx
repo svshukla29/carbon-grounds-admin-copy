@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { instancesApi, treesApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -14,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import {
   ArrowLeft, Loader2, TreePine, MapPin, Sprout, Calendar,
-  Droplets, Zap, Wifi, AlertTriangle,
+  Droplets, Zap, Wifi, AlertTriangle, Download, Leaf,
 } from "lucide-react";
 import { TreeRowActions } from "@/components/instances/tree-row-actions";
 import { MonitoringSection } from "@/components/instances/monitoring-section";
@@ -26,21 +27,45 @@ export default function InstanceDetailPage() {
   const router = useRouter();
   const [instance, setInstance] = useState<any>(null);
   const [trees, setTrees] = useState<any[]>([]);
+  const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [downloadingReport, setDownloadingReport] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!id) return;
     Promise.all([
       instancesApi.getOne(id),
       treesApi.getByInstance(id),
+      instancesApi.getSummary(id),
     ])
-      .then(([instRes, treesRes]) => {
+      .then(([instRes, treesRes, summaryRes]) => {
         setInstance(instRes.data);
         setTrees(Array.isArray(treesRes.data) ? treesRes.data : []);
+        setSummary(summaryRes.data);
       })
       .catch(() => router.push("/dashboard/instances"))
       .finally(() => setLoading(false));
   }, [id, router]);
+
+  const handleDownloadReport = async () => {
+    setDownloadingReport(true);
+    try {
+      const res = await instancesApi.downloadReport(id);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${instance.instanceId}-report.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast({ title: "Failed to download report", variant: "destructive" });
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
 
   const refreshTrees = async () => {
     if (!id) return;
@@ -84,18 +109,25 @@ export default function InstanceDetailPage() {
             </p>
           </div>
         </div>
-        <Button asChild variant="outline">
-          <Link href={`/dashboard/instances/edit/${id}`}>Edit Plot</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleDownloadReport} disabled={downloadingReport}>
+            {downloadingReport ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+            Report
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/dashboard/instances/edit/${id}`}>Edit Plot</Link>
+          </Button>
+        </div>
       </div>
 
       {/* Key Stats */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
         {[
           { label: "Area", value: `${parseFloat(instance.areaAcres || 0).toFixed(2)} acres`, icon: Sprout, color: "green" },
-          { label: "Trees", value: instance.totalPlantingUnits || trees.length, icon: TreePine, color: "emerald" },
-          { label: "Alive", value: aliveTrees, icon: TreePine, color: "teal" },
-          { label: "Lost", value: lostTrees, icon: AlertTriangle, color: "red" },
+          { label: "Trees", value: summary?.totalTrees ?? trees.length, icon: TreePine, color: "emerald" },
+          { label: "Alive", value: summary?.livingTrees ?? aliveTrees, icon: TreePine, color: "teal" },
+          { label: "Dead/Lost", value: (summary?.deadTrees ?? 0) + (summary?.lostTrees ?? lostTrees), icon: AlertTriangle, color: "red" },
+          { label: "Carbon Credits", value: summary ? `${summary.totalNetCredits.toFixed(2)} t` : "—", icon: Leaf, color: "amber" },
         ].map((s) => (
           <Card key={s.label}>
             <CardContent className="pt-5">
@@ -217,7 +249,7 @@ export default function InstanceDetailPage() {
               <CardTitle>Tree Records ({trees.length})</CardTitle>
               <CardDescription>Individual trees registered on this plot</CardDescription>
             </div>
-            <Button className="bg-green-600 hover:bg-green-700" onClick={() => window.location.href = `/dashboard/instances/${id}/add-trees`}>
+            <Button className="bg-green-600 hover:bg-green-700" onClick={() => router.push(`/dashboard/instances/${id}/add-trees`)}>
               <TreePine className="mr-2 h-4 w-4" /> Add Trees
             </Button>
           </div>
@@ -273,11 +305,15 @@ export default function InstanceDetailPage() {
                       {tree.healthStatus || "—"}
                     </TableCell>
                     <TableCell>
-                      {tree.lossDate ? (
-                        <Badge className="bg-red-100 text-red-700">Lost</Badge>
-                      ) : (
-                        <Badge className="bg-green-100 text-green-700">Alive</Badge>
-                      )}
+                      <Badge
+                        className={
+                          tree.status === "ALIVE" || !tree.status ? "bg-green-100 text-green-700"
+                            : tree.status === "REPLACED" ? "bg-amber-100 text-amber-700"
+                            : "bg-red-100 text-red-700"
+                        }
+                      >
+                        {tree.status || (tree.lossDate ? "LOST" : "ALIVE")}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <TreeRowActions tree={tree} onUpdated={refreshTrees} />

@@ -17,7 +17,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Calculator, Loader2, Plus, CalendarRange } from "lucide-react";
+import { Calculator, Loader2, Plus, CalendarRange, ListTree } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MonitoringChecklistDialog } from "@/components/instances/monitoring-checklist-dialog";
 
@@ -117,11 +117,275 @@ function CreatePeriodDialog({ instanceId, onCreated }: { instanceId: string; onC
   );
 }
 
+function CalculationDetailsDialog({ calculationId }: { calculationId: string }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<{ calculation: any; details: any[] } | null>(null);
+
+  const handleOpen = async (next: boolean) => {
+    setOpen(next);
+    if (next && !data) {
+      setLoading(true);
+      try {
+        const res = await calculationsApi.getDetails(calculationId);
+        setData(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="ghost">
+          <ListTree className="mr-1.5 h-3.5 w-3.5" /> Show work
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Calculation Breakdown</DialogTitle>
+          <DialogDescription>
+            Every input and formula used to produce this result — a full audit trail, not just the final number.
+          </DialogDescription>
+        </DialogHeader>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+          </div>
+        ) : data ? (
+          <div className="space-y-4">
+            <div className="rounded-lg border bg-muted/40 p-3 text-sm space-y-1">
+              <p>
+                <span className="text-muted-foreground">Ecological zone used: </span>
+                <span className="font-medium">{data.calculation.ecologicalZoneNameUsed || "None (default applied)"}</span>
+              </p>
+              <p>
+                <span className="text-muted-foreground">Root:shoot ratio (R): </span>
+                <span className="font-medium">{data.calculation.rootShootRatioUsed ?? "—"}</span>
+              </p>
+              <p>
+                <span className="text-muted-foreground">Formula version: </span>
+                <span className="font-mono text-xs">{data.calculation.formulaVersion}</span>
+              </p>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tree</TableHead>
+                  <TableHead>Species</TableHead>
+                  <TableHead>DBH (cm)</TableHead>
+                  <TableHead>AGB (kg)</TableHead>
+                  <TableHead>Carbon (kg)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.details.map((d) => (
+                  <TableRow key={d.id}>
+                    <TableCell className="font-medium">{d.treeIdUsed}</TableCell>
+                    <TableCell>{d.speciesNameUsed}</TableCell>
+                    <TableCell>{Number(d.dbhCmUsed).toFixed(1)}</TableCell>
+                    <TableCell>{Number(d.agbBiomassKg).toFixed(2)}</TableCell>
+                    <TableCell>{Number(d.carbonStockKg).toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Formula, per tree</h4>
+              <div className="max-h-48 overflow-y-auto rounded-lg border bg-muted/20 p-3 space-y-2">
+                {data.details.map((d) => (
+                  <p key={d.id} className="font-mono text-xs text-muted-foreground">
+                    <span className="text-foreground font-medium">{d.treeIdUsed}: </span>
+                    {d.formula}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground py-8 text-center">No per-tree detail available for this calculation.</p>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RunCalculationDialog({
+  instanceId, periodId, periodLabel, onRun,
+}: { instanceId: string; periodId: string; periodLabel: string; onRun: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [preview, setPreview] = useState<any>(null);
+  const { toast } = useToast();
+
+  const handleOpen = async (next: boolean) => {
+    setOpen(next);
+    if (next) {
+      setPreview(null);
+      setLoading(true);
+      try {
+        const res = await calculationsApi.preview(instanceId);
+        setPreview(res.data);
+      } catch (err: any) {
+        const msg = err?.response?.data?.message;
+        toast({
+          title: "Failed to preview calculation",
+          description: Array.isArray(msg) ? msg.join(", ") : msg,
+          variant: "destructive",
+        });
+        setOpen(false);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleConfirmRun = async () => {
+    setRunning(true);
+    try {
+      await calculationsApi.run(instanceId, periodId);
+      toast({ title: "Calculation completed" });
+      setOpen(false);
+      onRun();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message;
+      toast({
+        title: "Calculation failed",
+        description: Array.isArray(msg) ? msg.join(", ") : msg,
+        variant: "destructive",
+      });
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">
+          <Calculator className="mr-2 h-3.5 w-3.5" />
+          Run Calculation
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Review Before Running — {periodLabel}</DialogTitle>
+          <DialogDescription>
+            These are the exact inputs and formula that will be used. Nothing is saved until you confirm.
+          </DialogDescription>
+        </DialogHeader>
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-green-600" />
+          </div>
+        ) : preview ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Trees included</p>
+                <p className="text-lg font-semibold">{preview.treeCount}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Ecological Zone</p>
+                <p className="text-sm font-medium">{preview.ecologicalZoneName || "None (default applied)"}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">Root:Shoot Ratio (R)</p>
+                <p className="text-lg font-semibold">{Number(preview.rootShootRatio).toFixed(2)}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">CO2:C Ratio (IPCC)</p>
+                <p className="text-lg font-semibold">{Number(preview.co2ToCRatio).toFixed(4)}</p>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-green-50 border border-green-200 p-3 grid grid-cols-2 gap-3 sm:grid-cols-4 text-center">
+              <div>
+                <p className="text-xs text-green-700">AGB Biomass</p>
+                <p className="text-base font-bold text-green-800">{Number(preview.agbBiomass).toFixed(2)} kg</p>
+              </div>
+              <div>
+                <p className="text-xs text-green-700">Carbon Stock</p>
+                <p className="text-base font-bold text-green-800">{Number(preview.carbonStock).toFixed(4)} tC</p>
+              </div>
+              <div>
+                <p className="text-xs text-green-700">CO2e</p>
+                <p className="text-base font-bold text-green-800">{Number(preview.co2e).toFixed(4)} t</p>
+              </div>
+              <div>
+                <p className="text-xs text-green-700">Net Credits</p>
+                <p className="text-base font-bold text-green-800">{Number(preview.netCredits).toFixed(4)}</p>
+              </div>
+            </div>
+
+            {preview.treeCount === 0 ? (
+              <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                No living trees with a recorded DBH and a species with allometric constants were found — running
+                this will produce a zero-credit calculation.
+              </p>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tree</TableHead>
+                      <TableHead>Species</TableHead>
+                      <TableHead>DBH (cm)</TableHead>
+                      <TableHead>AGB (kg)</TableHead>
+                      <TableHead>Carbon (kg)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {preview.details.map((d: any) => (
+                      <TableRow key={d.plantingUnitId}>
+                        <TableCell className="font-medium">{d.treeIdUsed}</TableCell>
+                        <TableCell>{d.speciesNameUsed}</TableCell>
+                        <TableCell>{Number(d.dbhCmUsed).toFixed(1)}</TableCell>
+                        <TableCell>{Number(d.agbBiomassKg).toFixed(2)}</TableCell>
+                        <TableCell>{Number(d.carbonStockKg).toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Formula, per tree</h4>
+                  <div className="max-h-40 overflow-y-auto rounded-lg border bg-muted/20 p-3 space-y-2">
+                    {preview.details.map((d: any) => (
+                      <p key={d.plantingUnitId} className="font-mono text-xs text-muted-foreground">
+                        <span className="text-foreground font-medium">{d.treeIdUsed}: </span>
+                        {d.formula}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        ) : null}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={running}>Cancel</Button>
+          <Button
+            className="bg-green-600 hover:bg-green-700"
+            onClick={handleConfirmRun}
+            disabled={loading || running || !preview}
+          >
+            {running && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Confirm & Run
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function MonitoringSection({ instanceId }: { instanceId: string }) {
   const [periods, setPeriods] = useState<any[]>([]);
   const [calculations, setCalculations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [runningId, setRunningId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const refresh = async () => {
@@ -143,24 +407,6 @@ export function MonitoringSection({ instanceId }: { instanceId: string }) {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instanceId]);
-
-  const handleRun = async (periodId: string) => {
-    setRunningId(periodId);
-    try {
-      await calculationsApi.run(instanceId, periodId);
-      toast({ title: "Calculation completed" });
-      await refresh();
-    } catch (err: any) {
-      const msg = err?.response?.data?.message;
-      toast({
-        title: "Calculation failed",
-        description: Array.isArray(msg) ? msg.join(", ") : msg,
-        variant: "destructive",
-      });
-    } finally {
-      setRunningId(null);
-    }
-  };
 
   const handleStatusChange = async (periodId: string, status: string) => {
     try {
@@ -244,17 +490,12 @@ export function MonitoringSection({ instanceId }: { instanceId: string }) {
                           periodId={period.id}
                           periodLabel={period.periodName || `Period ${period.periodNumber ?? "—"}`}
                         />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleRun(period.id)}
-                          disabled={runningId === period.id}
-                        >
-                          {runningId === period.id
-                            ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                            : <Calculator className="mr-2 h-3.5 w-3.5" />}
-                          Run Calculation
-                        </Button>
+                        <RunCalculationDialog
+                          instanceId={instanceId}
+                          periodId={period.id}
+                          periodLabel={period.periodName || `Period ${period.periodNumber ?? "—"}`}
+                          onRun={refresh}
+                        />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -276,6 +517,7 @@ export function MonitoringSection({ instanceId }: { instanceId: string }) {
                   <TableHead>CO2e (t)</TableHead>
                   <TableHead>Net Credits</TableHead>
                   <TableHead>Date</TableHead>
+                  <TableHead className="text-right">Breakdown</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -288,6 +530,9 @@ export function MonitoringSection({ instanceId }: { instanceId: string }) {
                     <TableCell className="font-medium">{Number(c.netCredits).toFixed(4)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(c.createdAt).toLocaleDateString("en-IN")}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <CalculationDetailsDialog calculationId={c.id} />
                     </TableCell>
                   </TableRow>
                 ))}

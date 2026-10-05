@@ -16,9 +16,10 @@ import {
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { Search, Plus, Building2, Loader2, Phone, MapPin, Check, ChevronsUpDown, Contact } from "lucide-react";
+import { Search, Plus, Building2, Loader2, Phone, MapPin, Check, ChevronsUpDown, Contact, Sprout, TreePine, Ruler, Leaf, Download } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function GramPanchayatPage() {
   return (
@@ -40,6 +41,29 @@ function GramPanchayatPageInner() {
   // Detailed GP state
   const [gpDetails, setGpDetails] = useState<any>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [gpSummary, setGpSummary] = useState<any>(null);
+  const [downloadingReport, setDownloadingReport] = useState(false);
+  const { toast } = useToast();
+
+  const handleDownloadReport = async () => {
+    if (!gpDetails) return;
+    setDownloadingReport(true);
+    try {
+      const res = await gramPanchayatApi.downloadReport(gpDetails.id);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${gpDetails.gpName}-report.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast({ title: "Failed to download report", variant: "destructive" });
+    } finally {
+      setDownloadingReport(false);
+    }
+  };
 
   // 1. Fetch all GPs on mount to populate the combobox
   useEffect(() => {
@@ -68,14 +92,19 @@ function GramPanchayatPageInner() {
   useEffect(() => {
     if (!selectedGpId) {
       setGpDetails(null);
+      setGpSummary(null);
       return;
     }
 
     const fetchGpDetails = async () => {
       setLoadingDetails(true);
       try {
-        const res = await gramPanchayatApi.getOne(selectedGpId);
-        setGpDetails(res.data);
+        const [detailsRes, summaryRes] = await Promise.all([
+          gramPanchayatApi.getOne(selectedGpId),
+          gramPanchayatApi.getSummary(selectedGpId),
+        ]);
+        setGpDetails(detailsRes.data);
+        setGpSummary(summaryRes.data);
       } catch (e) {
         console.error("Failed to fetch GP details:", e);
       } finally {
@@ -202,6 +231,10 @@ function GramPanchayatPageInner() {
                     <div className="text-3xl font-bold text-green-700">{gpDetails.farmers?.length || 0}</div>
                   </div>
                   <div className="flex gap-2 justify-end">
+                    <Button size="sm" variant="outline" onClick={handleDownloadReport} disabled={downloadingReport}>
+                      {downloadingReport ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Download className="mr-1 h-4 w-4" />}
+                      Report
+                    </Button>
                     <Button asChild size="sm" variant="outline">
                       <Link href={`/dashboard/gram-panchayat/edit/${gpDetails.id}`}>Edit GP</Link>
                     </Button>
@@ -245,6 +278,62 @@ function GramPanchayatPageInner() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Panchayat-wide plot / tree / carbon summary */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-green-100 p-3">
+                    <Sprout className="h-5 w-5 text-green-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Farm Plots</p>
+                    <p className="text-2xl font-bold">{gpSummary?.totalPlots ?? 0}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-emerald-100 p-3">
+                    <TreePine className="h-5 w-5 text-emerald-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Trees Planted</p>
+                    <p className="text-2xl font-bold">{gpSummary?.totalTrees ?? 0}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-blue-100 p-3">
+                    <Ruler className="h-5 w-5 text-blue-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Total Area</p>
+                    <p className="text-2xl font-bold">{gpSummary?.totalAreaAcres?.toFixed(1) ?? "0.0"} <span className="text-sm font-normal text-muted-foreground">ac</span></p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-full bg-amber-100 p-3">
+                    <Leaf className="h-5 w-5 text-amber-700" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Carbon Credits</p>
+                    <p className="text-2xl font-bold">{gpSummary?.totalNetCredits?.toFixed(2) ?? "0.00"}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Farmers Table */}
           <Card>

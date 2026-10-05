@@ -23,6 +23,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MeasurementInput } from "@/components/ui/measurement-input";
 import { DBH_UNITS, HEIGHT_UNITS, dbhToCm, heightToM } from "@/lib/units";
+import { LocationPicker } from "@/components/ui/location-picker";
 
 export function AddTreesDialog({ instanceId, onTreesAdded }: { instanceId: string; onTreesAdded: () => void }) {
   const [open, setOpen] = useState(false);
@@ -253,6 +254,13 @@ export function AddTreesDialog({ instanceId, onTreesAdded }: { instanceId: strin
                   />
                 </div>
               </div>
+              <div>
+                <LocationPicker
+                  lat={singleForm.gpsLat}
+                  lng={singleForm.gpsLng}
+                  onChange={(lat, lng) => setSingleForm((p) => ({ ...p, gpsLat: lat, gpsLng: lng }))}
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label htmlFor="single-lat" className="text-sm">
@@ -316,7 +324,7 @@ export function AddTreesDialog({ instanceId, onTreesAdded }: { instanceId: strin
               {bulkTrees.map((tree, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-5 gap-2 p-2 bg-white border rounded items-end"
+                  className="grid grid-cols-6 gap-2 p-2 bg-white border rounded items-end"
                 >
                   <Input
                     placeholder={`DBH (${bulkUnits.dbhUnit})`}
@@ -358,6 +366,17 @@ export function AddTreesDialog({ instanceId, onTreesAdded }: { instanceId: strin
                     onChange={(e) => {
                       const newTrees = [...bulkTrees];
                       newTrees[idx].gpsLat = e.target.value;
+                      setBulkTrees(newTrees);
+                    }}
+                  />
+                  <Input
+                    placeholder="Lng"
+                    type="number"
+                    step="0.0001"
+                    value={tree.gpsLng}
+                    onChange={(e) => {
+                      const newTrees = [...bulkTrees];
+                      newTrees[idx].gpsLng = e.target.value;
                       setBulkTrees(newTrees);
                     }}
                   />

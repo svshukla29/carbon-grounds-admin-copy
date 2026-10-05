@@ -9,7 +9,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Loader2, Calculator, Leaf, TrendingUp } from "lucide-react";
+import { Loader2, Calculator, Leaf, TrendingUp, CheckCircle2, Clock, Archive } from "lucide-react";
 
 export default function CalculationsPage() {
   const [summary, setSummary] = useState<any>(null);
@@ -83,6 +83,61 @@ export default function CalculationsPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Credit Lifecycle: Verified / Pending / Retired */}
+          <div>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-3">Credit Lifecycle</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <Card className="border-green-200 bg-green-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-green-100 p-3">
+                      <CheckCircle2 className="h-5 w-5 text-green-700" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-green-700">Verified Credits</p>
+                      <p className="text-3xl font-bold text-green-800">
+                        {summary?.verifiedNetCredits?.toFixed(2) || "0.00"}
+                      </p>
+                      <p className="text-xs text-green-600">tCO₂e — from approved monitoring periods</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-amber-200 bg-amber-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-amber-100 p-3">
+                      <Clock className="h-5 w-5 text-amber-700" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-amber-700">Pending Verification</p>
+                      <p className="text-3xl font-bold text-amber-800">
+                        {summary?.pendingNetCredits?.toFixed(2) || "0.00"}
+                      </p>
+                      <p className="text-xs text-amber-600">tCO₂e — awaiting review/approval</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-slate-200 bg-slate-50">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-slate-200 p-3">
+                      <Archive className="h-5 w-5 text-slate-700" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-700">Retired Stock</p>
+                      <p className="text-3xl font-bold text-slate-800">
+                        {summary?.retiredNetCredits?.toFixed(4) || "0.0000"}
+                      </p>
+                      <p className="text-xs text-slate-600">tCO₂e — permanently used/cancelled</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Instructions */}

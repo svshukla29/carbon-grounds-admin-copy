@@ -20,6 +20,7 @@ import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
 import { instancesApi, farmersApi, mastersApi } from "@/lib/api";
+import { LocationPicker } from "@/components/ui/location-picker";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +66,12 @@ export function InstanceForm({ id }: { id?: string } = {}) {
 
   const set = (key: string, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [key]: value }));
+
+  const isOtherEcoZone =
+    form.ecologicalZone === "Other" ||
+    (form.ecologicalZone !== "" &&
+      dropdowns.ecologicalZones.length > 0 &&
+      !dropdowns.ecologicalZones.includes(form.ecologicalZone));
 
   // Load dropdown options
   useEffect(() => {
@@ -310,7 +317,10 @@ export function InstanceForm({ id }: { id?: string } = {}) {
 
             <div className="space-y-2">
               <Label>Ecological Zone</Label>
-              <Select value={form.ecologicalZone} onValueChange={(v) => set("ecologicalZone", v)}>
+              <Select
+                value={isOtherEcoZone ? "Other" : form.ecologicalZone}
+                onValueChange={(v) => set("ecologicalZone", v)}
+              >
                 <SelectTrigger><SelectValue placeholder="Select ecological zone" /></SelectTrigger>
                 <SelectContent>
                   {dropdowns.ecologicalZones.map((z) => (
@@ -318,6 +328,14 @@ export function InstanceForm({ id }: { id?: string } = {}) {
                   ))}
                 </SelectContent>
               </Select>
+              {isOtherEcoZone && (
+                <Input
+                  placeholder="Specify ecological zone"
+                  value={form.ecologicalZone === "Other" ? "" : form.ecologicalZone}
+                  onChange={(e) => set("ecologicalZone", e.target.value || "Other")}
+                  className="mt-1"
+                />
+              )}
             </div>
 
             <div className="space-y-2">
@@ -424,6 +442,14 @@ export function InstanceForm({ id }: { id?: string } = {}) {
             <CardDescription>GPS coordinates and on-site facilities</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <LocationPicker
+                lat={form.gpsLat}
+                lng={form.gpsLng}
+                onChange={(lat, lng) => { set("gpsLat", lat); set("gpsLng", lng); }}
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="gpsLat">GPS Latitude</Label>
               <Input id="gpsLat" type="number" step="any" value={form.gpsLat}

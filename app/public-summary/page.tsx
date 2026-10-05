@@ -1,5 +1,5 @@
 import { PublicSummaryContent } from "@/components/public-summary-content";
 
-export default function Home() {
+export default function PublicSummaryPage() {
   return <PublicSummaryContent />;
 }

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, Menu, Search, User, LogOut } from "lucide-react";
+import { Bell, Menu, Search, User, LogOut, ClipboardCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,14 +17,30 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
+import { monitoringApi } from "@/lib/api";
+import { ProfileDialog } from "@/components/profile-dialog";
 
 export function Header({
   setSidebarOpen,
 }: {
   setSidebarOpen: (open: boolean) => void;
 }) {
-  const [notifications] = useState(3);
+  const [pending, setPending] = useState<any[]>([]);
+  const [profileOpen, setProfileOpen] = useState(false);
   const { user, logout } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    const loadPending = () => {
+      monitoringApi
+        .getPending()
+        .then((res) => setPending(res.data || []))
+        .catch(() => {});
+    };
+    loadPending();
+    const interval = setInterval(loadPending, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const initials = user?.name
     ? user.name
@@ -89,15 +106,51 @@ export function Header({
       </div>
 
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {notifications > 0 && (
-            <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 p-0 text-xs text-white">
-              {notifications}
-            </Badge>
-          )}
-          <span className="sr-only">Notifications</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative">
+              <Bell className="h-5 w-5" />
+              {pending.length > 0 && (
+                <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-600 p-0 text-xs text-white">
+                  {pending.length}
+                </Badge>
+              )}
+              <span className="sr-only">Notifications</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuLabel>Pending Verifications</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {pending.length === 0 ? (
+              <div className="px-2 py-4 text-center text-sm text-gray-500">
+                No pending monitoring periods
+              </div>
+            ) : (
+              pending.slice(0, 6).map((p) => (
+                <DropdownMenuItem
+                  key={p.id}
+                  className="cursor-pointer"
+                  onClick={() => router.push("/dashboard/monitoring")}
+                >
+                  <ClipboardCheck className="mr-2 h-4 w-4 shrink-0 text-yellow-600" />
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="truncate text-sm">
+                      {p.instance?.name ?? `Instance ${p.instanceId?.slice(0, 8) ?? ""}`}
+                    </span>
+                    <span className="text-xs text-gray-500">{p.status?.replace("_", " ")}</span>
+                  </div>
+                </DropdownMenuItem>
+              ))
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="cursor-pointer justify-center text-sm font-medium text-green-700"
+              onClick={() => router.push("/dashboard/monitoring")}
+            >
+              View all
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -123,7 +176,7 @@ export function Header({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer" onClick={() => setProfileOpen(true)}>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
@@ -138,6 +191,8 @@ export function Header({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
     </header>
   );
 }

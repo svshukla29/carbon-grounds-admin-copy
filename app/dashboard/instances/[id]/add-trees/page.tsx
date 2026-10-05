@@ -314,7 +314,7 @@ export default function AddTreesPage() {
               {bulkTrees.map((tree, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-5 gap-2 p-2 bg-white border rounded items-end"
+                  className="grid grid-cols-6 gap-2 p-2 bg-white border rounded items-end"
                 >
                   <Input
                     placeholder={`DBH (${bulkUnits.dbhUnit})`}
@@ -356,6 +356,17 @@ export default function AddTreesPage() {
                     onChange={(e) => {
                       const newTrees = [...bulkTrees];
                       newTrees[idx].gpsLat = e.target.value;
+                      setBulkTrees(newTrees);
+                    }}
+                  />
+                  <Input
+                    placeholder="Lng"
+                    type="number"
+                    step="0.0001"
+                    value={tree.gpsLng}
+                    onChange={(e) => {
+                      const newTrees = [...bulkTrees];
+                      newTrees[idx].gpsLng = e.target.value;
                       setBulkTrees(newTrees);
                     }}
                   />

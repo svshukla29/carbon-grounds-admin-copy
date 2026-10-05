@@ -13,7 +13,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { farmersApi, gramPanchayatApi, mastersApi } from "@/lib/api";
+import { farmersApi, gramPanchayatApi, mastersApi, locationsApi } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 
 export function FarmerForm({ id }: { id?: string }) {
@@ -25,6 +25,9 @@ export function FarmerForm({ id }: { id?: string }) {
   const [submitting, setSubmitting] = useState(false);
   const [gps, setGps] = useState<any[]>([]);
   const [tribes, setTribes] = useState<any[]>([]);
+  const [states, setStates] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [villages, setVillages] = useState<any[]>([]);
 
   const [form, setForm] = useState({
     farmerName: "",
@@ -56,7 +59,33 @@ export function FarmerForm({ id }: { id?: string }) {
     mastersApi.getTribes()
       .then((r) => setTribes(r.data || []))
       .catch(console.error);
+
+    locationsApi.getStates()
+      .then((r) => setStates(r.data || []))
+      .catch(console.error);
   }, []);
+
+  // Cascade: District options follow the selected State
+  useEffect(() => {
+    if (!form.state) {
+      setDistricts([]);
+      return;
+    }
+    locationsApi.getDistricts(form.state)
+      .then((r) => setDistricts(r.data || []))
+      .catch(console.error);
+  }, [form.state]);
+
+  // Cascade: Village options follow the selected District
+  useEffect(() => {
+    if (!form.district) {
+      setVillages([]);
+      return;
+    }
+    locationsApi.getVillages(form.district)
+      .then((r) => setVillages(r.data || []))
+      .catch(console.error);
+  }, [form.district]);
 
   // Load existing farmer in edit mode
   useEffect(() => {
@@ -92,6 +121,12 @@ export function FarmerForm({ id }: { id?: string }) {
 
   const set = (key: string, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [key]: value }));
+
+  const setState = (value: string) =>
+    setForm((prev) => ({ ...prev, state: value, district: "", villageName: "" }));
+
+  const setDistrict = (value: string) =>
+    setForm((prev) => ({ ...prev, district: value, villageName: "" }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,10 +313,20 @@ export function FarmerForm({ id }: { id?: string }) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="villageName">Village Name *</Label>
-              <Input id="villageName" value={form.villageName}
-                onChange={(e) => set("villageName", e.target.value)}
-                placeholder="e.g. Sonpur" required />
+              <Label>Village Name *</Label>
+              <Select value={form.villageName} onValueChange={(v) => set("villageName", v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder={form.district ? "Select village" : "Select a district first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {villages.map((v) => (
+                    <SelectItem key={v.id} value={v.name}>{v.name}</SelectItem>
+                  ))}
+                  {form.villageName && !villages.some((v) => v.name === form.villageName) && (
+                    <SelectItem value={form.villageName}>{form.villageName}</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -306,17 +351,35 @@ export function FarmerForm({ id }: { id?: string }) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="district">District</Label>
-              <Input id="district" value={form.district}
-                onChange={(e) => set("district", e.target.value)}
-                placeholder="e.g. Jashpur" />
+              <Label>District</Label>
+              <Select value={form.district} onValueChange={setDistrict}>
+                <SelectTrigger>
+                  <SelectValue placeholder={form.state ? "Select district" : "Select a state first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {districts.map((d) => (
+                    <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>
+                  ))}
+                  {form.district && !districts.some((d) => d.name === form.district) && (
+                    <SelectItem value={form.district}>{form.district}</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="state">State</Label>
-              <Input id="state" value={form.state}
-                onChange={(e) => set("state", e.target.value)}
-                placeholder="e.g. Chhattisgarh" />
+              <Label>State</Label>
+              <Select value={form.state} onValueChange={setState}>
+                <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                <SelectContent>
+                  {states.map((s) => (
+                    <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                  ))}
+                  {form.state && !states.some((s) => s.name === form.state) && (
+                    <SelectItem value={form.state}>{form.state}</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
