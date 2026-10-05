@@ -29,7 +29,7 @@ import {
 import { FarmerPhotosService } from './farmer-photos.service';
 import { CreateFarmerPhotoDto } from './dto/create-farmer-photo.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { FIELD_DATA_ROLES, Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { safeUploadPath } from '../../common/utils/safe-file-path.util';
@@ -55,6 +55,7 @@ export class FarmerPhotosController {
   }
 
   @Post()
+  @Roles(...FIELD_DATA_ROLES)
   @ApiOperation({ summary: 'Upload a photo for a farmer (farmers can upload for themselves; staff for any)' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({

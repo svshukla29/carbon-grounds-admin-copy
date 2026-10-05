@@ -5,6 +5,7 @@ import { TreeMeasurementsService } from './tree-measurements.service';
 import { CreateTreeMeasurementDto } from './dto/create-tree-measurement.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { FIELD_DATA_ROLES, Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { PlantingUnitsService } from '../planting-units/planting-units.service';
 
@@ -34,6 +35,7 @@ export class TreeMeasurementsController {
   }
 
   @Post()
+  @Roles(...FIELD_DATA_ROLES)
   @ApiOperation({ summary: 'Log a monitoring-visit measurement (farmers can log for their own trees; staff for any)' })
   async create(@Body() dto: CreateTreeMeasurementDto, @CurrentUser() user: any) {
     if (user?.type === 'farmer') {

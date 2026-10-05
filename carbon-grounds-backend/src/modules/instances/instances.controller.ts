@@ -18,7 +18,7 @@ import * as ExcelJS from 'exceljs';
 import { InstancesService } from './instances.service';
 import { CreateInstanceDto } from './dto/create-instance.dto';
 import { UpdateInstanceDto } from './dto/update-instance.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { FIELD_DATA_ROLES, Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -149,6 +149,7 @@ export class InstancesController {
   }
 
   @Post()
+  @Roles(...FIELD_DATA_ROLES)
   @ApiOperation({ summary: 'Create a new farm plot (farmers can create their own; staff can create for any farmer)' })
   create(@CurrentUser() requester: any, @Body() dto: CreateInstanceDto) {
     if (requester?.type === 'farmer') {

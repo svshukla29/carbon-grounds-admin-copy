@@ -35,7 +35,7 @@ import { TreePhotosService } from './tree-photos.service';
 import { CreateTreePhotoDto } from './dto/create-tree-photo.dto';
 import { UpdateTreePhotoDto } from './dto/update-tree-photo.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { FIELD_DATA_ROLES, Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { PlantingUnitsService } from '../planting-units/planting-units.service';
@@ -95,6 +95,7 @@ export class TreePhotosController {
   }
 
   @Post()
+  @Roles(...FIELD_DATA_ROLES)
   @ApiOperation({ summary: 'Upload a dated photo for a tree (farmers can upload for their own trees; staff for any)' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({

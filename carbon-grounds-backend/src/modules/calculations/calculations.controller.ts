@@ -29,7 +29,7 @@ export class CalculationsController {
   }
 
   @Get('summary')
-  @Roles(UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.FIELD_OFFICER)
+  @Roles(UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.FIELD_OFFICER, UserRole.ANALYST, UserRole.VIEWER)
   @ApiOperation({ summary: 'Get aggregate carbon credit summary (staff only)' })
   getSummary() {
     return this.calculationsService.getSummary();

@@ -21,7 +21,7 @@ import { UpdatePlantingUnitDto } from './dto/update-planting-unit.dto';
 import { BulkCreatePlantingUnitsDto } from './dto/bulk-create-planting-units.dto';
 import { MarkLossDto } from './dto/mark-loss.dto';
 import { ReplaceTreeDto } from './dto/replace-tree.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { FIELD_DATA_ROLES, Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -139,6 +139,7 @@ export class PlantingUnitsController {
   }
 
   @Post()
+  @Roles(...FIELD_DATA_ROLES)
   @ApiOperation({ summary: 'Create a new planting unit (tree) — farmers can only add to their own farm plot' })
   create(@CurrentUser() requester: any, @Body() dto: CreatePlantingUnitDto) {
     if (requester?.type === 'farmer') {

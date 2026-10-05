@@ -18,7 +18,7 @@ import { KyariBedsService } from './kyari-beds.service';
 import { CreateKyariBedDto } from './dto/create-kyari-bed.dto';
 import { UpdateKyariBedDto } from './dto/update-kyari-bed.dto';
 import { BulkCreateKyariBedsDto } from './dto/bulk-create-kyari-beds.dto';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { FIELD_DATA_ROLES, Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -47,6 +47,7 @@ export class KyariBedsController {
   }
 
   @Post()
+  @Roles(...FIELD_DATA_ROLES)
   @ApiOperation({ summary: 'Add a Kyari bed to a farm plot (farmers can add to their own plots; staff to any)' })
   async create(@CurrentUser() requester: any, @Body() dto: CreateKyariBedDto) {
     if (requester?.type === 'farmer') {
