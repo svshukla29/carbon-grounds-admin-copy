@@ -52,7 +52,10 @@ import { PublicModule } from './modules/public/public.module';
           username: config.get<string>('DB_USERNAME'),
           password: config.get<string>('DB_PASSWORD'),
           entities: [__dirname + '/modules/**/*.entity{.ts,.js}'],
-          synchronize: true, // auto-create tables — set false in production after stable
+          // Off by default: on a live DB, synchronize silently drops columns
+          // removed from an entity. Set DB_SYNCHRONIZE=true only for a
+          // throwaway local DB, or for one deliberate run after a backup.
+          synchronize: config.get<string>('DB_SYNCHRONIZE') === 'true',
           ssl: isLocal ? false : { rejectUnauthorized: false }, // SSL only for AWS RDS
           logging: config.get<string>('NODE_ENV') === 'development',
         };
