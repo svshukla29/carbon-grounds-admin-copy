@@ -109,6 +109,9 @@ export class Farmer {
   @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   gpsLng: number;
 
+  @Column({ nullable: true })
+  photoUrl: string;
+
   @OneToMany(() => Instance, (instance) => instance.farmer)
   instances: Instance[];
 

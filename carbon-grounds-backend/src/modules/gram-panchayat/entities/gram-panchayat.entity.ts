@@ -4,9 +4,12 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
   OneToMany,
+  JoinColumn,
 } from 'typeorm';
 import { Farmer } from '../../farmers/entities/farmer.entity';
+import { Project } from '../../projects/entities/project.entity';
 
 @Entity('gram_panchayats')
 export class GramPanchayat {
@@ -46,6 +49,14 @@ export class GramPanchayat {
 
   @OneToMany(() => Farmer, (farmer) => farmer.gramPanchayat)
   farmers: Farmer[];
+
+  /** Which Project (a grouping of many GPs) this Gram Panchayat belongs to, if any. */
+  @Column({ type: 'uuid', nullable: true })
+  projectId: string | null;
+
+  @ManyToOne(() => Project, (project) => project.gramPanchayats, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'projectId' })
+  project: Project | null;
 
   @CreateDateColumn()
   createdAt: Date;

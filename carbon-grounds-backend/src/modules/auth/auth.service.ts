@@ -165,7 +165,22 @@ export class AuthService {
     signupToken: string,
     name: string,
     village: string,
-    extra?: { aadhaarNumber?: string; gpsLat?: number; gpsLng?: number },
+    extra?: {
+      gender?: any;
+      category?: any;
+      tribeId?: string;
+      bpl?: boolean;
+      aadhaarNumber?: string;
+      state?: string;
+      district?: string;
+      pinCode?: string;
+      block?: string;
+      tehsil?: string;
+      villageLgdCode?: string;
+      khasraNo?: string;
+      gpsLat?: number;
+      gpsLng?: number;
+    },
   ) {
     let payload: { mobile: string; purpose: string };
     try {

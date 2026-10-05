@@ -20,6 +20,7 @@ import { CreatePlantingUnitDto } from './dto/create-planting-unit.dto';
 import { UpdatePlantingUnitDto } from './dto/update-planting-unit.dto';
 import { BulkCreatePlantingUnitsDto } from './dto/bulk-create-planting-units.dto';
 import { MarkLossDto } from './dto/mark-loss.dto';
+import { ReplaceTreeDto } from './dto/replace-tree.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
@@ -36,6 +37,12 @@ export class PlantingUnitsController {
   @ApiOperation({ summary: 'Get all planting units (trees) for a farm plot' })
   findByInstance(@Param('instanceId', ParseUUIDPipe) instanceId: string) {
     return this.plantingUnitsService.findByInstance(instanceId);
+  }
+
+  @Get('map/all')
+  @ApiOperation({ summary: 'Get every living tree with a GPS point, for the GIS map tree layer' })
+  getMapPoints() {
+    return this.plantingUnitsService.getMapPoints();
   }
 
   @Get('export')
@@ -179,5 +186,18 @@ export class PlantingUnitsController {
   @ApiOperation({ summary: 'Restore a tree marked as lost back to alive' })
   restore(@Param('id', ParseUUIDPipe) id: string) {
     return this.plantingUnitsService.restoreAlive(id);
+  }
+
+  @Post(':id/replace')
+  @Roles(UserRole.ADMIN, UserRole.PROJECT_MANAGER, UserRole.FIELD_OFFICER)
+  @ApiOperation({ summary: 'Mark a tree Dead/Lost and plant a replacement (defaults to the same GPS location)' })
+  replace(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ReplaceTreeDto) {
+    return this.plantingUnitsService.replace(id, dto);
+  }
+
+  @Get(':id/history')
+  @ApiOperation({ summary: "Full lifecycle history for a tree — planting, measurements, photos, replacement links" })
+  getHistory(@Param('id', ParseUUIDPipe) id: string) {
+    return this.plantingUnitsService.getHistory(id);
   }
 }

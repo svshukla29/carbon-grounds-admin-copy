@@ -5,7 +5,7 @@ import { MastersService } from './masters.service';
 
 @ApiTags('Masters')
 @ApiBearerAuth('access-token')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard(['jwt', 'jwt-farmer']))
 @Controller('masters')
 export class MastersController {
   constructor(private mastersService: MastersService) {}
@@ -38,5 +38,11 @@ export class MastersController {
   @ApiOperation({ summary: 'Get IPCC calculation constants' })
   getIpccConstants() {
     return this.mastersService.getIpccConstants();
+  }
+
+  @Get('ecological-zones')
+  @ApiOperation({ summary: 'Get ecological zones with their root:shoot ratios' })
+  getEcologicalZones() {
+    return this.mastersService.getEcologicalZones();
   }
 }

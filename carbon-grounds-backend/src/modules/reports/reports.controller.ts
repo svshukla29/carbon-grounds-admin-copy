@@ -39,6 +39,8 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { ReportStatus } from './entities/report.entity';
+import { safeUploadPath } from '../../common/utils/safe-file-path.util';
+import { verifyFileSignature } from '../../common/utils/file-signature.util';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads', 'reports');
 
@@ -130,6 +132,14 @@ export class ReportsController {
     @UploadedFile() file: MulterFile,
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
+
+    if (
+      !verifyFileSignature(file.path, ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpeg'])
+    ) {
+      fs.unlinkSync(file.path);
+      throw new BadRequestException('File content does not match an allowed file type');
+    }
+
     const fileUrl = `/reports/files/${file.filename}`;
     return this.reportsService.attachFile(id, fileUrl, file.originalname);
   }
@@ -137,7 +147,7 @@ export class ReportsController {
   @Get('files/:filename')
   @ApiOperation({ summary: 'Download / view a report attachment' })
   serveFile(@Param('filename') filename: string, @Res() res: Response) {
-    const filePath = join(UPLOADS_DIR, filename);
+    const filePath = safeUploadPath(UPLOADS_DIR, filename);
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ message: 'File not found' });
     }

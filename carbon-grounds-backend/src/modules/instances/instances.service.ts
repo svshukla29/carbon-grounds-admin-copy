@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Not, Repository } from 'typeorm';
 import { Instance } from './entities/instance.entity';
 import { Farmer } from '../farmers/entities/farmer.entity';
+import { PlantingUnit, PlantingUnitStatus } from '../planting-units/entities/planting-unit.entity';
+import { Calculation } from '../calculations/entities/calculation.entity';
 import { CreateInstanceDto } from './dto/create-instance.dto';
 import { UpdateInstanceDto } from './dto/update-instance.dto';
 import { IdSequenceService } from '../codes/id-sequence.service';
@@ -15,11 +17,15 @@ export class InstancesService {
     private instancesRepo: Repository<Instance>,
     @InjectRepository(Farmer)
     private farmersRepo: Repository<Farmer>,
+    @InjectRepository(PlantingUnit)
+    private plantingUnitsRepo: Repository<PlantingUnit>,
+    @InjectRepository(Calculation)
+    private calculationsRepo: Repository<Calculation>,
     private idSequenceService: IdSequenceService,
   ) {}
 
   /** Generate the next display code, e.g. INS-FR1-1 */
-  private async generateInstanceCode(farmerId: string): Promise<string> {
+  private async generateInstanceCode(farmerId?: string): Promise<string> {
     const farmer = await this.farmersRepo.findOne({ where: { id: farmerId } });
     const farmerSeq = farmer ? extractSeq(farmer.instanceId) : 0;
     const seq = await this.idSequenceService.next('INS');
@@ -128,5 +134,88 @@ export class InstancesService {
       .select('COALESCE(SUM(instance.areaAcres), 0)', 'total')
       .getRawOne();
     return parseFloat(total);
+  }
+
+  /**
+   * Per-plot equivalent of GramPanchayatService.getSummary() — tree counts
+   * by lifecycle status plus verified/pending carbon credits, scoped to a
+   * single Instance instead of rolling up a whole Gram Panchayat.
+   */
+  async getSummary(id: string): Promise<{
+    totalTrees: number;
+    livingTrees: number;
+    deadTrees: number;
+    lostTrees: number;
+    replacedTrees: number;
+    verifiedNetCredits: number;
+    pendingNetCredits: number;
+    totalNetCredits: number;
+  }> {
+    const exists = await this.instancesRepo.findOne({ where: { id } });
+    if (!exists) throw new NotFoundException(`Instance #${id} not found`);
+
+    const statusCounts = await this.plantingUnitsRepo
+      .createQueryBuilder('unit')
+      .where('unit.instanceId = :id', { id })
+      .select('unit.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('unit.status')
+      .getRawMany();
+
+    const countFor = (status: PlantingUnitStatus) =>
+      statusCounts
+        .filter((r) => r.status === status)
+        .reduce((sum, r) => sum + parseInt(r.count, 10), 0);
+
+    const livingTrees = countFor(PlantingUnitStatus.ALIVE);
+    const deadTrees = countFor(PlantingUnitStatus.DEAD);
+    const lostTrees = countFor(PlantingUnitStatus.LOST);
+    const replacedTrees = countFor(PlantingUnitStatus.REPLACED);
+    const totalTrees = livingTrees + deadTrees + lostTrees + replacedTrees;
+
+    const byStatus = await this.calculationsRepo
+      .createQueryBuilder('calc')
+      .innerJoin('calc.period', 'period')
+      .where('calc.instanceId = :id', { id })
+      .andWhere('calc.retiredAt IS NULL')
+      .select('period.status', 'status')
+      .addSelect('COALESCE(SUM(calc.netCredits), 0)', 'netCredits')
+      .groupBy('period.status')
+      .getRawMany();
+
+    const verifiedNetCredits = byStatus
+      .filter((r) => r.status === 'APPROVED')
+      .reduce((sum, r) => sum + parseFloat(r.netCredits), 0);
+    const pendingNetCredits = byStatus
+      .filter((r) => r.status !== 'APPROVED')
+      .reduce((sum, r) => sum + parseFloat(r.netCredits), 0);
+
+    return {
+      totalTrees,
+      livingTrees,
+      deadTrees,
+      lostTrees,
+      replacedTrees,
+      verifiedNetCredits,
+      pendingNetCredits,
+      totalNetCredits: verifiedNetCredits + pendingNetCredits,
+    };
+  }
+
+  /** Data backing the Instance-wise Excel report: plot details, the same
+   * summary as getSummary(), and the full calculation run history. */
+  async getReportData(id: string): Promise<{
+    instance: Instance;
+    summary: Awaited<ReturnType<InstancesService['getSummary']>>;
+    calculations: Calculation[];
+  }> {
+    const instance = await this.findOne(id);
+    const summary = await this.getSummary(id);
+    const calculations = await this.calculationsRepo.find({
+      where: { instanceId: id },
+      relations: ['period'],
+      order: { createdAt: 'ASC' },
+    });
+    return { instance, summary, calculations };
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
-import { Farmer, FarmerCategory, FarmerStatus } from './entities/farmer.entity';
+import { Farmer, FarmerCategory, FarmerStatus, Gender } from './entities/farmer.entity';
 import { CreateFarmerDto } from './dto/create-farmer.dto';
 import { UpdateFarmerDto } from './dto/update-farmer.dto';
 import { GramPanchayat } from '../gram-panchayat/entities/gram-panchayat.entity';
@@ -142,12 +142,27 @@ export class FarmersService {
     });
   }
 
-  /** Minimal self-service registration — record starts PENDING until field staff verify it. */
+  /** Self-service registration — record starts PENDING until field staff verify it. */
   async createFromSignup(
     mobileNo: string,
     farmerName: string,
     villageName: string,
-    extra?: { aadhaarNumber?: string; gpsLat?: number; gpsLng?: number },
+    extra?: {
+      gender?: Gender;
+      category?: FarmerCategory;
+      tribeId?: string;
+      bpl?: boolean;
+      aadhaarNumber?: string;
+      state?: string;
+      district?: string;
+      pinCode?: string;
+      block?: string;
+      tehsil?: string;
+      villageLgdCode?: string;
+      khasraNo?: string;
+      gpsLat?: number;
+      gpsLng?: number;
+    },
   ): Promise<Farmer> {
     const instanceId = await this.generateFarmerCode();
     const farmer = this.farmersRepo.create({
@@ -156,7 +171,18 @@ export class FarmersService {
       villageName,
       status: FarmerStatus.PENDING,
       instanceId,
+      gender: extra?.gender,
+      category: extra?.category,
+      tribeId: extra?.tribeId,
+      bpl: extra?.bpl,
       aadhaarNumber: extra?.aadhaarNumber,
+      state: extra?.state || 'Chhattisgarh',
+      district: extra?.district,
+      pinCode: extra?.pinCode,
+      block: extra?.block,
+      tehsil: extra?.tehsil,
+      villageLgdCode: extra?.villageLgdCode,
+      khasraNo: extra?.khasraNo,
       gpsLat: extra?.gpsLat,
       gpsLng: extra?.gpsLng,
     });

@@ -7,6 +7,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { PlantingUnit } from '../../planting-units/entities/planting-unit.entity';
+import { MonitoringPeriod } from '../../monitoring/entities/monitoring-period.entity';
 
 @Entity('tree_measurements')
 export class TreeMeasurement {
@@ -43,6 +44,15 @@ export class TreeMeasurement {
 
   @Column({ nullable: true })
   measuredById: string;
+
+  /** Optional link to the monitoring visit this measurement was taken during
+   * — mirrors the same dual-link pattern already used on TreePhoto. */
+  @Column({ type: 'uuid', nullable: true })
+  monitoringPeriodId: string | null;
+
+  @ManyToOne(() => MonitoringPeriod, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'monitoringPeriodId' })
+  monitoringPeriod: MonitoringPeriod | null;
 
   @CreateDateColumn()
   createdAt: Date;

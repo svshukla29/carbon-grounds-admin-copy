@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { FarmersModule } from './modules/farmers/farmers.module';
@@ -22,11 +24,19 @@ import { TreePhotosModule } from './modules/tree-photos/tree-photos.module';
 import { TreeMeasurementsModule } from './modules/tree-measurements/tree-measurements.module';
 import { MonitoringChecklistModule } from './modules/monitoring-checklist/monitoring-checklist.module';
 import { SyncModule } from './modules/sync/sync.module';
+import { FarmerPhotosModule } from './modules/farmer-photos/farmer-photos.module';
+import { LocationsModule } from './modules/locations/locations.module';
+import { PublicModule } from './modules/public/public.module';
 
 @Module({
   imports: [
     // Load .env globally
     ConfigModule.forRoot({ isGlobal: true }),
+
+    // Generous global backstop (dashboard pages fire several parallel calls
+    // per navigation) — sensitive routes like login tighten this further
+    // with @Throttle().
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60000, limit: 200 }]),
 
     // TypeORM + RDS PostgreSQL
     TypeOrmModule.forRootAsync({
@@ -70,6 +80,12 @@ import { SyncModule } from './modules/sync/sync.module';
     TreeMeasurementsModule,
     MonitoringChecklistModule,
     SyncModule,
+    FarmerPhotosModule,
+    LocationsModule,
+    PublicModule,
+  ],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

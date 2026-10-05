@@ -13,6 +13,7 @@ import { PlantingUnit } from '../../planting-units/entities/planting-unit.entity
 import { MonitoringPeriod } from '../../monitoring/entities/monitoring-period.entity';
 import { KyariBed } from '../../kyari-beds/entities/kyari-bed.entity';
 import { CropArea } from '../../crop-areas/entities/crop-area.entity';
+import { EcologicalZone } from '../../masters/entities/ecological-zone.entity';
 
 export enum MonitoringFrequency {
   ANNUAL = 'ANNUAL',
@@ -45,6 +46,19 @@ export class Instance {
 
   @Column({ nullable: true, length: 100 })
   ecologicalZone: string;
+
+  /**
+   * Structured zone link used for the carbon calculation's root:shoot ratio.
+   * Kept alongside the free-text `ecologicalZone` above rather than replacing
+   * it — existing instances are backfilled by name match on boot
+   * (see MastersService.backfillInstanceEcologicalZones).
+   */
+  @Column({ type: 'uuid', nullable: true })
+  ecologicalZoneId: string | null;
+
+  @ManyToOne(() => EcologicalZone, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'ecologicalZoneId' })
+  ecologicalZoneRef: EcologicalZone | null;
 
   @Column({ type: 'date', nullable: true })
   surveyDate: Date;

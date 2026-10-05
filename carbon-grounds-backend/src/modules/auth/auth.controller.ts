@@ -9,6 +9,7 @@ import {
   Get,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
@@ -24,6 +25,7 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('login')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email and password' })
   async login(
@@ -93,6 +95,7 @@ export class AuthController {
   // ── Farmer OTP auth (mobile app) ────────────────────────────────────────
 
   @Post('send-otp')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send a login OTP to a farmer\'s mobile number' })
   sendOtp(@Body() dto: SendOtpDto) {
@@ -100,6 +103,7 @@ export class AuthController {
   }
 
   @Post('verify-otp')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Verify OTP — logs in if the mobile is registered, otherwise returns a signupToken',
@@ -113,7 +117,18 @@ export class AuthController {
   @ApiOperation({ summary: 'Create a new (pending) farmer account after OTP verification' })
   completeSignup(@Body() dto: CompleteSignupDto) {
     return this.authService.completeFarmerSignup(dto.signupToken, dto.name, dto.village, {
+      gender: dto.gender,
+      category: dto.category,
+      tribeId: dto.tribeId,
+      bpl: dto.bpl,
       aadhaarNumber: dto.aadhaarNumber,
+      state: dto.state,
+      district: dto.district,
+      pinCode: dto.pinCode,
+      block: dto.block,
+      tehsil: dto.tehsil,
+      villageLgdCode: dto.villageLgdCode,
+      khasraNo: dto.khasraNo,
       gpsLat: dto.gpsLat,
       gpsLng: dto.gpsLng,
     });

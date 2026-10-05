@@ -1,7 +1,12 @@
-import { IsString, IsOptional, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsIn, IsUUID } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateGramPanchayatDto {
+  @ApiPropertyOptional({ description: 'Project this GP belongs to, if any' })
+  @IsOptional()
+  @IsUUID()
+  projectId?: string;
+
   @ApiProperty({ example: 'Kondagaon' })
   @IsString()
   gpName: string;

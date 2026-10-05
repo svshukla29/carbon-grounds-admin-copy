@@ -40,6 +40,8 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { UserRole } from '../users/entities/user.entity';
 import { PlantingUnitsService } from '../planting-units/planting-units.service';
 import { ForbiddenException } from '@nestjs/common';
+import { safeUploadPath } from '../../common/utils/safe-file-path.util';
+import { verifyFileSignature } from '../../common/utils/file-signature.util';
 
 const UPLOADS_DIR = join(process.cwd(), 'uploads', 'tree-photos');
 
@@ -134,6 +136,11 @@ export class TreePhotosController {
   ) {
     if (!file) throw new BadRequestException('No photo uploaded');
 
+    if (!verifyFileSignature(file.path, ['png', 'jpeg', 'webp'])) {
+      fs.unlinkSync(file.path);
+      throw new BadRequestException('File content does not match an allowed image type');
+    }
+
     if (user?.type === 'farmer') {
       const unit = await this.plantingUnitsService.findOne(dto.plantingUnitId);
       if (unit.instance?.farmerId !== user.id) {
@@ -151,7 +158,7 @@ export class TreePhotosController {
   @Get('files/:filename')
   @ApiOperation({ summary: 'View a tree photo file' })
   serveFile(@Param('filename') filename: string, @Res() res: Response) {
-    const filePath = join(UPLOADS_DIR, filename);
+    const filePath = safeUploadPath(UPLOADS_DIR, filename);
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ message: 'File not found' });
     }

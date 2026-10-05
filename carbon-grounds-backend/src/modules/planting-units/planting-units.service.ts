@@ -1,24 +1,50 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { PlantingUnit } from './entities/planting-unit.entity';
+import { IsNull, Not, Repository } from 'typeorm';
+import { PlantingUnit, PlantingUnitStatus } from './entities/planting-unit.entity';
 import { Instance } from '../instances/entities/instance.entity';
+import { TreeMeasurement } from '../tree-measurements/entities/tree-measurement.entity';
+import { TreePhoto } from '../tree-photos/entities/tree-photo.entity';
 import { CreatePlantingUnitDto } from './dto/create-planting-unit.dto';
 import { UpdatePlantingUnitDto } from './dto/update-planting-unit.dto';
 import { BulkCreatePlantingUnitsDto } from './dto/bulk-create-planting-units.dto';
-import { MarkLossDto } from './dto/mark-loss.dto';
+import { MarkLossDto, LossStatus } from './dto/mark-loss.dto';
+import { ReplaceTreeDto } from './dto/replace-tree.dto';
 import { IdSequenceService } from '../codes/id-sequence.service';
 import { extractSeq } from '../codes/code-generator.util';
 
+export interface HistoryEvent {
+  date: Date | string;
+  type: string;
+  description: string;
+}
+
 @Injectable()
-export class PlantingUnitsService {
+export class PlantingUnitsService implements OnModuleInit {
   constructor(
     @InjectRepository(PlantingUnit)
     private plantingUnitsRepo: Repository<PlantingUnit>,
     @InjectRepository(Instance)
     private instancesRepo: Repository<Instance>,
+    @InjectRepository(TreeMeasurement)
+    private treeMeasurementsRepo: Repository<TreeMeasurement>,
+    @InjectRepository(TreePhoto)
+    private treePhotosRepo: Repository<TreePhoto>,
     private idSequenceService: IdSequenceService,
   ) {}
+
+  /**
+   * The `status` enum is new; every pre-existing row defaults to ALIVE
+   * regardless of its actual `lossDate`. Backfill status from the legacy
+   * lossDate-only signal once on boot so old "lost" trees aren't silently
+   * shown as alive.
+   */
+  async onModuleInit() {
+    await this.plantingUnitsRepo.update(
+      { lossDate: Not(IsNull()), status: PlantingUnitStatus.ALIVE },
+      { status: PlantingUnitStatus.LOST },
+    );
+  }
 
   async findInstanceOrThrow(instanceId: string): Promise<Instance> {
     const instance = await this.instancesRepo.findOne({ where: { id: instanceId } });
@@ -104,6 +130,8 @@ export class PlantingUnitsService {
     const unit = await this.plantingUnitsRepo.findOne({ where: { id } });
     if (!unit) throw new NotFoundException(`Planting unit #${id} not found`);
     unit.lossDate = new Date(dto.lossDate);
+    unit.status = dto.status === LossStatus.DEAD ? PlantingUnitStatus.DEAD : PlantingUnitStatus.LOST;
+    unit.lossReason = dto.reason ?? null;
     await this.plantingUnitsRepo.save(unit);
     return this.findOne(id);
   }
@@ -112,12 +140,157 @@ export class PlantingUnitsService {
     const unit = await this.plantingUnitsRepo.findOne({ where: { id } });
     if (!unit) throw new NotFoundException(`Planting unit #${id} not found`);
     unit.lossDate = null;
+    unit.status = PlantingUnitStatus.ALIVE;
+    unit.lossReason = null;
     await this.plantingUnitsRepo.save(unit);
     return this.findOne(id);
+  }
+
+  /**
+   * Marks a tree Dead/Lost and plants its replacement — reusing the same
+   * per-instance tree-numbering sequence as normal tree creation, and
+   * defaulting the new tree's GPS to the old tree's location since it's
+   * usually seeded at the same spot.
+   */
+  async replace(id: string, dto: ReplaceTreeDto): Promise<PlantingUnit> {
+    const oldUnit = await this.plantingUnitsRepo.findOne({ where: { id } });
+    if (!oldUnit) throw new NotFoundException(`Planting unit #${id} not found`);
+
+    oldUnit.status = PlantingUnitStatus.REPLACED;
+    if (!oldUnit.lossDate) oldUnit.lossDate = new Date();
+    if (dto.reason) oldUnit.lossReason = dto.reason;
+    await this.plantingUnitsRepo.save(oldUnit);
+
+    const instance = await this.findInstanceOrThrow(oldUnit.instanceId);
+    const instanceSeq = extractSeq(instance.instanceId);
+    const seq = await this.idSequenceService.next(`TR:${instance.id}`);
+    const treeId = `TR-INS${instanceSeq}-${seq}`;
+
+    const newUnit = this.plantingUnitsRepo.create({
+      instanceId: oldUnit.instanceId,
+      speciesId: dto.speciesId ?? oldUnit.speciesId,
+      dbhCm: dto.dbhCm,
+      heightM: dto.heightM,
+      plantingDate: dto.plantingDate as any,
+      gpsLat: dto.gpsLat ?? oldUnit.gpsLat,
+      gpsLng: dto.gpsLng ?? oldUnit.gpsLng,
+      treeId,
+      predecessorUnitId: oldUnit.id,
+      status: PlantingUnitStatus.ALIVE,
+    });
+    const saved = await this.plantingUnitsRepo.save(newUnit);
+    return this.findOne(saved.id);
+  }
+
+  /**
+   * Full lifecycle timeline for a tree — planting, measurements, photos,
+   * and any replacement link in either direction. This is the same data
+   * backing both the tree detail "History" tab and Gram-Panchayat/Instance
+   * reports' per-tree history requirement.
+   */
+  async getHistory(id: string): Promise<{
+    tree: PlantingUnit;
+    predecessor: PlantingUnit | null;
+    successor: PlantingUnit | null;
+    events: HistoryEvent[];
+  }> {
+    const tree = await this.findOne(id);
+
+    const [measurements, photos, predecessor, successor] = await Promise.all([
+      this.treeMeasurementsRepo.find({ where: { plantingUnitId: id }, order: { measuredAt: 'ASC' } }),
+      this.treePhotosRepo.find({ where: { plantingUnitId: id }, order: { createdAt: 'ASC' } }),
+      tree.predecessorUnitId
+        ? this.plantingUnitsRepo.findOne({ where: { id: tree.predecessorUnitId } })
+        : Promise.resolve(null),
+      this.plantingUnitsRepo.findOne({ where: { predecessorUnitId: id } }),
+    ]);
+
+    const events: HistoryEvent[] = [];
+
+    if (tree.plantingDate) {
+      events.push({
+        date: tree.plantingDate,
+        type: 'PLANTED',
+        description: `Planted (${tree.species?.commonName ?? 'species unknown'})`,
+      });
+    }
+    if (predecessor) {
+      events.push({
+        date: tree.createdAt,
+        type: 'REPLACEMENT',
+        description: `Planted as a replacement for ${predecessor.treeId}`,
+      });
+    }
+    for (const m of measurements) {
+      const parts = [
+        m.dbhCm != null ? `DBH ${m.dbhCm}cm` : null,
+        m.heightM != null ? `Height ${m.heightM}m` : null,
+        m.healthStatus ? `health: ${m.healthStatus}` : null,
+      ].filter(Boolean);
+      events.push({
+        date: m.measuredAt,
+        type: 'MEASUREMENT',
+        description: parts.join(', ') + (m.notes ? ` — ${m.notes}` : ''),
+      });
+    }
+    for (const p of photos) {
+      events.push({
+        date: p.takenAt ?? p.createdAt,
+        type: 'PHOTO',
+        description: p.notes || 'Photo uploaded',
+      });
+    }
+    if (tree.lossDate) {
+      events.push({
+        date: tree.lossDate,
+        type: tree.status,
+        description:
+          tree.status === PlantingUnitStatus.REPLACED && successor
+            ? `Replaced by ${successor.treeId}${tree.lossReason ? ` — ${tree.lossReason}` : ''}`
+            : `Marked ${tree.status}${tree.lossReason ? ` — ${tree.lossReason}` : ''}`,
+      });
+    }
+
+    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return { tree, predecessor, successor, events };
   }
 
   /** Total tree count across all plots (dashboard) */
   count(): Promise<number> {
     return this.plantingUnitsRepo.count();
+  }
+
+  /** Every living tree that has its own GPS point, for the GIS map's tree-marker layer. */
+  async getMapPoints(): Promise<
+    Array<{
+      id: string;
+      treeId: string;
+      speciesName: string;
+      gpsLat: number;
+      gpsLng: number;
+      instanceId: string;
+      farmerName: string;
+    }>
+  > {
+    const units = await this.plantingUnitsRepo
+      .createQueryBuilder('unit')
+      .leftJoinAndSelect('unit.species', 'species')
+      .leftJoinAndSelect('unit.instance', 'instance')
+      .leftJoinAndSelect('instance.farmer', 'farmer')
+      .where('unit.gpsLat IS NOT NULL')
+      .andWhere('unit.gpsLng IS NOT NULL')
+      .andWhere('unit.lossDate IS NULL')
+      .getMany();
+
+    return units.map((u) => ({
+      id: u.id,
+      treeId: u.treeId,
+      speciesName: u.species?.commonName || 'Unknown',
+      gpsLat: Number(u.gpsLat),
+      gpsLng: Number(u.gpsLng),
+      instanceId: u.instance?.instanceId || '',
+      farmerName: u.instance?.farmer?.farmerName || '',
+    }));
   }
 }

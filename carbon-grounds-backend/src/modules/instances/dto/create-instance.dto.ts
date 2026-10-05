@@ -14,9 +14,10 @@ import { Type } from 'class-transformer';
 import { MonitoringFrequency } from '../entities/instance.entity';
 
 export class CreateInstanceDto {
-  @ApiProperty({ description: 'Farmer UUID this plot belongs to' })
+  @ApiPropertyOptional({ description: 'Farmer UUID this plot belongs to — omit when a farmer is creating their own plot, the controller fills it in from the JWT' })
+  @IsOptional()
   @IsUUID()
-  farmerId: string;
+  farmerId?: string;
 
   @ApiProperty({ example: 2.5, description: 'Plot area in acres' })
   @Type(() => Number)
