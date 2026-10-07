@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { MeasurementInput } from "@/components/ui/measurement-input";
+import { formatAgeMonths, formatTreeAge, monthsBetween } from "@/lib/tree-age";
 import { DBH_UNITS, HEIGHT_UNITS, dbhToCm, heightToM, cmToDbhUnit, mToHeightUnit } from "@/lib/units";
 import { Pencil, Leaf, AlertTriangle, Loader2, Camera, Repeat, History as HistoryIcon, Ruler } from "lucide-react";
 import {
@@ -221,6 +222,24 @@ export function TreeRowActions({ tree, onUpdated }: { tree: any; onUpdated: () =
     } finally {
       setLogging(false);
     }
+  };
+
+  // Growth chart: x-axis is the tree's age (months since planting) when the
+  // planting date is known, like a child's growth chart; otherwise the date.
+  const plantingDate = history?.tree?.plantingDate;
+  const sortedMeasurements = [...measurements].sort(
+    (a, b) => new Date(a.measuredAt).getTime() - new Date(b.measuredAt).getTime(),
+  );
+  const growthByAge =
+    !!plantingDate && sortedMeasurements.every((m) => monthsBetween(plantingDate, m.measuredAt) >= 0);
+  const growth = {
+    byAge: growthByAge,
+    points: sortedMeasurements.map((m) => ({
+      ageMonths: growthByAge ? monthsBetween(plantingDate, m.measuredAt) : null,
+      date: new Date(m.measuredAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }),
+      dbhCm: m.dbhCm != null ? Number(m.dbhCm) : null,
+      heightM: m.heightM != null ? Number(m.heightM) : null,
+    })),
   };
 
   return (
@@ -619,25 +638,38 @@ export function TreeRowActions({ tree, onUpdated }: { tree: any; onUpdated: () =
                 )}
               </div>
 
-              {measurements.length >= 2 && (
+              {growth.points.length >= 2 && (
                 <div className="space-y-1">
-                  <h4 className="text-sm font-medium">Growth Over Time</h4>
+                  <h4 className="text-sm font-medium">
+                    Growth {growth.byAge ? "by Tree Age" : "Over Time"}
+                  </h4>
+                  {!growth.byAge && (
+                    <p className="text-xs text-muted-foreground">Add a planting date to see growth by age.</p>
+                  )}
                   <div className="h-56 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart
-                        data={[...measurements]
-                          .sort((a, b) => new Date(a.measuredAt).getTime() - new Date(b.measuredAt).getTime())
-                          .map((m) => ({
-                            date: new Date(m.measuredAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "2-digit" }),
-                            dbhCm: m.dbhCm != null ? Number(m.dbhCm) : null,
-                            heightM: m.heightM != null ? Number(m.heightM) : null,
-                          }))}
-                        margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
-                      >
+                      <LineChart data={growth.points} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                        {growth.byAge ? (
+                          <XAxis
+                            dataKey="ageMonths"
+                            type="number"
+                            domain={[0, "dataMax"]}
+                            allowDecimals={false}
+                            tickFormatter={formatAgeMonths}
+                            tick={{ fontSize: 10 }}
+                          />
+                        ) : (
+                          <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+                        )}
                         <YAxis tick={{ fontSize: 10 }} />
-                        <Tooltip contentStyle={{ fontSize: 12 }} />
+                        <Tooltip
+                          contentStyle={{ fontSize: 12 }}
+                          labelFormatter={(label, payload) => {
+                            const date = payload?.[0]?.payload?.date;
+                            return growth.byAge ? `Age ${formatAgeMonths(Number(label))} · ${date}` : String(label);
+                          }}
+                        />
                         <Legend wrapperStyle={{ fontSize: 11 }} />
                         <Line type="monotone" dataKey="dbhCm" name="DBH (cm)" stroke="#16a34a" strokeWidth={2} dot={{ r: 3 }} />
                         <Line type="monotone" dataKey="heightM" name="Height (m)" stroke="#2563eb" strokeWidth={2} dot={{ r: 3 }} />
@@ -655,6 +687,8 @@ export function TreeRowActions({ tree, onUpdated }: { tree: any; onUpdated: () =
                     <li key={i} className="text-sm">
                       <span className="text-xs text-muted-foreground">
                         {new Date(e.date).toLocaleDateString("en-IN")}
+                        {formatTreeAge(history.tree.plantingDate, e.date) &&
+                          ` (age ${formatTreeAge(history.tree.plantingDate, e.date)})`}
                       </span>
                       {" — "}
                       <span className="font-medium">{e.type}</span>
