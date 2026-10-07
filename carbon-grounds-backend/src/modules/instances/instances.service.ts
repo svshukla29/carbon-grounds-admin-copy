@@ -5,6 +5,7 @@ import { Instance } from './entities/instance.entity';
 import { Farmer } from '../farmers/entities/farmer.entity';
 import { PlantingUnit, PlantingUnitStatus } from '../planting-units/entities/planting-unit.entity';
 import { Calculation } from '../calculations/entities/calculation.entity';
+import { EcologicalZone } from '../masters/entities/ecological-zone.entity';
 import { CreateInstanceDto } from './dto/create-instance.dto';
 import { UpdateInstanceDto } from './dto/update-instance.dto';
 import { IdSequenceService } from '../codes/id-sequence.service';
@@ -21,6 +22,8 @@ export class InstancesService {
     private plantingUnitsRepo: Repository<PlantingUnit>,
     @InjectRepository(Calculation)
     private calculationsRepo: Repository<Calculation>,
+    @InjectRepository(EcologicalZone)
+    private ecoZonesRepo: Repository<EcologicalZone>,
     private idSequenceService: IdSequenceService,
   ) {}
 
@@ -32,9 +35,22 @@ export class InstancesService {
     return `INS-FR${farmerSeq}-${seq}`;
   }
 
+  /**
+   * The carbon calculation reads the zone's root:shoot ratio through
+   * ecologicalZoneId, but forms send the zone by name. Resolve the link from
+   * the name whenever it's set; a custom "Other" name matches no zone, so the
+   * calculation falls back to the IPCC default ratio.
+   */
+  private async resolveEcologicalZoneId(name: string | null | undefined): Promise<string | null> {
+    if (!name) return null;
+    const zone = await this.ecoZonesRepo.findOne({ where: { name } });
+    return zone?.id ?? null;
+  }
+
   async create(dto: CreateInstanceDto): Promise<Instance> {
     const instanceId = await this.generateInstanceCode(dto.farmerId);
-    const instance = this.instancesRepo.create({ ...dto, instanceId });
+    const ecologicalZoneId = await this.resolveEcologicalZoneId(dto.ecologicalZone);
+    const instance = this.instancesRepo.create({ ...dto, instanceId, ecologicalZoneId });
     const saved = await this.instancesRepo.save(instance);
     return this.findOne(saved.id);
   }
@@ -81,6 +97,9 @@ export class InstancesService {
     const instance = await this.instancesRepo.findOne({ where: { id } });
     if (!instance) throw new NotFoundException(`Instance #${id} not found`);
     Object.assign(instance, dto);
+    if (dto.ecologicalZone !== undefined) {
+      instance.ecologicalZoneId = await this.resolveEcologicalZoneId(dto.ecologicalZone);
+    }
     await this.instancesRepo.save(instance);
     return this.findOne(id);
   }

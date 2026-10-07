@@ -175,6 +175,10 @@ export const mastersApi = {
     api.get("/masters/tribes", { params: { state, pvtgOnly } }),
   searchTribes: (q: string) => api.get("/masters/tribes/search", { params: { q } }),
   getIpccConstants: () => api.get("/masters/ipcc-constants"),
+  getEcologicalZones: (includeInactive = false) =>
+    api.get("/masters/ecological-zones", { params: { includeInactive } }),
+  createEcologicalZone: (data: any) => api.post("/masters/ecological-zones", data),
+  updateEcologicalZone: (id: string, data: any) => api.patch(`/masters/ecological-zones/${id}`, data),
 };
 
 // ── Monitoring Periods ────────────────────────────────────────────────────────

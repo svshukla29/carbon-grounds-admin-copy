@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, IsNull, Not, Repository } from 'typeorm';
 import { Tribe } from './entities/tribe.entity';
@@ -7,6 +7,7 @@ import { EcologicalZone } from './entities/ecological-zone.entity';
 import { Gender, FarmerCategory } from '../farmers/entities/farmer.entity';
 import { MonitoringFrequency, Instance } from '../instances/entities/instance.entity';
 import { MonitoringStatus } from '../monitoring/entities/monitoring-period.entity';
+import { CreateEcologicalZoneDto, UpdateEcologicalZoneDto } from './dto/ecological-zone.dto';
 
 const SEED_TRIBES: Partial<Tribe>[] = [
   { name: 'Baiga', state: 'Chhattisgarh', isPvtg: true },
@@ -96,30 +97,28 @@ export class MastersService implements OnModuleInit {
   }
 
   /**
-   * Instances predate the ecologicalZoneId FK and only have a free-text
-   * ecologicalZone string. Link any that match a seeded zone by name, so
-   * the carbon calculation can pick up a root:shoot ratio for them without
-   * requiring every plot to be manually re-edited.
+   * A plot stores its zone by name (what the form sends) and by
+   * ecologicalZoneId (what the carbon calculation reads). Plots saved before
+   * the link was resolved on save — or whose zone was later changed — can
+   * point at no zone or the wrong one. Re-derive the link from the name.
+   * Past calculations are unaffected: each stores the ratio it used.
    */
   private async backfillInstanceEcologicalZones() {
-    const unlinked = await this.instancesRepo.find({
-      where: { ecologicalZoneId: IsNull(), ecologicalZone: Not(IsNull()) },
-    });
-    if (unlinked.length === 0) return;
+    const instances = await this.instancesRepo.find({ where: { ecologicalZone: Not(IsNull()) } });
+    if (instances.length === 0) return;
 
     const zones = await this.ecoZonesRepo.find();
-    const zoneByName = new Map(zones.map((z) => [z.name, z]));
+    const zoneIdByName = new Map(zones.map((z) => [z.name, z.id]));
 
-    for (const instance of unlinked) {
-      const match = zoneByName.get(instance.ecologicalZone);
-      if (match) {
-        instance.ecologicalZoneId = match.id;
-        await this.instancesRepo.save(instance);
+    for (const instance of instances) {
+      const expected = zoneIdByName.get(instance.ecologicalZone) ?? null;
+      if (instance.ecologicalZoneId !== expected) {
+        await this.instancesRepo.update(instance.id, { ecologicalZoneId: expected });
       }
     }
   }
 
-  getDropdowns() {
+  async getDropdowns() {
     return {
       genders: Object.values(Gender),
       categories: Object.values(FarmerCategory),
@@ -131,27 +130,9 @@ export class MastersService implements OnModuleInit {
         'Wasteland',
         'Homestead',
       ],
-      // Champion & Seth (1968) classification of Indian forest types — the national
-      // standard, so this list holds as the platform expands beyond Chhattisgarh.
-      ecologicalZones: [
-        'Tropical Wet Evergreen',
-        'Tropical Semi-Evergreen',
-        'Tropical Moist Deciduous',
-        'Littoral and Swamp',
-        'Tropical Dry Deciduous',
-        'Tropical Thorn',
-        'Tropical Dry Evergreen',
-        'Sub-Tropical Broadleaf',
-        'Sub-Tropical Pine',
-        'Sub-Tropical Dry Evergreen',
-        'Montane Wet Temperate',
-        'Himalayan Moist Temperate',
-        'Himalayan Dry Temperate',
-        'Sub-Alpine',
-        'Moist Alpine Scrub',
-        'Dry Alpine Scrub',
-        'Other',
-      ],
+      // Managed in the dashboard (Climatic Zones); seeded from the Champion &
+      // Seth (1968) classification of Indian forest types.
+      ecologicalZones: await this.getEcologicalZoneNames(),
       irrigationTypes: ['Rainfed', 'Irrigated', 'Mixed'],
       monitoringFrequencies: Object.values(MonitoringFrequency),
       monitoringStatuses: Object.values(MonitoringStatus),
@@ -177,7 +158,50 @@ export class MastersService implements OnModuleInit {
     return this.ipccRepo.find({ order: { name: 'ASC' } });
   }
 
-  getEcologicalZones(): Promise<EcologicalZone[]> {
-    return this.ecoZonesRepo.find({ where: { isActive: true }, order: { name: 'ASC' } });
+  getEcologicalZones(includeInactive = false): Promise<EcologicalZone[]> {
+    return this.ecoZonesRepo.find({
+      where: includeInactive ? {} : { isActive: true },
+      order: { name: 'ASC' },
+    });
+  }
+
+  /** Active zone names for form dropdowns, with "Other" (free text) always last. */
+  private async getEcologicalZoneNames(): Promise<string[]> {
+    const names = (await this.getEcologicalZones()).map((z) => z.name).filter((n) => n !== 'Other');
+    return [...names, 'Other'];
+  }
+
+  async createEcologicalZone(dto: CreateEcologicalZoneDto): Promise<EcologicalZone> {
+    await this.assertZoneNameFree(dto.name);
+    return this.ecoZonesRepo.save(this.ecoZonesRepo.create(dto));
+  }
+
+  async updateEcologicalZone(id: string, dto: UpdateEcologicalZoneDto): Promise<EcologicalZone> {
+    const zone = await this.ecoZonesRepo.findOne({ where: { id } });
+    if (!zone) throw new NotFoundException(`Ecological zone #${id} not found`);
+
+    const oldName = zone.name;
+    // "Other" is the plot form's always-present fallback (IPCC default ratio).
+    if (oldName === 'Other' && ((dto.name !== undefined && dto.name !== 'Other') || dto.isActive === false)) {
+      throw new BadRequestException('The "Other" zone cannot be renamed or deactivated; only its ratio and source can change');
+    }
+    if (dto.name !== undefined && dto.name !== oldName) await this.assertZoneNameFree(dto.name, id);
+    Object.assign(zone, dto);
+    const saved = await this.ecoZonesRepo.save(zone);
+
+    // Plots also store the zone's name; keep linked plots showing the new one.
+    if (saved.name !== oldName) {
+      await this.instancesRepo.update({ ecologicalZoneId: id }, { ecologicalZone: saved.name });
+    }
+    return saved;
+  }
+
+  private async assertZoneNameFree(name: string, exceptId?: string) {
+    // Case-insensitive exact match; escape LIKE wildcards in the name itself.
+    const pattern = name.replace(/[\\%_]/g, (ch) => `\\${ch}`);
+    const existing = await this.ecoZonesRepo.findOne({ where: { name: ILike(pattern) } });
+    if (existing && existing.id !== exceptId) {
+      throw new ConflictException(`A zone named "${existing.name}" already exists`);
+    }
   }
 }

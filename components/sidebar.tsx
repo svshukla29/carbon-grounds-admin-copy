@@ -19,6 +19,7 @@ import {
   LogOut,
   Images,
   FolderKanban,
+  Globe2,
   Ruler,
 } from "lucide-react";
 import Link from "next/link";
@@ -109,6 +110,12 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
       icon: Leaf,
       href: "/dashboard/species",
       active: pathname.startsWith("/dashboard/species"),
+    },
+    {
+      label: "Climatic Zones",
+      icon: Globe2,
+      href: "/dashboard/zones",
+      active: pathname.startsWith("/dashboard/zones"),
     },
     {
       label: "Reports",

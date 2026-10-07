@@ -1,17 +1,21 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { MastersService } from './masters.service';
+import { CreateEcologicalZoneDto, UpdateEcologicalZoneDto } from './dto/ecological-zone.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { UserRole } from '../users/entities/user.entity';
 
 @ApiTags('Masters')
 @ApiBearerAuth('access-token')
-@UseGuards(AuthGuard(['jwt', 'jwt-farmer']))
+@UseGuards(AuthGuard(['jwt', 'jwt-farmer']), RolesGuard)
 @Controller('masters')
 export class MastersController {
   constructor(private mastersService: MastersService) {}
 
   @Get('dropdowns')
-  @ApiOperation({ summary: 'Get static dropdown options for forms' })
+  @ApiOperation({ summary: 'Get dropdown options for forms' })
   getDropdowns() {
     return this.mastersService.getDropdowns();
   }
@@ -42,7 +46,22 @@ export class MastersController {
 
   @Get('ecological-zones')
   @ApiOperation({ summary: 'Get ecological zones with their root:shoot ratios' })
-  getEcologicalZones() {
-    return this.mastersService.getEcologicalZones();
+  @ApiQuery({ name: 'includeInactive', required: false, type: Boolean })
+  getEcologicalZones(@Query('includeInactive') includeInactive?: string) {
+    return this.mastersService.getEcologicalZones(includeInactive === 'true');
+  }
+
+  @Post('ecological-zones')
+  @Roles(UserRole.ADMIN, UserRole.PROJECT_MANAGER)
+  @ApiOperation({ summary: 'Add an ecological/climatic zone (e.g. a new IPCC zone)' })
+  createEcologicalZone(@Body() dto: CreateEcologicalZoneDto) {
+    return this.mastersService.createEcologicalZone(dto);
+  }
+
+  @Patch('ecological-zones/:id')
+  @Roles(UserRole.ADMIN, UserRole.PROJECT_MANAGER)
+  @ApiOperation({ summary: 'Edit or deactivate an ecological/climatic zone' })
+  updateEcologicalZone(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateEcologicalZoneDto) {
+    return this.mastersService.updateEcologicalZone(id, dto);
   }
 }
