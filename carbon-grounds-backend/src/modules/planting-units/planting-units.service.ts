@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Not, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { PlantingUnit, PlantingUnitStatus } from './entities/planting-unit.entity';
 import { Instance } from '../instances/entities/instance.entity';
 import { TreeMeasurement } from '../tree-measurements/entities/tree-measurement.entity';
@@ -17,6 +17,77 @@ export interface HistoryEvent {
   date: Date | string;
   type: string;
   description: string;
+}
+
+/** One timeline event of one tree, as written to the Excel reports. */
+export interface TreeHistoryRow extends HistoryEvent {
+  plotId: string;
+  treeId: string;
+  species: string;
+  currentStatus: PlantingUnitStatus;
+  plantingDate: Date | null;
+}
+
+/**
+ * Builds a tree's dated timeline (planted, replacement, measurements, photos,
+ * dead/lost/replaced). Shared by the History dialog and the Excel reports so
+ * both always tell the same story.
+ */
+export function buildTreeEvents(
+  tree: PlantingUnit,
+  measurements: TreeMeasurement[],
+  photos: TreePhoto[],
+  predecessor: PlantingUnit | null,
+  successor: PlantingUnit | null,
+): HistoryEvent[] {
+  const events: HistoryEvent[] = [];
+
+  if (tree.plantingDate) {
+    events.push({
+      date: tree.plantingDate,
+      type: 'PLANTED',
+      description: `Planted (${tree.species?.commonName ?? 'species unknown'})`,
+    });
+  }
+  if (predecessor) {
+    events.push({
+      date: tree.createdAt,
+      type: 'REPLACEMENT',
+      description: `Planted as a replacement for ${predecessor.treeId}`,
+    });
+  }
+  for (const m of measurements) {
+    const parts = [
+      m.dbhCm != null ? `DBH ${m.dbhCm}cm` : null,
+      m.heightM != null ? `Height ${m.heightM}m` : null,
+      m.healthStatus ? `health: ${m.healthStatus}` : null,
+    ].filter(Boolean);
+    events.push({
+      date: m.measuredAt,
+      type: 'MEASUREMENT',
+      description: parts.join(', ') + (m.notes ? ` — ${m.notes}` : ''),
+    });
+  }
+  for (const p of photos) {
+    events.push({
+      date: p.takenAt ?? p.createdAt,
+      type: 'PHOTO',
+      description: p.notes || 'Photo uploaded',
+    });
+  }
+  if (tree.lossDate) {
+    events.push({
+      date: tree.lossDate,
+      type: tree.status,
+      description:
+        tree.status === PlantingUnitStatus.REPLACED && successor
+          ? `Replaced by ${successor.treeId}${tree.lossReason ? ` — ${tree.lossReason}` : ''}`
+          : `Marked ${tree.status}${tree.lossReason ? ` — ${tree.lossReason}` : ''}`,
+    });
+  }
+
+  events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  return events;
 }
 
 @Injectable()
@@ -205,55 +276,72 @@ export class PlantingUnitsService implements OnModuleInit {
       this.plantingUnitsRepo.findOne({ where: { predecessorUnitId: id } }),
     ]);
 
-    const events: HistoryEvent[] = [];
-
-    if (tree.plantingDate) {
-      events.push({
-        date: tree.plantingDate,
-        type: 'PLANTED',
-        description: `Planted (${tree.species?.commonName ?? 'species unknown'})`,
-      });
-    }
-    if (predecessor) {
-      events.push({
-        date: tree.createdAt,
-        type: 'REPLACEMENT',
-        description: `Planted as a replacement for ${predecessor.treeId}`,
-      });
-    }
-    for (const m of measurements) {
-      const parts = [
-        m.dbhCm != null ? `DBH ${m.dbhCm}cm` : null,
-        m.heightM != null ? `Height ${m.heightM}m` : null,
-        m.healthStatus ? `health: ${m.healthStatus}` : null,
-      ].filter(Boolean);
-      events.push({
-        date: m.measuredAt,
-        type: 'MEASUREMENT',
-        description: parts.join(', ') + (m.notes ? ` — ${m.notes}` : ''),
-      });
-    }
-    for (const p of photos) {
-      events.push({
-        date: p.takenAt ?? p.createdAt,
-        type: 'PHOTO',
-        description: p.notes || 'Photo uploaded',
-      });
-    }
-    if (tree.lossDate) {
-      events.push({
-        date: tree.lossDate,
-        type: tree.status,
-        description:
-          tree.status === PlantingUnitStatus.REPLACED && successor
-            ? `Replaced by ${successor.treeId}${tree.lossReason ? ` — ${tree.lossReason}` : ''}`
-            : `Marked ${tree.status}${tree.lossReason ? ` — ${tree.lossReason}` : ''}`,
-      });
-    }
-
-    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const events = buildTreeEvents(tree, measurements, photos, predecessor, successor);
 
     return { tree, predecessor, successor, events };
+  }
+
+  /**
+   * Every tree's timeline in a plot, Gram Panchayat or project, flattened to
+   * one row per event for the Excel reports. Loads measurements, photos and
+   * replacement links for all trees in a handful of queries rather than per tree.
+   */
+  async getHistoryRows(scope: { instanceId?: string; gramPanchayatId?: string; projectId?: string }): Promise<TreeHistoryRow[]> {
+    const qb = this.plantingUnitsRepo
+      .createQueryBuilder('pu')
+      .leftJoinAndSelect('pu.species', 'species')
+      .innerJoinAndSelect('pu.instance', 'instance')
+      .innerJoin('instance.farmer', 'farmer')
+      .orderBy('instance.instanceId', 'ASC')
+      .addOrderBy('pu.treeId', 'ASC');
+    if (scope.instanceId) {
+      qb.where('pu.instanceId = :id', { id: scope.instanceId });
+    } else if (scope.gramPanchayatId) {
+      qb.where('farmer.gramPanchayatId = :id', { id: scope.gramPanchayatId });
+    } else if (scope.projectId) {
+      qb.innerJoin('farmer.gramPanchayat', 'gp').where('gp.projectId = :id', { id: scope.projectId });
+    } else {
+      throw new Error('getHistoryRows needs an instanceId, gramPanchayatId or projectId');
+    }
+
+    const trees = await qb.getMany();
+    if (trees.length === 0) return [];
+
+    const ids = trees.map((t) => t.id);
+    const predecessorIds = trees.map((t) => t.predecessorUnitId).filter((id): id is string => !!id);
+    const [measurements, photos, successors, predecessors] = await Promise.all([
+      this.treeMeasurementsRepo.find({ where: { plantingUnitId: In(ids) }, order: { measuredAt: 'ASC' } }),
+      this.treePhotosRepo.find({ where: { plantingUnitId: In(ids) }, order: { createdAt: 'ASC' } }),
+      this.plantingUnitsRepo.find({ where: { predecessorUnitId: In(ids) } }),
+      predecessorIds.length ? this.plantingUnitsRepo.find({ where: { id: In(predecessorIds) } }) : Promise.resolve([]),
+    ]);
+
+    const groupBy = <T>(items: T[], key: (item: T) => string) => {
+      const map = new Map<string, T[]>();
+      for (const item of items) map.set(key(item), [...(map.get(key(item)) ?? []), item]);
+      return map;
+    };
+    const measurementsByTree = groupBy(measurements, (m) => m.plantingUnitId);
+    const photosByTree = groupBy(photos, (p) => p.plantingUnitId);
+    const successorByPredecessor = new Map(successors.map((s) => [s.predecessorUnitId as string, s]));
+    const predecessorById = new Map(predecessors.map((p) => [p.id, p]));
+
+    return trees.flatMap((tree) =>
+      buildTreeEvents(
+        tree,
+        measurementsByTree.get(tree.id) ?? [],
+        photosByTree.get(tree.id) ?? [],
+        tree.predecessorUnitId ? predecessorById.get(tree.predecessorUnitId) ?? null : null,
+        successorByPredecessor.get(tree.id) ?? null,
+      ).map((event) => ({
+        plotId: tree.instance.instanceId,
+        treeId: tree.treeId,
+        species: tree.species?.commonName ?? '',
+        currentStatus: tree.status,
+        plantingDate: tree.plantingDate,
+        ...event,
+      })),
+    );
   }
 
   /** Total tree count across all plots (dashboard) */

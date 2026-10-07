@@ -18,6 +18,8 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import type { Response } from 'express';
 import * as ExcelJS from 'exceljs';
 import { ProjectsService } from './projects.service';
+import { PlantingUnitsService } from '../planting-units/planting-units.service';
+import { addTreeHistorySheet } from '../../common/utils/tree-history-sheet.util';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -29,7 +31,10 @@ import { UserRole } from '../users/entities/user.entity';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('projects')
 export class ProjectsController {
-  constructor(private projectsService: ProjectsService) {}
+  constructor(
+    private projectsService: ProjectsService,
+    private plantingUnitsService: PlantingUnitsService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all projects' })
@@ -95,6 +100,8 @@ export class ProjectsController {
     for (const gp of gramPanchayats) {
       gpSheet.addRow(gp);
     }
+
+    addTreeHistorySheet(workbook, await this.plantingUnitsService.getHistoryRows({ projectId: id }));
 
     res.setHeader(
       'Content-Type',

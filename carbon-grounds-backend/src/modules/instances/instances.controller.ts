@@ -16,6 +16,8 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import type { Response } from 'express';
 import * as ExcelJS from 'exceljs';
 import { InstancesService } from './instances.service';
+import { PlantingUnitsService } from '../planting-units/planting-units.service';
+import { addTreeHistorySheet } from '../../common/utils/tree-history-sheet.util';
 import { CreateInstanceDto } from './dto/create-instance.dto';
 import { UpdateInstanceDto } from './dto/update-instance.dto';
 import { FIELD_DATA_ROLES, Roles } from '../../common/decorators/roles.decorator';
@@ -28,7 +30,10 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 @UseGuards(AuthGuard(['jwt', 'jwt-farmer']), RolesGuard)
 @Controller('instances')
 export class InstancesController {
-  constructor(private instancesService: InstancesService) {}
+  constructor(
+    private instancesService: InstancesService,
+    private plantingUnitsService: PlantingUnitsService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get paginated farm plots' })
@@ -135,6 +140,8 @@ export class InstancesController {
         retired: calc.retiredAt ? 'Yes' : 'No',
       });
     }
+
+    addTreeHistorySheet(workbook, await this.plantingUnitsService.getHistoryRows({ instanceId: id }));
 
     res.setHeader(
       'Content-Type',

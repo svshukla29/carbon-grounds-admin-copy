@@ -7,11 +7,13 @@ import { Farmer } from '../farmers/entities/farmer.entity';
 import { PlantingUnit } from '../planting-units/entities/planting-unit.entity';
 import { Calculation } from '../calculations/entities/calculation.entity';
 import { CodesModule } from '../codes/codes.module';
+import { PlantingUnitsModule } from '../planting-units/planting-units.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Instance, Farmer, PlantingUnit, Calculation]),
     CodesModule,
+    PlantingUnitsModule,
   ],
   controllers: [InstancesController],
   providers: [InstancesService],

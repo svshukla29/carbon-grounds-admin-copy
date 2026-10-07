@@ -15,6 +15,8 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import type { Response } from 'express';
 import * as ExcelJS from 'exceljs';
 import { GramPanchayatService } from './gram-panchayat.service';
+import { PlantingUnitsService } from '../planting-units/planting-units.service';
+import { addTreeHistorySheet } from '../../common/utils/tree-history-sheet.util';
 import { CreateGramPanchayatDto } from './dto/create-gram-panchayat.dto';
 import { UpdateGramPanchayatDto } from './dto/update-gram-panchayat.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -26,7 +28,10 @@ import { UserRole } from '../users/entities/user.entity';
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('gram-panchayat')
 export class GramPanchayatController {
-  constructor(private gramPanchayatService: GramPanchayatService) {}
+  constructor(
+    private gramPanchayatService: GramPanchayatService,
+    private plantingUnitsService: PlantingUnitsService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all gram panchayats' })
@@ -106,6 +111,8 @@ export class GramPanchayatController {
     for (const plot of plots) {
       plotsSheet.addRow(plot);
     }
+
+    addTreeHistorySheet(workbook, await this.plantingUnitsService.getHistoryRows({ gramPanchayatId: id }));
 
     res.setHeader(
       'Content-Type',
