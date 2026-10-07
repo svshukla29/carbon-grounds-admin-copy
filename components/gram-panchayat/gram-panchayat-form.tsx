@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { gramPanchayatApi } from "@/lib/api";
+import { gramPanchayatApi, projectsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +33,15 @@ export function GramPanchayatForm({ id }: { id?: string } = {}) {
   const [error, setError] = useState("");
 
   const [formData, setFormData] = useState(EMPTY_FORM);
+  // Radix Select can't hold "", so "none" stands for "not in any project".
+  const [projectId, setProjectId] = useState("none");
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    projectsApi.getAll()
+      .then((res) => setProjects(Array.isArray(res.data) ? res.data : []))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (!isEditMode || !id) return;
@@ -50,6 +59,7 @@ export function GramPanchayatForm({ id }: { id?: string } = {}) {
           contact1Name: gp.contact1Name ?? "",
           contact1Phone: gp.contact1Phone ?? "",
         });
+        setProjectId(gp.projectId ?? "none");
       })
       .catch((err) => {
         console.error(err);
@@ -74,9 +84,10 @@ export function GramPanchayatForm({ id }: { id?: string } = {}) {
 
     try {
       if (isEditMode && id) {
-        await gramPanchayatApi.update(id, formData);
+        // null explicitly unlinks the GP from its project
+        await gramPanchayatApi.update(id, { ...formData, projectId: projectId === "none" ? null : projectId });
       } else {
-        await gramPanchayatApi.create(formData);
+        await gramPanchayatApi.create({ ...formData, projectId: projectId === "none" ? undefined : projectId });
       }
       router.push("/dashboard/gram-panchayat");
     } catch (err: any) {
@@ -122,6 +133,22 @@ export function GramPanchayatForm({ id }: { id?: string } = {}) {
                 {error}
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="projectId">Project</Label>
+              <Select value={projectId} onValueChange={setProjectId}>
+                <SelectTrigger id="projectId">
+                  <SelectValue placeholder="Select Project" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No project</SelectItem>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Which project this Gram Panchayat belongs to (optional).</p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">

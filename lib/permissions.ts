@@ -18,6 +18,7 @@ const PERMISSIONS = {
   runCalculations: ["ADMIN", "PROJECT_MANAGER"],
   approveMonitoring: ["ADMIN", "PROJECT_MANAGER"],
   manageSpecies: ["ADMIN", "PROJECT_MANAGER"],
+  manageProjects: ["ADMIN", "PROJECT_MANAGER"],
   editReports: ["ADMIN", "PROJECT_MANAGER", "ANALYST"],
   manageUsers: ["ADMIN"],
 } satisfies Record<string, Role[]>;

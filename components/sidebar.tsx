@@ -18,6 +18,7 @@ import {
   Sprout,
   LogOut,
   Images,
+  FolderKanban,
   Ruler,
 } from "lucide-react";
 import Link from "next/link";
@@ -42,6 +43,12 @@ export function Sidebar({ open, setOpen }: SidebarProps) {
       icon: BarChart3,
       href: "/dashboard",
       active: pathname === "/dashboard",
+    },
+    {
+      label: "Projects",
+      icon: FolderKanban,
+      href: "/dashboard/projects",
+      active: pathname.startsWith("/dashboard/projects"),
     },
     {
       label: "Gram Panchayats",

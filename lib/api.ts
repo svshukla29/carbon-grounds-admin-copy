@@ -208,14 +208,19 @@ export const calculationsApi = {
   getDetails: (id: string) => api.get(`/calculations/${id}/details`),
 };
 
-// ── Legacy APIs ───────────────────────────────────────────────────────────────
+// ── Projects (top of the hierarchy: Project → GP → Farmer → Plot → Tree) ──────
 export const projectsApi = {
   getAll: () => api.get("/projects"),
   getOne: (id: string) => api.get(`/projects/${id}`),
+  getSummary: (id: string) => api.get(`/projects/${id}/summary`),
+  downloadReport: (id: string) =>
+    api.get(`/projects/${id}/report.xlsx`, { responseType: "blob" }),
   create: (data: any) => api.post("/projects", data),
   update: (id: string, data: any) => api.patch(`/projects/${id}`, data),
   delete: (id: string) => api.delete(`/projects/${id}`),
 };
+
+// ── Legacy APIs ───────────────────────────────────────────────────────────────
 export const partnersApi = { getAll: () => api.get("/partners") };
 export const reportsApi = {
   getAll: (params?: { search?: string; status?: string; projectId?: string }) =>
